@@ -1068,7 +1068,7 @@ void CCharacter::HandleTiles(int Index)
 			m_Core.m_Jumps = NewJumps;
 	}
 
-	// BestClient: teleport tile prediction, only active inside the fast practice world
+	// 667 Client: teleport tile prediction, only active inside the fast practice world
 	if(!GameWorld()->m_WorldConfig.m_PredictTeleports)
 		return;
 

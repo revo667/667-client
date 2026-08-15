@@ -7,6 +7,7 @@
 #include "visualizer/source_priority.h"
 
 #include <base/color.h>
+#include <base/lock.h>
 #include <base/math.h>
 #include <base/system.h>
 #include <base/time.h>
@@ -215,6 +216,31 @@ namespace
 		return (Seed & 0xffffu) / 65535.0f * 2.0f * pi;
 	}
 
+	// Deterministic 32-bit avalanche, used to turn (track, bar, step) triples
+	// into repeatable pseudo-random values without pulling in <random>.
+	static float VisualizerHash01(uint32_t X)
+	{
+		X ^= X >> 16;
+		X *= 0x7feb352du;
+		X ^= X >> 15;
+		X *= 0x846ca68bu;
+		X ^= X >> 16;
+		return (X & 0xffffffu) / (float)0xffffffu;
+	}
+
+	// Value noise: one random level per integer step, smoothstepped in between,
+	// so the result wanders instead of oscillating on a fixed period.
+	static float VisualizerValueNoise(uint32_t Seed, float T)
+	{
+		const float Base = floorf(T);
+		const uint32_t Step = (uint32_t)(int32_t)Base;
+		const float Frac = T - Base;
+		const float Blend = Frac * Frac * (3.0f - 2.0f * Frac);
+		const float Low = VisualizerHash01(Seed + Step * 374761393u);
+		const float High = VisualizerHash01(Seed + (Step + 1u) * 374761393u);
+		return Low + (High - Low) * Blend;
+	}
+
 	static float VisualizerBarTargetLevel(const SNowPlayingSnapshot &Snapshot, float TimeSeconds, float TrackProgress, int BarIndex, int NumBars)
 	{
 		const float BarT = BarIndex / maximum(1.0f, (float)(NumBars - 1));
@@ -235,13 +261,34 @@ namespace
 			return std::clamp(Calm, 0.38f, 0.88f);
 		}
 
-		const float Pulse = 0.5f + 0.5f * sinf(TimeSeconds * (1.08f + 0.05f * BarIndex) * 2.0f * pi + TrackProgress * 6.0f * pi + SeedPhase + BarPhase * 0.5f);
-		const float Sweep = 0.5f + 0.5f * sinf(TimeSeconds * 1.78f * 2.0f * pi + Centered * 3.0f + DriftPhase + TrackProgress * 4.2f * pi + BarPhase * 0.7f);
-		const float Crest = 0.5f + 0.5f * sinf(TimeSeconds * (2.45f + 0.09f * BarIndex) * 2.0f * pi - Distance * 3.1f + SeedPhase * 1.15f + BarPhase);
-		const float Texture = 0.5f + 0.5f * sinf(TimeSeconds * 3.40f * 2.0f * pi + Centered * 5.0f - DriftPhase * 0.55f - BarPhase * 0.8f);
-		const float Bounce = 0.5f + 0.5f * sinf(TimeSeconds * (1.36f + 0.12f * BarIndex) * 2.0f * pi + BarPhase * 1.7f - Centered * 1.8f);
-		const float Motion = Pulse * (0.28f + 0.26f * Arch) + Sweep * 0.20f + Crest * 0.18f * Shoulder + Texture * 0.10f + Bounce * 0.24f;
-		const float Level = 0.16f + Arch * 0.22f + Shoulder * 0.08f + Motion * (0.42f + 0.28f * Arch);
+		// There is no audio capture backend here, so the motion is synthesised.
+		// Layered value noise plus a seeded beat envelope reads like a spectrum;
+		// a stack of pure sines settles into a visibly repeating pattern instead.
+		const uint32_t BarSeed = Seed ^ ((uint32_t)(BarIndex + 1) * 0x9e3779b9u);
+		float Noise = VisualizerValueNoise(BarSeed, TimeSeconds * 6.5f) * 0.58f;
+		Noise += VisualizerValueNoise(BarSeed ^ 0x5bf03635u, TimeSeconds * 14.0f) * 0.29f;
+		Noise += VisualizerValueNoise(BarSeed ^ 0x27d4eb2fu, TimeSeconds * 29.0f) * 0.13f;
+
+		// Beat grid: a tempo picked per track, with each beat given its own
+		// random strength so the pulse never lands identically twice.
+		const float Bpm = 92.0f + VisualizerHash01(Seed ^ 0x1b873593u) * 56.0f;
+		const float BeatPos = TimeSeconds * (Bpm / 60.0f);
+		const float BeatBase = floorf(BeatPos);
+		const float BeatStrength = 0.45f + 0.55f * VisualizerHash01(Seed + (uint32_t)(int32_t)BeatBase * 2654435761u);
+		const float Beat = expf(-(BeatPos - BeatBase) * 5.2f) * BeatStrength;
+		// The bass end reacts hardest to the beat, like a real spectrum does.
+		const float BeatWeight = 0.10f + Arch * 0.34f;
+
+		// Slow energy drift so a long track does not sit at one intensity, and a
+		// gentle per-bar wobble to keep neighbours from moving in lockstep.
+		const float Energy = 0.86f + 0.14f * VisualizerValueNoise(Seed ^ 0x85ebca6bu, TrackProgress * 9.0f + TimeSeconds * 0.25f);
+		const float Wobble = 0.5f + 0.5f * sinf(TimeSeconds * 0.7f * 2.0f * pi + BarPhase + DriftPhase * 0.3f + SeedPhase * 0.2f);
+
+		const float Level = (0.16f + Arch * 0.20f + Shoulder * 0.07f +
+					    Noise * (0.34f + 0.24f * Arch) +
+					    Beat * BeatWeight +
+					    Wobble * 0.05f) *
+				    Energy;
 		return std::clamp(Level, 0.16f, 1.0f);
 	}
 
@@ -1296,6 +1343,328 @@ namespace
 		{
 			QueueAction(m_RequestNext);
 		}
+	};
+#endif
+
+#if defined(CONF_PLATFORM_MACOS)
+	// macOS has no MPRIS/SMTC equivalent that is reachable from a normal process
+	// (MediaRemote is private and entitlement-gated since 15.4), so the supported
+	// route is AppleScript against the individual players. Spawning `osascript`
+	// costs tens of milliseconds, which is far too slow for the 8 Hz main thread
+	// poll, so all scripting happens on a worker thread and Poll() only hands
+	// back the most recent snapshot.
+	class CMacNowPlayingProvider final : public IMusicPlaybackProvider
+	{
+		static constexpr char SCRIPT_FIELD_SEPARATOR = '\x1f';
+		static constexpr int POLL_INTERVAL_MS = 1000;
+		// osascript fails immediately when the user denied the Automation
+		// prompt. Back off instead of spawning a process every second forever.
+		static constexpr int POLL_INTERVAL_DENIED_MS = 5000;
+
+		std::mutex m_Mutex;
+		std::condition_variable m_Wakeup;
+		bool m_Running = true;
+		SNowPlayingSnapshot m_Snapshot;
+		std::string m_CurrentService;
+		std::vector<const char *> m_vpPendingActions;
+		bool m_LoggedScriptFailure = false;
+		std::thread m_Worker;
+
+		// The script is fed through a quoted heredoc, so the shell passes it
+		// through literally and no escaping of the AppleScript is needed.
+		static bool RunAppleScript(const char *pScript, std::string *pOutput)
+		{
+			std::string Command = "/usr/bin/osascript 2>/dev/null <<'BC_APPLESCRIPT_EOF'\n";
+			Command += pScript;
+			Command += "\nBC_APPLESCRIPT_EOF\n";
+
+			FILE *pPipe = popen(Command.c_str(), "r");
+			if(pPipe == nullptr)
+				return false;
+
+			std::string Output;
+			char aBuf[1024];
+			while(fgets(aBuf, sizeof(aBuf), pPipe) != nullptr)
+				Output += aBuf;
+
+			const int Status = pclose(pPipe);
+			if(pOutput != nullptr)
+				*pOutput = std::move(Output);
+			return Status == 0;
+		}
+
+		// Emits one \x1f-separated record per player that is running and not
+		// stopped. Unit separator is used because track titles may contain tabs.
+		// Each `try` block is independent so an uninstalled player is skipped
+		// rather than aborting the whole script.
+		//
+		// Durations and positions are rounded to whole milliseconds inside the
+		// script on purpose: coercing an AppleScript real with `as text` uses the
+		// system decimal separator, so on a locale such as tr_TR it would emit
+		// "218,65" and every strtoll/atof below would silently truncate at the
+		// comma. Integers have no separator in any locale. Spotify already
+		// reports the track length in milliseconds, Music reports seconds.
+		static const char *QueryScript()
+		{
+			return
+				"set fs to (ASCII character 31)\n"
+				"set out to \"\"\n"
+				"try\n"
+				"	if application \"Spotify\" is running then\n"
+				"		tell application \"Spotify\"\n"
+				"			set ps to (player state as text)\n"
+				"			if ps is not \"stopped\" then\n"
+				"				set t to current track\n"
+				"				set dur to (round (duration of t)) as text\n"
+				"				set pos to (round ((player position) * 1000)) as text\n"
+				"				set out to out & \"spotify\" & fs & ps & fs & (name of t) & fs & (artist of t) & fs & (album of t) & fs & dur & fs & pos & fs & (artwork url of t) & linefeed\n"
+				"			end if\n"
+				"		end tell\n"
+				"	end if\n"
+				"end try\n"
+				"try\n"
+				"	if application \"Music\" is running then\n"
+				"		tell application \"Music\"\n"
+				"			set ps to (player state as text)\n"
+				"			if ps is not \"stopped\" then\n"
+				"				set t to current track\n"
+				"				set dur to (round ((duration of t) * 1000)) as text\n"
+				"				set pos to (round ((player position) * 1000)) as text\n"
+				"				set out to out & \"apple-music\" & fs & ps & fs & (name of t) & fs & (artist of t) & fs & (album of t) & fs & dur & fs & pos & fs & \"\" & linefeed\n"
+				"			end if\n"
+				"		end tell\n"
+				"	end if\n"
+				"end try\n"
+				"return out";
+		}
+
+		static const char *AppleScriptAppName(std::string_view ServiceId)
+		{
+			return ServiceId == "spotify" ? "Spotify" : "Music";
+		}
+
+		static std::vector<std::string> SplitFields(const std::string &Line)
+		{
+			std::vector<std::string> vFields;
+			size_t Start = 0;
+			while(true)
+			{
+				const size_t Pos = Line.find(SCRIPT_FIELD_SEPARATOR, Start);
+				if(Pos == std::string::npos)
+				{
+					vFields.emplace_back(Line.substr(Start));
+					break;
+				}
+				vFields.emplace_back(Line.substr(Start, Pos - Start));
+				Start = Pos + 1;
+			}
+			return vFields;
+		}
+
+		static EMusicPlaybackState ParsePlaybackState(const std::string &State)
+		{
+			if(State == "playing")
+				return EMusicPlaybackState::PLAYING;
+			if(State == "paused")
+				return EMusicPlaybackState::PAUSED;
+			// "fast forwarding" and "rewinding" are Music-only and still count
+			// as active playback.
+			if(State == "fast forwarding" || State == "rewinding")
+				return EMusicPlaybackState::PLAYING;
+			return EMusicPlaybackState::STOPPED;
+		}
+
+		static bool ParseRecord(const std::string &Line, SNowPlayingSnapshot &Out)
+		{
+			const std::vector<std::string> vFields = SplitFields(Line);
+			if(vFields.size() < 8)
+				return false;
+
+			Out = SNowPlayingSnapshot();
+			Out.m_ServiceId = vFields[0];
+			Out.m_PlaybackState = ParsePlaybackState(vFields[1]);
+			if(Out.m_PlaybackState == EMusicPlaybackState::STOPPED)
+				return false;
+
+			Out.m_Title = vFields[2];
+			Out.m_Artist = vFields[3];
+			Out.m_Album = vFields[4];
+
+			// Already normalised to whole milliseconds by QueryScript().
+			Out.m_DurationMs = (int64_t)std::strtoll(vFields[5].c_str(), nullptr, 10);
+			Out.m_PositionMs = (int64_t)std::strtoll(vFields[6].c_str(), nullptr, 10);
+
+			Out.m_CanPrev = true;
+			Out.m_CanPlayPause = true;
+			Out.m_CanNext = true;
+
+			const std::string &ArtUrl = vFields[7];
+			Out.m_Art.m_Key = Out.m_ServiceId + "|" + Out.m_Title + "|" + Out.m_Artist;
+			if(!ArtUrl.empty() && (IsUrlScheme(ArtUrl, "http://") || IsUrlScheme(ArtUrl, "https://")))
+			{
+				Out.m_Art.m_Type = SMusicArt::EType::URL;
+				Out.m_Art.m_Url = ArtUrl;
+			}
+
+			Out.m_Valid = !Out.m_Title.empty() || !Out.m_Artist.empty() || !Out.m_Album.empty();
+			return Out.m_Valid;
+		}
+
+		// Prefers whatever is actually playing, then whichever player was
+		// already selected, so a paused Spotify does not steal the HUD from
+		// Music mid-track.
+		static int ScoreCandidate(const SNowPlayingSnapshot &Candidate, const std::string &CurrentService)
+		{
+			int Score = Candidate.m_PlaybackState == EMusicPlaybackState::PLAYING ? 20 : 10;
+			if(Candidate.m_ServiceId == CurrentService)
+				Score += 100;
+			// Ranks Spotify (DEDICATED) above Music (GENERIC) on a tie.
+			Score += BestClientVisualizer::PlayerSourcePriority(Candidate.m_ServiceId) / 100;
+			return Score;
+		}
+
+		bool QueryPlayers(SNowPlayingSnapshot &Out, const std::string &CurrentService, bool &ScriptOk)
+		{
+			std::string Output;
+			ScriptOk = RunAppleScript(QueryScript(), &Output);
+			if(!ScriptOk)
+				return false;
+
+			int BestScore = -1;
+			size_t Start = 0;
+			while(Start < Output.size())
+			{
+				size_t End = Output.find('\n', Start);
+				if(End == std::string::npos)
+					End = Output.size();
+
+				const std::string Line = Output.substr(Start, End - Start);
+				Start = End + 1;
+				if(Line.empty())
+					continue;
+
+				SNowPlayingSnapshot Candidate;
+				if(!ParseRecord(Line, Candidate))
+					continue;
+
+				const int Score = ScoreCandidate(Candidate, CurrentService);
+				if(Score > BestScore)
+				{
+					BestScore = Score;
+					Out = std::move(Candidate);
+				}
+			}
+			return BestScore >= 0;
+		}
+
+		void RunAction(const char *pVerb, const std::string &Service)
+		{
+			if(Service.empty())
+				return;
+
+			char aScript[128];
+			str_format(aScript, sizeof(aScript), "tell application \"%s\" to %s",
+				AppleScriptAppName(Service), pVerb);
+			RunAppleScript(aScript, nullptr);
+		}
+
+		void WorkerThread()
+		{
+			std::unique_lock<std::mutex> Lock(m_Mutex);
+			while(m_Running)
+			{
+				// Actions are executed with the lock released so a slow
+				// osascript call never blocks Poll() on the main thread.
+				std::vector<const char *> vpActions;
+				vpActions.swap(m_vpPendingActions);
+				const std::string Service = m_CurrentService;
+
+				Lock.unlock();
+
+				for(const char *pVerb : vpActions)
+					RunAction(pVerb, Service);
+
+				SNowPlayingSnapshot Snapshot;
+				bool ScriptOk = false;
+				const bool Valid = QueryPlayers(Snapshot, Service, ScriptOk);
+
+				Lock.lock();
+
+				if(Valid)
+				{
+					m_CurrentService = Snapshot.m_ServiceId;
+					m_Snapshot = std::move(Snapshot);
+				}
+				else
+				{
+					m_CurrentService.clear();
+					m_Snapshot = SNowPlayingSnapshot();
+				}
+
+				if(!ScriptOk && !m_LoggedScriptFailure)
+				{
+					m_LoggedScriptFailure = true;
+					MusicPlayerDebugLog(1, "macos",
+						"osascript failed - Automation permission for Spotify/Music is most likely not granted");
+				}
+				else if(ScriptOk)
+					m_LoggedScriptFailure = false;
+
+				if(!m_Running)
+					break;
+
+				// A queued action is applied on the next iteration immediately
+				// so the HUD reacts to a button press without a poll delay.
+				if(m_vpPendingActions.empty())
+				{
+					m_Wakeup.wait_for(Lock, std::chrono::milliseconds(ScriptOk ? POLL_INTERVAL_MS : POLL_INTERVAL_DENIED_MS),
+						[this] { return !m_Running || !m_vpPendingActions.empty(); });
+				}
+			}
+		}
+
+		// libc++ annotates std::mutex for clang's thread-safety analysis, which
+		// then wants a negative capability that std::mutex cannot express (only
+		// base/lock.h's CLock can, and that one does not work with a condition
+		// variable). Opt these members out the same way jobs.h does.
+		void QueueAction(const char *pVerb) NO_THREAD_SAFETY_ANALYSIS
+		{
+			{
+				std::lock_guard<std::mutex> Lock(m_Mutex);
+				if(m_CurrentService.empty())
+					return;
+				m_vpPendingActions.push_back(pVerb);
+			}
+			m_Wakeup.notify_one();
+		}
+
+	public:
+		CMacNowPlayingProvider()
+		{
+			m_Worker = std::thread([this] { WorkerThread(); });
+		}
+
+		~CMacNowPlayingProvider() override
+		{
+			{
+				std::lock_guard<std::mutex> Lock(m_Mutex);
+				m_Running = false;
+			}
+			m_Wakeup.notify_one();
+			if(m_Worker.joinable())
+				m_Worker.join();
+		}
+
+		bool Poll(SNowPlayingSnapshot &Out) override NO_THREAD_SAFETY_ANALYSIS
+		{
+			std::lock_guard<std::mutex> Lock(m_Mutex);
+			Out = m_Snapshot;
+			return Out.m_Valid;
+		}
+
+		void Previous() override { QueueAction("previous track"); }
+		void PlayPause() override { QueueAction("playpause"); }
+		void Next() override { QueueAction("next track"); }
 	};
 #endif
 
@@ -2777,6 +3146,9 @@ public:
 		m_pVisualizer = std::make_unique<BestClientVisualizer::CRealtimeMusicVisualizer>();
 #elif defined(CONF_FAMILY_WINDOWS) && BC_MUSICPLAYER_HAS_WINRT
 		m_pProvider = std::make_unique<CWindowsNowPlayingProvider>();
+		m_pVisualizer = std::make_unique<BestClientVisualizer::CRealtimeMusicVisualizer>();
+#elif defined(CONF_PLATFORM_MACOS)
+		m_pProvider = std::make_unique<CMacNowPlayingProvider>();
 		m_pVisualizer = std::make_unique<BestClientVisualizer::CRealtimeMusicVisualizer>();
 #else
 		m_pProvider = std::make_unique<CNullNowPlayingProvider>();

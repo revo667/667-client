@@ -1,5 +1,5 @@
 // Copyright © 2026 BestProject Team
-// BestClient Updater — standalone Linux GUI application (SDL2).
+// 667 Client Updater — standalone Linux GUI application (SDL2).
 // Mirrors src/tools/bestclient_updater.cpp (Windows) step-for-step. Receives
 // four positional arguments:
 //   argv[1]  PID of the client process to wait for
@@ -234,7 +234,7 @@ static int WorkerThreadFn(void *pData)
 	SetPercent(100);
 
 	// ── 9. Launch client ───────────────────────────────────────────────────
-	SetStatus("Launching BestClient...");
+	SetStatus("Launching 667 Client...");
 	usleep(500 * 1000);
 
 	const pid_t Child = fork();
@@ -289,8 +289,8 @@ static void Render(SDL_Renderer *pRenderer)
 
 	{
 		const int Scale = 4;
-		const int W1 = BcFont::TextWidth("BestClient", Scale);
-		BcFont::DrawText(pRenderer, (WND_W - W1) / 2, 14, Scale, "BestClient", C_TITLE);
+		const int W1 = BcFont::TextWidth("667 Client", Scale);
+		BcFont::DrawText(pRenderer, (WND_W - W1) / 2, 14, Scale, "667 Client", C_TITLE);
 		const int W2 = BcFont::TextWidth("Updater", Scale);
 		BcFont::DrawText(pRenderer, (WND_W - W2) / 2, 48, Scale, "Updater", C_TITLE);
 	}
@@ -363,7 +363,7 @@ int main(int argc, char **argv)
 
 	g_pLock = SDL_CreateMutex();
 
-	SDL_Window *pWindow = SDL_CreateWindow("BestClient Updater",
+	SDL_Window *pWindow = SDL_CreateWindow("667 Client Updater",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		WND_W, WND_H, SDL_WINDOW_BORDERLESS);
 	if(!pWindow)

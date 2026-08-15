@@ -77,7 +77,7 @@ public:
 		bool m_IsFNG;
 		bool m_InfiniteAmmo;
 		bool m_PredictTiles;
-		bool m_PredictTeleports; // BestClient: only enabled inside the fast practice world
+		bool m_PredictTeleports; // 667 Client: only enabled inside the fast practice world
 		int m_PredictFreeze;
 		bool m_PredictWeapons;
 		bool m_PredictDDRace;

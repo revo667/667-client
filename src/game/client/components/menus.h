@@ -235,7 +235,7 @@ protected:
 
 	bool m_CreateDefaultFavoriteCommunities = false;
 	bool m_ForceRefreshLanPage = false;
-	int64_t m_LastServerBrowserRefreshTick = 0; // BestClient
+	int64_t m_LastServerBrowserRefreshTick = 0; // 667 Client
 
 	char m_aNextServer[256];
 

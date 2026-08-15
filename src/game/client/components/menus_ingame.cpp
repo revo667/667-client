@@ -233,7 +233,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		}
 		else if(GameClient()->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
 		{
-			// BestClient: fast practice button, shrinks when the button bar runs out of width
+			// 667 Client: fast practice button, shrinks when the button bar runs out of width
 			const bool ShowAutoCameraButton = GameClient()->m_Snap.m_pLocalInfo && (GameClient()->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS || Paused || Spec);
 			constexpr float NormalPracticeButtonWidth = 120.0f;
 			constexpr float CompactPracticeButtonWidth = 52.0f;

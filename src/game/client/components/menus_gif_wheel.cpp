@@ -381,7 +381,7 @@ static void UpdateChatMediaRevealPhase(float &Phase, bool Expanded, float Dt)
 
 // The "Chat Media" settings block (Visuals tab, top of the left column). Carries the "Gif Wheel"
 // launcher button, which is how the wheel editor is reached now - there is no separate top-level
-// BestClient tab for it anymore, to avoid piling up tabs.
+// 667 Client tab for it anymore, to avoid piling up tabs.
 void CMenus::RenderSettingsBestClientChatMediaBlock(CUIRect &Column)
 {
 	const float ChatMediaLineSize = 20.0f;

@@ -29,7 +29,7 @@ permissions:
   contents: write
 
 env:
-  CLIENT_NAME: BestClient
+  CLIENT_NAME: 667Client
 
 jobs:
   build-cmake:
@@ -49,14 +49,24 @@ jobs:
           cmake-init-env: CXXFLAGS="-Werror -Wno-unused-function"
           package-file: "*-linux_x86_64.tar.xz"
           artifact-name: release-linux
-          asset-name: BestClient-linux.tar.xz
+          asset-name: 667Client-linux.tar.xz
         - name: windows
           os: windows-latest
           cmake-args: -A x64 -DTOOLS=OFF -DDOWNLOAD_GTEST=OFF -DVULKAN=ON
           cmake-init-env: CXXFLAGS= LDFLAGS=
           package-file: "*-win64.zip"
           artifact-name: release-windows
-          asset-name: BestClient-windows.zip
+          asset-name: 667Client-windows.zip
+        # SDL2 is taken from ddnet-libs because Homebrew's build is not a framework.
+        # No bestclient-updater here: that target is Windows/Linux only, so the
+        # in-game updater falls back to opening the releases page on macOS.
+        - name: macos
+          os: macos-latest
+          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DTOOLS=OFF -DDOWNLOAD_GTEST=OFF -DSDL2_LIBRARY=$GITHUB_WORKSPACE/ddnet-libs/sdl/mac/libfat/SDL2.framework/Versions/A/SDL2 -DSDL2_INCLUDEDIR=$GITHUB_WORKSPACE/ddnet-libs/sdl/mac/libfat/SDL2.framework/Headers
+          cmake-init-env: CXXFLAGS= LDFLAGS=
+          package-file: "*-macos.dmg"
+          artifact-name: release-macos
+          asset-name: 667Client-macos.dmg
 
     steps:
     - uses: actions/checkout@v4
@@ -68,6 +78,15 @@ jobs:
       run: |
         sudo apt-get update -y
         sudo apt-get install pkg-config ninja-build libcurl4-openssl-dev libfreetype6-dev libnotify-dev libogg-dev libopus-dev libopusfile-dev libsdl2-dev libsqlite3-dev libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libx264-dev libpng-dev libvulkan-dev libglew-dev -y
+
+    # dmgbuild is what the package_dmg target shells out to; without it CMake
+    # never defines that target and packaging fails.
+    - name: Prepare macOS
+      if: contains(matrix.os, 'macos')
+      run: |
+        brew install ffmpeg molten-vk ninja pkg-config
+        brew upgrade freetype
+        pip3 install --break-system-packages dmgbuild pyobjc-framework-Quartz
 
     - name: Install Vulkan SDK
       uses: humbletim/install-vulkan-sdk@v1.2
@@ -85,7 +104,10 @@ jobs:
       run: |
         cmake -S . -B build-release ${{ matrix.cmake-args }}
         cmake --build build-release --config Release --target game-client
-        cmake --build build-release --config Release --target bestclient-updater
+
+    - name: Build updater
+      if: "!contains(matrix.os, 'macos')"
+      run: cmake --build build-release --config Release --target bestclient-updater
 
     # Sign when secrets are present. Without a cert the build still ships unsigned —
     # Defender may false-positive until WINDOWS_CERT_BASE64 / WINDOWS_CERT_PASSWORD are set.
@@ -240,6 +262,7 @@ jobs:
         files: |
           artifacts/${{ env.CLIENT_NAME }}-linux.tar.xz
           artifacts/${{ env.CLIENT_NAME }}-windows.zip
+          artifacts/${{ env.CLIENT_NAME }}-macos.dmg
           artifacts/${{ env.CLIENT_NAME }}-android.apk
 
     - name: Create or update release manually
@@ -253,4 +276,5 @@ jobs:
         files: |
           artifacts/${{ env.CLIENT_NAME }}-linux.tar.xz
           artifacts/${{ env.CLIENT_NAME }}-windows.zip
+          artifacts/${{ env.CLIENT_NAME }}-macos.dmg
           artifacts/${{ env.CLIENT_NAME }}-android.apk

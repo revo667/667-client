@@ -60,17 +60,17 @@ Apply
 Info
 == Інформація
 
-BestClient Links
-== Посилання BestClient
+667 Client Links
+== Посилання 667 Client
 
-BestClient Settings
-== Налаштування BestClient
+667 Client Settings
+== Налаштування 667 Client
 
 Config Files
 == Конфіг файли
 
-BestClient Developers
-== Розробники BestClient
+667 Client Developers
+== Розробники 667 Client
 
 Hide Settings Tabs
 == Приховати вкладки в налаштуваннях
@@ -84,8 +84,8 @@ Reason
 Color
 == Колір
 
-BestClient
-== BestClient
+667 Client
+== 667 Client
 
 Speed
 == Швидкість
@@ -96,7 +96,7 @@ Telegram
 Check update
 == 
 
-BestClient %s is out!
+667 Client %s is out!
 == 
 
 Preparing update...
@@ -1227,7 +1227,7 @@ Commands in other layout
 Cinematic camera
 == 
 
-Use BestClient MasterServer
+Use 667 Client MasterServer
 == 
 
 Show player below indicator
@@ -1353,7 +1353,7 @@ Fun
 Shop
 == 
 
-BestClient %s is available
+667 Client %s is available
 == 
 
 Downloading

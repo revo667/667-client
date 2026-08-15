@@ -90,7 +90,7 @@ public:
 		DiscordCreateParamsSetDefault(&Params);
 
 		// Params.client_id = 752165779117441075; // DDNet
-		Params.client_id = 1444576875774083133; // BestClient
+		Params.client_id = 1444576875774083133; // 667 Client
 		Params.flags = EDiscordCreateFlags::DiscordCreateFlags_NoRequireDiscord;
 		Params.event_data = this;
 		Params.activity_events = &m_ActivityEvents;
@@ -187,7 +187,7 @@ public:
 		}
 		else
 		{
-			str_copy(m_Activity.assets.small_text, "BestClient player", sizeof(m_Activity.assets.small_text));
+			str_copy(m_Activity.assets.small_text, "667 Client player", sizeof(m_Activity.assets.small_text));
 		}
 
 		str_copy(m_Activity.details, "discord.gg/bestclient", sizeof(m_Activity.details));

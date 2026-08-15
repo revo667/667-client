@@ -509,7 +509,7 @@ void CPlayers::RenderHookCollLine(
 
 	float Alpha = GameClient()->IsOtherTeam(ClientId) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
 	Alpha *= (float)g_Config.m_ClHookCollAlpha / 100;
-	// BestClient: dim non-participants while fast practice is active
+	// 667 Client: dim non-participants while fast practice is active
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 	if(Alpha <= 0.0f)
@@ -590,7 +590,7 @@ void CPlayers::RenderHook(
 	if(pPlayerChar->m_HookedPlayer != -1 && !GameClient()->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Active)
 		return;
 
-	// BestClient: in fast practice, hide hooks from non-participants that target a practice participant
+	// 667 Client: in fast practice, hide hooks from non-participants that target a practice participant
 	// (server-side hook to the real tee position looks wrong in the practice world)
 	if(GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active &&
 		ClientId >= 0 && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId) &&
@@ -605,7 +605,7 @@ void CPlayers::RenderHook(
 	float Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
 	if(ClientId == -2) // ghost
 		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
-	// BestClient: dim non-participants while fast practice is active
+	// 667 Client: dim non-participants while fast practice is active
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 
@@ -625,7 +625,7 @@ void CPlayers::RenderHook(
 
 	if(in_range(pPlayerChar->m_HookedPlayer, MAX_CLIENTS - 1))
 	{
-		// BestClient: a practice participant hooking a non-participant uses the snap hook position,
+		// 667 Client: a practice participant hooking a non-participant uses the snap hook position,
 		// because the hooked tee's render position lives in the real world, not the practice world
 		const bool HookTargetOutsidePractice = GameClient()->m_FastPractice.Enabled() &&
 			GameClient()->m_FastPractice.IsPracticeParticipant(ClientId) &&
@@ -741,7 +741,7 @@ void CPlayers::RenderPlayer(
 
 	if(ClientId == -2) // ghost
 		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
-	// BestClient: dim non-participants while fast practice is active
+	// 667 Client: dim non-participants while fast practice is active
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 	// TODO: snd_game_volume_others
@@ -1130,7 +1130,7 @@ void CPlayers::RenderPlayer(
 		}
 	}
 
-	// BestClient: in fast practice override emote from snap with practice world state
+	// 667 Client: in fast practice override emote from snap with practice world state
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Active() && GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 	{
 		const CGameClient::CClientData &CD = GameClient()->m_aClients[ClientId];
@@ -1139,7 +1139,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// render the "shadow" tee — skip for practice participants, their snap position is meaningless
-	const bool IsPracticeParticipant = ClientId >= 0 && GameClient()->m_FastPractice.Active() && GameClient()->m_FastPractice.IsPracticeParticipant(ClientId); // BestClient
+	const bool IsPracticeParticipant = ClientId >= 0 && GameClient()->m_FastPractice.Active() && GameClient()->m_FastPractice.IsPracticeParticipant(ClientId); // 667 Client
 	if(!IsPracticeParticipant && (g_Config.m_ClUnpredictedShadow == 3 || (Local && g_Config.m_ClUnpredictedShadow == 1) || (!Local && g_Config.m_ClUnpredictedShadow == 2)))
 	{
 		vec2 ShadowPosition = Position;
@@ -1807,7 +1807,7 @@ void CPlayers::OnRender()
 		{
 			Alpha = g_Config.m_ClRaceGhostAlpha / 100.f;
 		}
-		// BestClient: dim non-participants while fast practice is active
+		// 667 Client: dim non-participants while fast practice is active
 		if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 			Alpha = std::min(Alpha, 0.5f);
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo(), EMOTE_BLINK, vec2(1, 0), Client.m_SpecChar, Alpha);

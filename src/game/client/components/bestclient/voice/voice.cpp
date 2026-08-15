@@ -630,7 +630,7 @@ void CVoiceChat::LoadMutedNamesFromFile()
 
 void CVoiceChat::SaveMutedNamesToFile()
 {
-	Storage()->CreateFolder("BestClient", IStorage::TYPE_SAVE);
+	Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
 	IOHANDLE File = Storage()->OpenFile(VOICE_MUTED_CFG_PATH, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 		return;
@@ -3664,7 +3664,7 @@ std::string CVoiceChat::EffectiveServerAddress() const
 
 const char *CVoiceChat::EffectiveServerLabel() const
 {
-	return IsManagedServerConfig() ? "BestClient Voice" : g_Config.m_BcVoiceChatServerAddress;
+	return IsManagedServerConfig() ? "667 Client Voice" : g_Config.m_BcVoiceChatServerAddress;
 }
 
 bool CVoiceChat::IsManagedServerConfig() const

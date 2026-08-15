@@ -26,7 +26,7 @@
 
 using namespace std::chrono_literals;
 
-// BestClient
+// 667 Client
 extern void (*BCGradient_ApplyEverythingHook)(CTextCursor *pCursor, const char *pText, int Length);
 
 // TClient

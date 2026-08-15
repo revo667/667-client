@@ -293,7 +293,7 @@ public:
 		SORT_GAMETYPE - Sort by game type. DM, TDM etc.
 		SORT_NUMPLAYERS - Sort after how many players there are on the server.
 		SORT_NUMFRIENDS - Sort after how many friends there are on the server.
-		SORT_NUMBESTCLIENT - Sort after how many BestClient players there are on the server.
+		SORT_NUMBESTCLIENT - Sort after how many 667 Client players there are on the server.
 		SORT_FAVORITES - Sort by favorite status, number of players and then ping.
 	*/
 	enum

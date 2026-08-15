@@ -59,17 +59,17 @@ Apply
 Info
 == Информация
 
-BestClient Links
-== Ссылки BestClient
+667 Client Links
+== Ссылки 667 Client
 
-BestClient Settings
-== Настройки BestClient
+667 Client Settings
+== Настройки 667 Client
 
 Config Files
 == Файлы настроек
 
-BestClient Developers
-== Разработчики BestClient
+667 Client Developers
+== Разработчики 667 Client
 
 Hide Settings Tabs
 == Скрыть вкладки настроек
@@ -83,8 +83,8 @@ Reason
 Color
 == Цвет
 
-BestClient
-== BestClient
+667 Client
+== 667 Client
 
 Speed
 == Скорость
@@ -218,8 +218,8 @@ Telegram
 Check update
 == Проверить обновление
 
-BestClient %s is out!
-== Вышел BestClient %s!
+667 Client %s is out!
+== Вышел 667 Client %s!
 
 Preparing update...
 == Подготовка обновления...
@@ -1004,8 +1004,8 @@ Cinematic camera
 Strength
 == Сила
 
-Use BestClient MasterServer
-== Использовать мастер-сервер BestClient
+Use 667 Client MasterServer
+== Использовать мастер-сервер 667 Client
 
 Show player below indicator
 == Показывать индикатор игрока снизу
@@ -1103,8 +1103,8 @@ Restart client now so component changes fully apply?
 Disabled components: %d
 == Отключено компонентов: %d
 
-BestClient %s is available
-== Доступен BestClient %s
+667 Client %s is available
+== Доступен 667 Client %s
 
 Downloading
 == Загрузка
@@ -1535,7 +1535,7 @@ Rollback length
 Rollback bind
 == Бинд отката
 
-##### BestClient interface completeness #####
+##### 667 Client interface completeness #####
 
 Gradient
 == Градиент
@@ -1936,7 +1936,7 @@ NEW
 BETA
 == БЕТА
 
-##### BestClient related screens and feedback #####
+##### 667 Client related screens and feedback #####
 
 ##### Chat Filter #####
 
@@ -2004,8 +2004,8 @@ Emotes
 No gifs assigned yet - drag some in from Settings
 == GIF не назначены. Добавьте их в настройках.
 
-Hook combo sounds not found. Put files as data/BestClient/combo/combo1.wv ... combo7.wv
-== [[red]] Звуки хук-комбо не найдены. Поместите файлы combo1.wv ... combo7.wv в data/BestClient/combo/.
+Hook combo sounds not found. Put files as data/667 Client/combo/combo1.wv ... combo7.wv
+== [[red]] Звуки хук-комбо не найдены. Поместите файлы combo1.wv ... combo7.wv в data/667 Client/combo/.
 
 Reloaded images. %d slot(s) fell back to main asset.
 == Изображения перезагружены. Слотов, возвращённых к основному ресурсу: %d.

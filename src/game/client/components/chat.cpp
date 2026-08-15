@@ -964,7 +964,7 @@ void CChat::OnInit()
 
 bool CChat::OnInput(const IInput::CEvent &Event)
 {
-	// BestClient: click a ready photo/gif preview to open it fullscreen; click anywhere (or Esc)
+	// 667 Client: click a ready photo/gif preview to open it fullscreen; click anywhere (or Esc)
 	// to close it back. Works even while chat is fully closed, same as the retry-click below.
 	if((Event.m_Flags & IInput::FLAG_PRESS) && HasValidFullscreenMedia())
 	{
@@ -996,7 +996,7 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		}
 	}
 
-	// BestClient: retrying failed media works even while chat is fully closed, as long as a
+	// 667 Client: retrying failed media works even while chat is fully closed, as long as a
 	// message with a failed preview is still fading out on screen.
 	if((Event.m_Flags & IInput::FLAG_PRESS) && Event.m_Key == KEY_MOUSE_1 && g_Config.m_BcChatMediaPreview &&
 		(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK))
@@ -5225,7 +5225,7 @@ void CChat::OnRender()
 
 		float Blend = Now > Line.m_Time + 14 * time_freq() && !m_PrevShowChat ? 1.0f - (Now - Line.m_Time - 14 * time_freq()) / (2.0f * time_freq()) : 1.0f;
 
-		// BestClient: lift newly received messages from the bottom.
+		// 667 Client: lift newly received messages from the bottom.
 		float BcLineYOffset = 0.0f;
 		if(BcChatMessageAnimEnabled && g_Config.m_BcChatAnimationMs > 0 && Line.m_Time > 0)
 		{
@@ -5483,7 +5483,7 @@ void CChat::SendChat(int Team, const char *pLine)
 	// don't send empty messages
 	if(*str_utf8_skip_whitespaces(pLine) == '\0')
 		return;
-	// BestClient: fast practice consumes practice chat commands locally
+	// 667 Client: fast practice consumes practice chat commands locally
 	if(GameClient()->m_FastPractice.ConsumePracticeChatCommand(Team, pLine))
 		return;
 	if(GameClient()->m_VoiceChat.TryHandleChatCommand(pLine))

@@ -10,17 +10,17 @@ Speed
 Color
 == Farbe
 
-BestClient Links
-== BestClient-Links
+667 Client Links
+== 667 Client-Links
 
 Config Files
 == Konfigurationsdateien
 
-BestClient Settings
-== BestClient-Einstellungen
+667 Client Settings
+== 667 Client-Einstellungen
 
-BestClient Developers
-== BestClient-Entwickler
+667 Client Developers
+== 667 Client-Entwickler
 
 Hide Settings Tabs
 == Einstellungs-Tabs ausblenden
@@ -127,7 +127,7 @@ Off (default)
 Preset
 == Voreinstellung
 
-BestClient
+667 Client
 == 
 
 Discord
@@ -139,7 +139,7 @@ Telegram
 Check update
 == 
 
-BestClient %s is out!
+667 Client %s is out!
 == 
 
 Preparing update...
@@ -1210,7 +1210,7 @@ Commands in other layout
 Cinematic camera
 == 
 
-Use BestClient MasterServer
+Use 667 Client MasterServer
 == 
 
 Show player below indicator
@@ -1345,7 +1345,7 @@ Shop
 Website
 == 
 
-BestClient %s is available
+667 Client %s is available
 == 
 
 Downloading

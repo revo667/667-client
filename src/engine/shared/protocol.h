@@ -169,7 +169,7 @@ enum
 
 /**
  * Country codes in ISO 3166-1 numeric.
- * MINIMUM is extended below -1 to allow BestClient custom flags (X-WHITE, etc.).
+ * MINIMUM is extended below -1 to allow 667 Client custom flags (X-WHITE, etc.).
  */
 namespace CountryCode
 {

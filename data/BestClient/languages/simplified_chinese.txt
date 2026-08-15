@@ -388,7 +388,7 @@ Music Player / HUD alpha
 Mini
 == 迷你
 
-BestClient
+667 Client
 == 
 
 Discord
@@ -397,7 +397,7 @@ Discord
 Telegram
 == 
 
-BestClient %s is out!
+667 Client %s is out!
 == 
 
 Preparing update...
@@ -1282,7 +1282,7 @@ Focus mode bind
 Show points in tab
 == 
 
-Use BestClient MasterServer
+Use 667 Client MasterServer
 == 
 
 Lock team automatically after joining
@@ -1369,13 +1369,13 @@ Restart client now so component changes fully apply?
 Disabled components: %d
 == 
 
-BestClient Links
+667 Client Links
 == 
 
 Website
 == 
 
-BestClient %s is available
+667 Client %s is available
 == 
 
 Downloading
@@ -1390,10 +1390,10 @@ Open a dedicated component toggles page.
 Config Files
 == 
 
-BestClient Settings
+667 Client Settings
 == 
 
-BestClient Developers
+667 Client Developers
 == 
 
 Hide Settings Tabs

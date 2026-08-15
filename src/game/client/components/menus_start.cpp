@@ -277,7 +277,7 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 
 			if(ShowDownloadButton)
 			{
-				str_format(aUpdateBuf, sizeof(aUpdateBuf), Localize("BestClient %s is out!"), Updater()->GetLatestVersionString());
+				str_format(aUpdateBuf, sizeof(aUpdateBuf), Localize("667 Client %s is out!"), Updater()->GetLatestVersionString());
 				TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
 			}
 			else if(ShowUpdateProgress)
@@ -370,7 +370,7 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 		char aBestClientBuf[64];
 		str_format(aDDNetBuf, sizeof(aDDNetBuf), "DDNet %s", GAME_RELEASE_VERSION);
 		str_format(aTClientBuf, sizeof(aTClientBuf), "TClient %s", TCLIENT_VERSION);
-		str_format(aBestClientBuf, sizeof(aBestClientBuf), "BestClient %s", BESTCLIENT_VERSION);
+		str_format(aBestClientBuf, sizeof(aBestClientBuf), "667 Client %s", BESTCLIENT_VERSION);
 		Ui()->DoLabel(&VersionLine1, aDDNetBuf, 14.0f, TEXTALIGN_MR);
 		Ui()->DoLabel(&VersionLine2, aTClientBuf, 14.0f, TEXTALIGN_MR);
 		Ui()->DoLabel(&VersionLine3, aBestClientBuf, 14.0f, TEXTALIGN_MR);

@@ -955,7 +955,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterFriends ^= 1;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&g_Config.m_BrFilterBestclient, Localize("Show BestClient only"), g_Config.m_BrFilterBestclient, &Button))
+	if(DoButton_CheckBox(&g_Config.m_BrFilterBestclient, Localize("Show 667 Client only"), g_Config.m_BrFilterBestclient, &Button))
 		ToggleBestClientServerFilter();
 
 	View.HSplitTop(RowHeight, &Button, &View);
@@ -1691,7 +1691,7 @@ void CMenus::RenderServerbrowserBestClient(CUIRect View)
 	{
 		Button.VSplitRight(80.0f, &Button, &VersionsButton);
 	}
-	if(DoButton_CheckBox(&g_Config.m_BrFilterBestclient, Localize("Show BestClient only"), g_Config.m_BrFilterBestclient, &Button))
+	if(DoButton_CheckBox(&g_Config.m_BrFilterBestclient, Localize("Show 667 Client only"), g_Config.m_BrFilterBestclient, &Button))
 		ToggleBestClientServerFilter();
 
 	if(g_Config.m_BcClientIndicatorVersions)
@@ -1713,7 +1713,7 @@ void CMenus::RenderServerbrowserBestClient(CUIRect View)
 		AllBestClientPlayers += ServerBrowser()->SortedGet(i)->m_NumBestClientPlayers;
 
 	char aLabel[128];
-	str_format(aLabel, sizeof(aLabel), Localize("All BestClient players: %d"), AllBestClientPlayers);
+	str_format(aLabel, sizeof(aLabel), Localize("All 667 Client players: %d"), AllBestClientPlayers);
 	View.HSplitTop(RowHeight, &Button, &View);
 	Ui()->DoLabel(&Button, aLabel, FontSize, TEXTALIGN_ML);
 
@@ -1821,7 +1821,7 @@ void CMenus::RenderServerbrowserBestClient(CUIRect View)
 		return;
 	}
 
-	str_format(aLabel, sizeof(aLabel), Localize("BestClient players: %d"), pSelectedServer->m_NumBestClientPlayers);
+	str_format(aLabel, sizeof(aLabel), Localize("667 Client players: %d"), pSelectedServer->m_NumBestClientPlayers);
 	View.HSplitTop(RowHeight, &Button, &View);
 	Ui()->DoLabel(&Button, aLabel, FontSize, TEXTALIGN_ML);
 
@@ -1829,7 +1829,7 @@ void CMenus::RenderServerbrowserBestClient(CUIRect View)
 	if(!pSelectedServer->m_HasBestClientPlayers)
 	{
 		View.HSplitTop(RowHeight, &Button, &View);
-		Ui()->DoLabel(&Button, Localize("No BestClient users on the selected server"), FontSize, TEXTALIGN_MC);
+		Ui()->DoLabel(&Button, Localize("No 667 Client users on the selected server"), FontSize, TEXTALIGN_MC);
 		return;
 	}
 
@@ -2500,7 +2500,7 @@ void CMenus::RenderServerbrowserTabBar(CUIRect TabBar)
 		g_Config.m_UiToolboxPage = UI_TOOLBOX_PAGE_BESTCLIENT;
 	}
 	RenderCenteredBestClientTabIcon(Graphics(), BestClientTabButton, ColorRGBA(1.0f, 1.0f, 1.0f, 0.95f));
-	GameClient()->m_Tooltips.DoToolTip(&s_BestClientTabButton, &BestClientTabButton, Localize("BestClient"));
+	GameClient()->m_Tooltips.DoToolTip(&s_BestClientTabButton, &BestClientTabButton, Localize("667 Client"));
 
 	static CButtonContainer s_FriendsTabButton;
 	if(DoButton_MenuTab(&s_FriendsTabButton, FontIcon::HEART, g_Config.m_UiToolboxPage == UI_TOOLBOX_PAGE_FRIENDS, &FriendsTabButton, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_BROWSER_FRIENDS], &ColorInactive, &ColorActive))

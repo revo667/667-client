@@ -1233,7 +1233,7 @@ void CHud::RenderTextInfo()
 		str_format(aBuf, sizeof(aBuf), "%d", Client()->GetPredictionTime());
 		TextRender()->Text(m_Width - 10 - TextRender()->TextWidth(12, aBuf, -1, -1.0f), Showfps ? 20 : 5, 12, aBuf, -1.0f);
 	}
-	// BestClient
+	// 667 Client
 	if(GameClient()->m_FastPractice.Enabled())
 	{
 		constexpr const char *pLine1 = "practice mode";

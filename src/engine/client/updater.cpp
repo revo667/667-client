@@ -39,8 +39,8 @@ static bool StrEndsWithNoCase(const char *pStr, const char *pSuffix)
 	return str_comp_nocase(pStr + StrLen - SuffixLen, pSuffix) == 0;
 }
 
-static constexpr const char *GITHUB_RELEASES_URL = "https://api.github.com/repos/BestProjectTeam/BestClient/releases?per_page=10";
-static constexpr const char *GITHUB_LATEST_RELEASE_URL = "https://github.com/BestProjectTeam/BestClient/releases/latest";
+static constexpr const char *GITHUB_RELEASES_URL = "https://api.github.com/repos/revo667/667-client/releases?per_page=10";
+static constexpr const char *GITHUB_LATEST_RELEASE_URL = "https://github.com/revo667/667-client/releases/latest";
 #if defined(CONF_PLATFORM_ANDROID)
 static constexpr const char *UPDATE_ARCHIVE_PATH = "update/bestclient-release.apk";
 #else

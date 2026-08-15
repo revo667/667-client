@@ -1071,7 +1071,7 @@ void CClans::MaybeAutoRefresh()
 
 void CClans::MaybePushPresence(bool UiOpen)
 {
-	// Main-list online/playing status is reported by each BestClient to the clans API.
+	// Main-list online/playing status is reported by each 667 Client to the clans API.
 	// Unleashed players are filled server-side from the DDNet master only.
 	if(!m_LoggedIn || !InClan())
 		return;

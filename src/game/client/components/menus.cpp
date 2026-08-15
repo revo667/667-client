@@ -1163,7 +1163,7 @@ void CMenus::Render()
 		m_JoinTutorial.m_Queued = false;
 	}
 
-	// BestClient: auto-refresh the server browser list on a timer while a browser
+	// 667 Client: auto-refresh the server browser list on a timer while a browser
 	// tab is open. Uses the plain (non-forced) refresh path so it only re-polls the
 	// current list instead of re-requesting DDNet info and force-rebuilding the
 	// community cache every tick, which caused noticeable stutter with a short

@@ -398,7 +398,7 @@ void CClient::SendInput()
 
 		if(Size)
 		{
-			// BestClient: let the game layer sanitize the outgoing input copy (fast practice)
+			// 667 Client: let the game layer sanitize the outgoing input copy (fast practice)
 			int aSendData[MAX_INPUT_SIZE];
 			dbg_assert(Size <= (int)sizeof(aSendData), "input size exceeds send buffer");
 			mem_copy(aSendData, m_aInputs[i][m_aCurrentInput[i]].m_aData, (size_t)Size);

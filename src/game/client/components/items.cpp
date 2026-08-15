@@ -632,7 +632,7 @@ void CItems::OnRender()
 
 	if(UsePredicted)
 	{
-		// BestClient: practice projectiles/lasers live in the copied practice world
+		// 667 Client: practice projectiles/lasers live in the copied practice world
 		CGameWorld &PrevWorld = GameClient()->m_FastPractice.Active() ? GameClient()->m_FastPractice.PracticePrevWorld() : GameClient()->m_PrevPredictedWorld;
 		for(auto *pProj = (CProjectile *)PrevWorld.FindFirst(CGameWorld::ENTTYPE_PROJECTILE); pProj; pProj = (CProjectile *)pProj->NextEntity())
 		{

@@ -228,7 +228,7 @@ int CControls::SnapInput(int *pData)
 		m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PLAYERFLAG_CHATTING;
 	else if(GameClient()->m_Menus.IsActive())
 		m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PLAYERFLAG_IN_MENU;
-	else if(GameClient()->m_SwapTimer.IsInputFrozen()) // BestClient swap peek spectate
+	else if(GameClient()->m_SwapTimer.IsInputFrozen()) // 667 Client swap peek spectate
 		m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = 0;
 	else
 		m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PLAYERFLAG_PLAYING;
@@ -460,7 +460,7 @@ bool CControls::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
 	if(GameClient()->IsWorldPaused())
 		return false;
 
-	if(GameClient()->m_SwapTimer.IsInputFrozen()) // BestClient
+	if(GameClient()->m_SwapTimer.IsInputFrozen()) // 667 Client
 		return true;
 
 	if(CursorType == IInput::CURSOR_JOYSTICK && g_Config.m_InpControllerAbsolute && GameClient()->m_Snap.m_pGameInfoObj && !GameClient()->m_Snap.m_SpecInfo.m_Active)

@@ -4,7 +4,7 @@
 
 ##### translated strings #####
 
-BestClient
+667 Client
 == 
 
 Discord
@@ -16,7 +16,7 @@ Telegram
 Check update
 == 
 
-BestClient %s is out!
+667 Client %s is out!
 == 
 
 Preparing update...
@@ -1195,7 +1195,7 @@ Commands in other layout
 Cinematic camera
 == 
 
-Use BestClient MasterServer
+Use 667 Client MasterServer
 == 
 
 Show player below indicator
@@ -1327,13 +1327,13 @@ Fun
 Shop
 == 
 
-BestClient Links
+667 Client Links
 == 
 
 Website
 == 
 
-BestClient %s is available
+667 Client %s is available
 == 
 
 Downloading
@@ -1354,10 +1354,10 @@ Open a dedicated component toggles page.
 Config Files
 == 
 
-BestClient Settings
+667 Client Settings
 == 
 
-BestClient Developers
+667 Client Developers
 == 
 
 Hide Settings Tabs

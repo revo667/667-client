@@ -5,8 +5,8 @@
 ##### /authors #####
 
 ##### translated strings #####
-BestClient
-== BestClient
+667 Client
+== 667 Client
 
 Info
 == Información
@@ -53,8 +53,8 @@ No
 Color
 == Color
 
-BestClient Links
-== Enlaces BestClient
+667 Client Links
+== Enlaces 667 Client
 
 Discord
 == Discord
@@ -65,11 +65,11 @@ Website
 Config Files
 == Archivos de configuración
 
-BestClient Settings
-== Ajustes de BestClient
+667 Client Settings
+== Ajustes de 667 Client
 
-BestClient Developers
-== Desarrolladores de BestClient
+667 Client Developers
+== Desarrolladores de 667 Client
 
 Hide Settings Tabs
 == Ocultar pestañas de ajustes
@@ -89,7 +89,7 @@ Telegram
 Check update
 == 
 
-BestClient %s is out!
+667 Client %s is out!
 == 
 
 Preparing update...
@@ -1220,7 +1220,7 @@ Commands in other layout
 Cinematic camera
 == 
 
-Use BestClient MasterServer
+Use 667 Client MasterServer
 == 
 
 Show player below indicator
@@ -1346,7 +1346,7 @@ Fun
 Shop
 == 
 
-BestClient %s is available
+667 Client %s is available
 == 
 
 Downloading

@@ -52,6 +52,8 @@
 				</array>
 			</dict>
 		</array>
+		<key>NSAppleEventsUsageDescription</key>
+		<string>Allows the music player HUD to show the track currently playing in Spotify or Music, and to skip or pause it.</string>
 		<key>NSHighResolutionCapable</key>
 		<true/>
 		<key>NSPrefersDisplaySafeAreaCompatibilityMode</key>
