@@ -20,7 +20,7 @@ static constexpr float EMOTICON_CENTER_RADIUS = 40.0f;
 
 CEmoticon::CEmoticon()
 {
-	CEmoticon::OnReset();
+	OnReset();
 }
 
 void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
@@ -38,13 +38,11 @@ void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
 	{
 		// Key released: close whichever wheel is currently showing (the user may have switched
 		// mid-hold via the center button) and let its own close/execute logic run.
-		if(pSelf->GameClient()->m_GifWheel.IsActive())
-			pSelf->GameClient()->m_GifWheel.OnRelease();
 		pSelf->m_Active = false;
 		return;
 	}
 
-	if(pSelf->GameClient()->m_BindWheel.IsActive() || pSelf->GameClient()->m_GifWheel.IsActive())
+	if(pSelf->GameClient()->m_BindWheel.IsActive())
 		return;
 
 	pSelf->m_PreferGifWheel = false;
@@ -247,6 +245,8 @@ void CEmoticon::OnRender()
 	const vec2 ScreenCenter = Screen.Center();
 
 	Ui()->MapScreen();
+
+	Graphics()->BlendNormal();
 
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();

@@ -2,7 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "menus_settings_controls.h"
 
-#include <base/str.h>
+#include <base/math.h>
+#include <base/system.h>
 
 #include <engine/font_icons.h>
 #include <engine/graphics.h>
@@ -18,7 +19,6 @@
 #include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
 
-#include <algorithm>
 #include <functional>
 #include <string>
 #include <vector>
@@ -188,10 +188,12 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			Localize("Reset"), Localize("Cancel"), &CMenus::ResetSettingsControls);
 	}
 
+	vec2 ScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ScrollUnit = 6.0f * BUTTON_HEIGHT;
-	ScrollParams.m_ForceShowScrollbar = true;
-	m_SettingsScrollRegion.Begin(&MainView, &ScrollParams);
+	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+	m_SettingsScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
+	MainView.y += ScrollOffset.y;
 
 	CUIRect LeftColumn, RightColumn;
 	MainView.VSplitMid(&LeftColumn, &RightColumn, MARGIN);
@@ -726,7 +728,7 @@ void CMenusSettingsControls::RenderJoystickAxisPicker(CUIRect View)
 	Ui()->DoLabel(&AimBind, Localize("Aim bind"), FONT_SIZE, TEXTALIGN_MC);
 
 	IInput::IJoystick *pJoystick = Input()->GetActiveJoystick();
-	for(int i = 0; i < std::min(pJoystick->GetNumAxes(), (int)NUM_JOYSTICK_AXES); i++)
+	for(int i = 0; i < std::min<int>(pJoystick->GetNumAxes(), NUM_JOYSTICK_AXES); i++)
 	{
 		View.HSplitTop(BUTTON_SPACING, nullptr, &View);
 		View.HSplitTop(BUTTON_HEIGHT, &Row, &View);

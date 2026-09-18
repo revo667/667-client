@@ -37,7 +37,7 @@ public:
 constexpr auto SAVES_FILE = "ddnet-saves.txt";
 
 constexpr int MAX_LINE_LENGTH = 256; // Global constant for chat line length
-class IHttpRequest;
+class CHttpRequest;
 
 // Shared with CGifBubbles so the above-head bubble matches the chat preview's rounded style.
 void DrawRoundedMediaPreview(IGraphics *pGraphics, const IGraphics::CTextureHandle &Texture, float X, float Y, float W, float H, float Rounding, float Alpha);
@@ -122,7 +122,7 @@ class CChat : public CComponent
 		std::vector<std::string> m_vMediaCandidates;
 		int m_MediaCandidateIndex;
 		int m_MediaRetryCount;
-		std::shared_ptr<IHttpRequest> m_pMediaRequest;
+		std::shared_ptr<CHttpRequest> m_pMediaRequest;
 		std::shared_ptr<CMediaDecodeJob> m_pMediaDecodeJob;
 		std::optional<SMediaDecodedFrames> m_OptMediaDecodedFrames;
 		int m_MediaUploadIndex;
@@ -276,6 +276,7 @@ class CChat : public CComponent
 	CButtonContainer m_TranslateSettingsButton;
 	CButtonContainer m_TranslateSettingsEnableButton;
 	CButtonContainer m_TranslateSettingsEnableOutgoingButton;
+	CButtonContainer m_TranslateSettingsStripPunctuationButton;
 	SPopupMenuId m_TranslateSettingsPopupId;
 	bool m_TranslateButtonPressed;
 	bool m_TranslateButtonRectValid;
@@ -311,7 +312,6 @@ class CChat : public CComponent
 	bool HasAllowedMediaCandidates(const CLine &Line) const;
 	bool ShouldDisplayMediaSlot(const CLine &Line) const;
 	bool ShouldHideMediaPreview(const CLine &Line) const;
-	bool ShouldHideNsfwMedia(const CLine &Line) const;
 	std::string MediaPlaceholderText(const CLine &Line) const;
 	std::string BuildVisibleMessageText(const CLine &Line, bool UseMediaLabelWhenEmpty) const;
 	std::string BuildPlainTextLine(const CLine &Line, int HoveredTranslateLineIndex = -1) const;

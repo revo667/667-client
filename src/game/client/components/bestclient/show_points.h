@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-class IHttpRequest;
+class CHttpRequest;
 
 class CShowPoints : public CComponent
 {
@@ -20,6 +20,7 @@ public:
 		None = 0,
 		Ddnet,
 		Ego,
+		Legit,
 	};
 
 	int Sizeof() const override { return sizeof(*this); }
@@ -38,7 +39,7 @@ public:
 private:
 	enum
 	{
-		PROVIDER_COUNT = 2, // Ddnet, Ego
+		PROVIDER_COUNT = 3, // Ddnet, Ego, Legit
 		MAX_CONCURRENT = 3,
 		MAX_QUEUE = 64,
 		SUCCESS_TTL_MS = 10 * 60 * 1000,
@@ -58,7 +59,7 @@ private:
 	{
 		std::string m_Name;
 		EProvider m_Provider = EProvider::None;
-		std::shared_ptr<IHttpRequest> m_pTask;
+		std::shared_ptr<CHttpRequest> m_pTask;
 	};
 
 	std::unordered_map<std::string, SCacheEntry> m_aCache[PROVIDER_COUNT];
@@ -68,8 +69,6 @@ private:
 	mutable char m_aCommunityIdBuf[COMMUNITY_ID_LENGTH] = "";
 
 	static int ProviderIndex(EProvider Provider);
-	static void MakeLowerAscii(char *pBuf, int Size, const char *pSrc);
-
 	const char *CurrentCommunityId() const;
 	bool IsCacheFresh(const SCacheEntry &Entry) const;
 	bool IsQueuedOrInFlight(const std::string &Name) const;

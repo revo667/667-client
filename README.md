@@ -14,7 +14,7 @@
 BestClient is a customized DDNet client built around native BestClient systems instead of a thin reskin.
 The project adds its own rendering stack, input tools, social systems, editors, and UI modules while staying compatible with DDNet servers.
 
-The client currently ships with **281** `bc_*` config variables, five BestClient settings tabs, integrated voice chat, a live HUD editor, clans, collaborative multimapping, Fast Practice, and a Fun tab with mini-games.
+The client currently ships with more than **300** `bc_*` config variables, five BestClient settings tabs, integrated voice chat, a live HUD editor, clans, collaborative multimapping, Fast Practice, and native mini-games opened from the Info tab.
 
 ## Links
 
@@ -22,7 +22,7 @@ The client currently ships with **281** `bc_*` config variables, five BestClient
 - Telegram: [t.me/bestddnet](https://t.me/bestddnet)
 - Discord: [discord.gg/bestclient](https://discord.gg/bestclient)
 
-## Screenshots
+## Screenshots (taken in version 2.0)
 
 ### Main menu
 
@@ -48,7 +48,7 @@ The client currently ships with **281** `bc_*` config variables, five BestClient
   <img src="docs/screenshots/others_2.jpg" width="32%" alt="Others 2" />
 </p>
 
-#### Fun · Info
+#### Games · Info
 
 <p align="center">
   <img src="docs/screenshots/fun.jpg" width="49%" alt="Fun" />
@@ -104,13 +104,12 @@ The client currently ships with **281** `bc_*` config variables, five BestClient
 
 ### Visuals
 
-- **Chat Media** — inline photo/GIF previews, domain filter, Gif Wheel, CherryGifs, above-head gif bubble
+- **Chat Media** — inline photo/GIF previews, domain filter, above-head gif bubble
 - **Gradient** — gradient nicknames, clans, skins, or all text (skin / custom / rainbow)
 - **Hook Combo** — combo popups and sounds (hook / hammer / both)
 - **Jelly Tee** — tee deformation (self / others)
 - **3D Particles** — cubes/hearts/mixed, glow, player push
 - **Media Background** — video/image in menus and ingame background
-- **Eye Comfort** — warm screen overlay
 - **Sweat Weapon (Crystal Laser)** — crystal laser and shotgun effects
 - **Flying Name Plates** — kite-style trailing name plates
 - **Motion Blur** — previous-frame blending (BETA)
@@ -137,9 +136,8 @@ Demo playback only (Demo Player): **Camera Drift**, **Dynamic FOV**.
 
 ### Others
 
-- **Misc** — auto update, layout, silent typing, cinematic camera, better spectate (`+specpause` radio), spec moved notify, extend zoom, UI/wheel/scoreboard scale, and more
-- **Rollback Demo** — replay rollback with configurable length
-- **Browser Utils** — auto server list refresh, short KoG server names
+- **Misc** — auto update, silent typing, cinematic camera, better spectate (`+specpause` radio), spec moved notify, extend zoom, UI/wheel/scoreboard scale, and more
+- **Browser Utils** — auto server list refresh, short EGO/KoG server names
 - **Chat Filter** — regex/censor list, player whitelist (from RushieClient)
 - **Voice Binds** — push-to-talk and voice moderation key
 - **Voice Chat** — Opus PTT/VAD, radius/team0, per-player volume/mute, voice mod tab in admin panel
@@ -154,7 +152,9 @@ Demo playback only (Demo Player): **Camera Drift**, **Dynamic FOV**.
 - **Fast Practice** — local practice world with dummy ghost, practice chat commands, `fast_practice_toggle`
 - **Assets Editor** — mix assets, prepare exports, jump into the name plate workflow from a fullscreen editor
 
-### Fun
+### Games
+
+The mini-games are opened with the **Games** button in the **Info** tab.
 
 - Casino
 - Snake
@@ -201,7 +201,7 @@ cmake --build headless --target run_tests
 
 ## Full `bc_*` config list
 
-Source: `src/engine/shared/config_variables_bestclient.h` (281 variables).
+Source: `src/engine/shared/config_variables_bestclient.h` (more than 300 variables).
 
 <details>
 <summary>Expand full list</summary>
@@ -277,8 +277,6 @@ bc_chat_open_animation_ms
 bc_chat_save_draft
 bc_chat_typing_animation
 bc_chat_typing_animation_ms
-bc_cherrygifs_show_nsfw
-bc_cherrygifs_sort_top
 bc_cinematic_camera
 bc_cinematic_camera_strength
 bc_clans_allow_local_dev
@@ -312,14 +310,11 @@ bc_dynamic_fov_amount
 bc_dynamic_fov_smoothness
 bc_enable_censor_list
 bc_extend_zoom
-bc_eye_comfort
-bc_eye_comfort_strength
 bc_f_input_amount
 bc_f_input_others
 bc_fast_actions
 bc_filter_change_whole_word
 bc_finish_prediction
-bc_finish_prediction_analyse_tele_freeze
 bc_finish_prediction_show_always
 bc_finish_prediction_show_millis
 bc_finish_prediction_show_percentage
@@ -337,7 +332,6 @@ bc_gif_bubble_duration_ms
 bc_gif_bubble_offset_y
 bc_gores_mode
 bc_gores_mode_disable_weapons
-bc_hide_hud_in_settings
 bc_high_process_priority
 bc_hook_combo
 bc_hook_combo_mode
@@ -437,11 +431,9 @@ bc_regex_player_whitelist
 bc_saiko_input_amount
 bc_saiko_input_others
 bc_scoreboard_scale
-bc_scoreboard_team_gradients
 bc_self_time_cp
 bc_self_time_cp_color
 bc_self_time_cp_place_mode
-bc_settings_layout
 bc_show_blocked_word_in_console
 bc_show_correct_checkpoint
 bc_show_real_hitbox
@@ -501,7 +493,7 @@ Plain-text export: [docs/bc_config_list.txt](docs/bc_config_list.txt).
 Some BestClient features were adapted from other DDNet client forks:
 
 - **Entity-Client** ([FoxNet-DDNet/Entity-Client-DDNet](https://github.com/FoxNet-DDNet/Entity-Client-DDNet)) — Physic Balls, Better Spectate (`+specpause`), Chat Bubbles
-- **RushieClient** ([RushieClient/RushieClient-ddnet](https://github.com/RushieClient/RushieClient-ddnet)) — Chat Filter
+- **RushieClient** ([RushieClient/RushieClient-ddnet](https://github.com/RushieClient/RushieClient-ddnet)) — Chat Filter, Edge Info, Find Teleport, Find Finish
 
 ## License
 

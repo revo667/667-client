@@ -1,7 +1,6 @@
 /* Copyright © 2026 BestProject Team */
 #include "gif_bubbles.h"
 
-#include <base/color.h>
 #include <base/time.h>
 
 #include <engine/graphics.h>
@@ -50,8 +49,6 @@ void CGifBubbles::OnRender()
 		if(!pLine || pLine->m_MediaState != CChat::EMediaState::READY || pLine->m_vMediaFrames.empty())
 			continue;
 		if(!GameClient()->m_aClients[ClientId].m_Active || !GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
-			continue;
-		if(Chat.ShouldHideNsfwMedia(*pLine))
 			continue;
 
 		const vec2 RenderPos = GameClient()->m_aClients[ClientId].m_RenderPos;

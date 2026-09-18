@@ -422,7 +422,7 @@ void CTClient::OnConsoleInit()
 	Console()->Register("emote_cycle", "", CFGFLAG_CLIENT, ConEmoteCycle, this, "Cycle through emotes");
 
 	Console()->Chain(
-		"tc_allow_any_res", [](IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData) {
+		"tc_allow_any_resolution", [](IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData) {
 			pfnCallback(pResult, pCallbackUserData);
 			((CTClient *)pUserData)->SetForcedAspect();
 		},
@@ -667,6 +667,7 @@ void CTClient::OnStateChange(int OldState, int NewState)
 void CTClient::OnNewSnapshot()
 {
 	SetForcedAspect();
+
 	// Update volleyball
 	bool IsVolleyBall = false;
 	if(g_Config.m_TcVolleyBallBetterBall > 0 && g_Config.m_TcVolleyBallBetterBallSkin[0] != '\0')
@@ -824,11 +825,7 @@ void CTClient::RenderCenterLines()
 	Graphics()->TextureClear();
 
 	float X0, Y0, X1, Y1;
-	const CScreenRect ScreenRect = Graphics()->GetScreen();
-	X0 = ScreenRect.m_TopLeft.x;
-	Y0 = ScreenRect.m_TopLeft.y;
-	X1 = ScreenRect.m_BottomRight.x;
-	Y1 = ScreenRect.m_BottomRight.y;
+	Graphics()->GetScreen(&X0, &Y0, &X1, &Y1);
 	const float XMid = (X0 + X1) / 2.0f;
 	const float YMid = (Y0 + Y1) / 2.0f;
 

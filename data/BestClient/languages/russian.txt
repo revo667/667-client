@@ -968,9 +968,6 @@ Show percentage
 Show always
 == Показывать всегда
 
-Analyse teleports/freeze
-== Анализ телепортов/фриза
-
 Lock team automatically after joining
 == Автоматически блокировать команду после входа
 
@@ -1025,8 +1022,11 @@ Browser Utils
 Auto server list refresh
 == Автообновление списка серверов
 
-Use short KoG server name
-== Использовать сокращённое имя KoG-серверов
+Short EGO/KoG server name
+== Сокращённое имя EGO/KoG-серверов
+
+Show finished map on EGO
+== Показывать пройденные карты на EGO
 
 Chat Media
 == Медиа в чате
@@ -2294,12 +2294,6 @@ unknown argument for /hitothers
 
 Connection error, see console
 == Ошибка подключения. Подробности в консоли.
-
-CherryGifs error %d: %s
-== Ошибка CherryGifs %d: %s
-
-CherryGifs HTTP error %d
-== Ошибка HTTP CherryGifs: %d
 
 Malformed response (not an object)
 == Сервер вернул некорректный ответ.

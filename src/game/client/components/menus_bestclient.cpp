@@ -16,6 +16,7 @@
 #include <game/client/components/media_decoder.h>
 #include <game/client/components/menus.h>
 #include <game/client/gameclient.h>
+#include <game/client/lineinput.h>
 #include <game/client/ui.h>
 #include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
@@ -47,6 +48,80 @@ static void UpdateModuleRevealPhase(float &Phase, bool Expanded, float Dt)
 		Phase = Expanded ? 1.0f : 0.0f;
 }
 
+void CMenus::RenderSettingsBestClientChatMediaBlock(CUIRect &Column)
+{
+	const float LineSize = 20.0f;
+	const float MarginSmall = 5.0f;
+	const float HeadlineFontSize = 20.0f;
+	const float MarginBetweenViews = 30.0f;
+	const float BlockPadding = MarginBetweenViews * 0.6666f;
+	const ColorRGBA BlockColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f);
+	static float RevealPhase = 0.0f;
+	const bool Expanded = g_Config.m_BcChatMediaPreview != 0;
+	UpdateModuleRevealPhase(RevealPhase, Expanded, Client()->RenderFrameTime());
+	const float HeaderHeight = 3.0f * LineSize + 2.0f * MarginSmall;
+	const float DomainsHeight = g_Config.m_BcChatMediaContentFilter ? 2.0f * (MarginSmall + LineSize) : 0.0f;
+	const float ExpandedHeight = (5.0f * (MarginSmall + LineSize) + DomainsHeight) * RevealPhase;
+
+	CUIRect Block;
+	Column.HSplitTop(HeaderHeight + ExpandedHeight, &Block, &Column);
+	CUIRect BlockBg = Block;
+	BlockBg.w += BlockPadding;
+	BlockBg.h += BlockPadding;
+	BlockBg.x -= BlockPadding * 0.5f;
+	BlockBg.y -= BlockPadding * 0.5f;
+	BlockBg.Draw(BlockColor, IGraphics::CORNER_ALL, 10.0f);
+
+	CUIRect Content, Label, Button;
+	Block.HSplitTop(LineSize, &Label, &Block);
+	Ui()->DoLabel(&Label, Localize("Chat Media"), HeadlineFontSize, TEXTALIGN_ML);
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+
+	CChat &Chat = GameClient()->m_Chat;
+	Block.HSplitTop(LineSize, &Content, &Block);
+	if(DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcChatMediaPreview, Localize("Render media previews from chat links"), &g_Config.m_BcChatMediaPreview, &Content, LineSize))
+		Chat.RebuildChat();
+
+	if(ExpandedHeight <= 0.5f)
+		return;
+
+	CUIRect Visible = Block;
+	Visible.h = ExpandedHeight;
+	Ui()->ClipEnable(&Visible);
+	const auto RebuildAfterToggle = [&](const char *pLabel, int *pValue) {
+		Block.HSplitTop(MarginSmall, nullptr, &Block);
+		Block.HSplitTop(LineSize, &Content, &Block);
+		if(DoButton_CheckBoxAutoVMarginAndSet(pValue, Localize(pLabel), pValue, &Content, LineSize))
+			Chat.RebuildChat();
+	};
+	RebuildAfterToggle("Show photos in chat media", &g_Config.m_BcChatMediaPhotos);
+	RebuildAfterToggle("Show GIFs in chat media", &g_Config.m_BcChatMediaGifs);
+	RebuildAfterToggle("Content filtering", &g_Config.m_BcChatMediaContentFilter);
+
+	if(g_Config.m_BcChatMediaContentFilter)
+	{
+		Block.HSplitTop(MarginSmall, nullptr, &Block);
+		Block.HSplitTop(LineSize, &Label, &Block);
+		Ui()->DoLabel(&Label, Localize("Allowed media domains"), 12.0f, TEXTALIGN_ML);
+		Block.HSplitTop(MarginSmall, nullptr, &Block);
+		Block.HSplitTop(LineSize, &Button, &Block);
+		static CLineInput DomainsInput(g_Config.m_BcChatMediaAllowedDomains, sizeof(g_Config.m_BcChatMediaAllowedDomains));
+		DomainsInput.SetEmptyText("tenor.com; imgur.com; giphy.com; gifs.teeworlds.xyz");
+		if(Ui()->DoClearableEditBox(&DomainsInput, &Button, 14.0f))
+			Chat.RebuildChat();
+	}
+
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Button, &Block);
+	if(Ui()->DoScrollbarOption(&g_Config.m_BcChatMediaPreviewMaxWidth, &g_Config.m_BcChatMediaPreviewMaxWidth, &Button, Localize("Media preview width"), 120, 400))
+		Chat.RebuildChat();
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Label, &Block);
+	static CButtonContainer HideMediaBindReader, HideMediaBindClear;
+	DoLine_KeyReader(Label, HideMediaBindReader, HideMediaBindClear, Localize("Hide media bind"), "toggle_chat_media_hidden");
+	Ui()->ClipDisable();
+}
+
 static void DrawBcMenuBadge(IGraphics *pGraphics, CUi *pUi, ITextRender *pTextRender, CUIRect *pRow, const char *pText, float FontSize, const ColorRGBA &Top, const ColorRGBA &Bottom, float Gap)
 {
 	const float BadgeWidth = pTextRender->TextWidth(FontSize, pText) + 10.0f;
@@ -68,6 +143,8 @@ enum
 	NUM_BESTCLIENT_TABS,
 };
 
+static int s_CurBestClientTab = BESTCLIENT_TAB_VISUALS;
+
 void CMenus::RenderSettingsBestClient(CUIRect MainView)
 {
 	// Match original old-layout: shift content up past the 20px margin so tab bar
@@ -75,7 +152,6 @@ void CMenus::RenderSettingsBestClient(CUIRect MainView)
 	MainView.y -= 20.0f;
 	MainView.h += 20.0f;
 
-	static int s_CurTab = BESTCLIENT_TAB_VISUALS;
 	static CButtonContainer s_aPageTabs[NUM_BESTCLIENT_TABS] = {};
 
 	MainView.HSplitTop(8.0f, nullptr, &MainView);
@@ -98,7 +174,7 @@ void CMenus::RenderSettingsBestClient(CUIRect MainView)
 	};
 
 	auto IsTabHidden = [&](int Tab) {
-		return Tab != BESTCLIENT_TAB_INFO && IsBestClientTabFlagSet(g_Config.m_BcBestClientSettingsTabs, Tab);
+		return (Tab == BESTCLIENT_TAB_FUN && s_CurBestClientTab != BESTCLIENT_TAB_FUN) || (Tab != BESTCLIENT_TAB_INFO && Tab != BESTCLIENT_TAB_FUN && IsBestClientTabFlagSet(g_Config.m_BcBestClientSettingsTabs, Tab));
 	};
 
 	int TabCount = 0;
@@ -114,13 +190,13 @@ void CMenus::RenderSettingsBestClient(CUIRect MainView)
 
 	if(FirstVisibleTab == -1)
 	{
-		s_CurTab = BESTCLIENT_TAB_INFO;
+		s_CurBestClientTab = BESTCLIENT_TAB_INFO;
 		FirstVisibleTab = BESTCLIENT_TAB_INFO;
 		TabCount = 1;
 	}
 
-	if(s_CurTab < BESTCLIENT_TAB_VISUALS || s_CurTab >= NUM_BESTCLIENT_TABS || IsTabHidden(s_CurTab))
-		s_CurTab = FirstVisibleTab;
+	if(s_CurBestClientTab < BESTCLIENT_TAB_VISUALS || s_CurBestClientTab >= NUM_BESTCLIENT_TABS || IsTabHidden(s_CurBestClientTab))
+		s_CurBestClientTab = FirstVisibleTab;
 
 	const float TabWidth = TabBar.w / (float)TabCount;
 	int VisibleIndex = 0;
@@ -131,22 +207,22 @@ void CMenus::RenderSettingsBestClient(CUIRect MainView)
 
 		TabBar.VSplitLeft(TabWidth, &TabButton, &TabBar);
 		const int Corners = VisibleIndex == 0 ? IGraphics::CORNER_L : (VisibleIndex == TabCount - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
-		if(DoButton_MenuTab(&s_aPageTabs[Tab], apTabNames[Tab], s_CurTab == Tab, &TabButton, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
-			s_CurTab = Tab;
+		if(DoButton_MenuTab(&s_aPageTabs[Tab], apTabNames[Tab], s_CurBestClientTab == Tab, &TabButton, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+			s_CurBestClientTab = Tab;
 		VisibleIndex++;
 	}
 
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
 
-	if(s_CurTab == BESTCLIENT_TAB_VISUALS)
+	if(s_CurBestClientTab == BESTCLIENT_TAB_VISUALS)
 		RenderSettingsBestClientVisuals(MainView);
-	else if(s_CurTab == BESTCLIENT_TAB_GAMEPLAY)
+	else if(s_CurBestClientTab == BESTCLIENT_TAB_GAMEPLAY)
 		RenderSettingsBestClientGameplay(MainView);
-	else if(s_CurTab == BESTCLIENT_TAB_OTHERS)
+	else if(s_CurBestClientTab == BESTCLIENT_TAB_OTHERS)
 		RenderSettingsBestClientOthers(MainView);
-	else if(s_CurTab == BESTCLIENT_TAB_FUN)
+	else if(s_CurBestClientTab == BESTCLIENT_TAB_FUN)
 		RenderSettingsBestClientFun(MainView);
-	else if(s_CurTab == BESTCLIENT_TAB_INFO)
+	else if(s_CurBestClientTab == BESTCLIENT_TAB_INFO)
 		RenderSettingsBestClientInfo(MainView);
 }
 
@@ -178,8 +254,10 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 	vec2 VisualsScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams VisualsScrollParams;
 	VisualsScrollParams.m_ScrollUnit = 60.0f;
+	VisualsScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	VisualsScrollParams.m_ScrollbarMargin = 5.0f;
-	s_VisualsScrollRegion.Begin(&MainView, &VisualsScrollParams);
+	s_VisualsScrollRegion.Begin(&MainView, &VisualsScrollOffset, &VisualsScrollParams);
+	MainView.y += VisualsScrollOffset.y;
 	MainView.VSplitRight(5.0f, &MainView, nullptr);
 	MainView.VSplitLeft(5.0f, nullptr, &MainView);
 
@@ -272,7 +350,7 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 
 		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 		MainView.HSplitTop(LineSize, &Button, &MainView);
-		DoSliderWithScaledValue(&g_Config.m_BcChatBubbleShowTime, &g_Config.m_BcChatBubbleShowTime, &Button, Localize("Show for"), 200, 1000, 100, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "s");
+		DoSliderWithDividedValue(&g_Config.m_BcChatBubbleShowTime, &g_Config.m_BcChatBubbleShowTime, &Button, Localize("Show for"), 100, 1000, 100, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "s");
 
 		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 		MainView.HSplitTop(LineSize, &Button, &MainView);
@@ -325,8 +403,9 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 	static float s_GradientRevealPhase = 0.0f;
 	UpdateModuleRevealPhase(s_GradientRevealPhase, GradientShowModeOptions, Client()->RenderFrameTime());
 	const float GradientHeaderHeight = LineSize + MarginSmall + 4.0f * LineSize;
-	// Expanded: animate speed + mode label/buttons (+ color count label/buttons + pickers when custom)
-	const float GradientExpandedTargetHeight = MarginSmall + LineSize + MarginSmall + LineSize + LineSize + (GradientShowCustomColors ? MarginSmall + LineSize + LineSize + MarginSmall + GradientCustomColorCount * (GradientColorPickerLineSize + GradientColorPickerSpacing) : 0.0f);
+	const float GradientTargetRadioHeight = 2.0f + LineSize;
+	// Expanded: animate speed + mode label/buttons + target radio (+ color count label/buttons + pickers when custom)
+	const float GradientExpandedTargetHeight = MarginSmall + LineSize + MarginSmall + LineSize + LineSize + MarginSmall + GradientTargetRadioHeight + (GradientShowCustomColors ? MarginSmall + LineSize + LineSize + MarginSmall + GradientCustomColorCount * (GradientColorPickerLineSize + GradientColorPickerSpacing) : 0.0f);
 	const float GradientExpandedHeight = GradientExpandedTargetHeight * BCUiAnimations::EaseOutCubic(s_GradientRevealPhase);
 	const float GradientBlockHeight = GradientHeaderHeight + GradientExpandedHeight;
 
@@ -361,6 +440,7 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 		g_Config.m_BcNameplateGradientSkin = DefaultConfig::BcNameplateGradientSkin;
 		g_Config.m_BcNameplateGradientEverything = DefaultConfig::BcNameplateGradientEverything;
 		g_Config.m_BcNameplateGradientAnimateSpeed = DefaultConfig::BcNameplateGradientAnimateSpeed;
+		g_Config.m_BcNameplateGradientTarget = DefaultConfig::BcNameplateGradientTarget;
 	}
 	GradientTitleLabel.VSplitRight(MarginSmall, &GradientTitleLabel, nullptr);
 	Ui()->DoLabel(&GradientTitleLabel, Localize("Gradient"), HeadlineFontSize, TEXTALIGN_ML);
@@ -405,6 +485,14 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 			if(DoButton_Menu(&s_GradientModeRainbow, Localize("Rainbow"), g_Config.m_BcNameplateGradientMode == BC_GRADIENT_MODE_RAINBOW, &RainbowButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
 				g_Config.m_BcNameplateGradientMode = BC_GRADIENT_MODE_RAINBOW;
 		}
+
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		static std::vector<CButtonContainer> s_vGradientTargetButtons = {{}, {}, {}};
+		DoLine_RadioMenu(MainView, Localize("Apply to", "Gradient"),
+			s_vGradientTargetButtons,
+			{Localize("Own", "Gradient"), Localize("Others", "Gradient"), Localize("All", "Gradient")},
+			{BC_GRADIENT_TARGET_OWN, BC_GRADIENT_TARGET_OTHERS, BC_GRADIENT_TARGET_ALL},
+			g_Config.m_BcNameplateGradientTarget);
 
 		if(GradientShowCustomColors)
 		{
@@ -793,7 +881,7 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 		return 0;
 	};
 
-	Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
+	Storage()->CreateFolder("BestClient", IStorage::TYPE_SAVE);
 	Storage()->CreateFolder("BestClient/backgrounds", IStorage::TYPE_SAVE);
 
 	static std::vector<std::string> s_vMenuMediaFileLabels;
@@ -865,7 +953,7 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 	static CButtonContainer s_MenuMediaFolderButton;
 	if(Ui()->DoButton_FontIcon(&s_MenuMediaFolderButton, FontIcon::FOLDER, 0, &MediaFolderButton, BUTTONFLAG_LEFT))
 	{
-		Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
+		Storage()->CreateFolder("BestClient", IStorage::TYPE_SAVE);
 		Storage()->CreateFolder("BestClient/backgrounds", IStorage::TYPE_SAVE);
 		char aBuf[IO_MAX_PATH_LENGTH];
 		Storage()->GetCompletePath(IStorage::TYPE_SAVE, "BestClient/backgrounds", aBuf, sizeof(aBuf));
@@ -897,53 +985,162 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 	Ui()->DoLabel(&Button, pMediaStatusText, 11.0f, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 
-	// Eye comfort (left column block)
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
-
-	const bool EyeComfortExpanded = g_Config.m_BcEyeComfort != 0;
-	static float s_EyeComfortRevealPhase = 0.0f;
-	UpdateModuleRevealPhase(s_EyeComfortRevealPhase, EyeComfortExpanded, Client()->RenderFrameTime());
-	const float EyeComfortHeaderHeight = LineSize + MarginSmall + LineSize;
-	const float EyeComfortExpandedTargetHeight = MarginSmall + LineSize;
-	const float EyeComfortExpandedHeight = EyeComfortExpandedTargetHeight * BCUiAnimations::EaseOutCubic(s_EyeComfortRevealPhase);
-	const float EyeComfortBlockHeight = EyeComfortHeaderHeight + EyeComfortExpandedHeight;
-
-	CUIRect EyeComfortBlock;
-	Column.HSplitTop(EyeComfortBlockHeight, &EyeComfortBlock, &Column);
-
-	CUIRect EyeComfortBlockBg = EyeComfortBlock;
-	EyeComfortBlockBg.w += BlockPadding;
-	EyeComfortBlockBg.h += BlockPadding;
-	EyeComfortBlockBg.x -= BlockPadding * 0.5f;
-	EyeComfortBlockBg.y -= BlockPadding * 0.5f;
-	EyeComfortBlockBg.Draw(BlockColor, IGraphics::CORNER_ALL, 10.0f);
-
-	MainView = EyeComfortBlock;
-
+	static float s_CursorTrailRevealPhase = 0.0f;
+	const bool CursorTrailExpanded = g_Config.m_BcCursorTrail != 0;
+	const bool CursorTrailCustom = CursorTrailExpanded && g_Config.m_BcCursorTrailMode == 1;
+	const float CursorTrailTargetHeight = 6.0f * (MarginSmall + LineSize) + (CursorTrailCustom ? MarginSmall + LineSize : 0.0f);
+	UpdateModuleRevealPhase(s_CursorTrailRevealPhase, CursorTrailExpanded, Client()->RenderFrameTime());
+	const float CursorTrailBlockHeight = 2.0f * LineSize + MarginSmall + CursorTrailTargetHeight * BCUiAnimations::EaseOutCubic(s_CursorTrailRevealPhase);
+	CUIRect CursorTrailBlock;
+	Column.HSplitTop(CursorTrailBlockHeight, &CursorTrailBlock, &Column);
+	CUIRect CursorTrailBlockBg = CursorTrailBlock;
+	CursorTrailBlockBg.w += BlockPadding;
+	CursorTrailBlockBg.h += BlockPadding;
+	CursorTrailBlockBg.x -= BlockPadding * 0.5f;
+	CursorTrailBlockBg.y -= BlockPadding * 0.5f;
+	CursorTrailBlockBg.Draw(BlockColor, IGraphics::CORNER_ALL, 10.0f);
+	MainView = CursorTrailBlock;
 	MainView.HSplitTop(LineSize, &Label, &MainView);
-	CUIRect EyeComfortTitleLabel, EyeComfortResetButton;
-	Label.VSplitRight(LineSize + 8.0f, &EyeComfortTitleLabel, &EyeComfortResetButton);
-	static CButtonContainer s_EyeComfortResetButton;
-	const bool EyeComfortResetClicked = Ui()->DoButton_FontIcon(&s_EyeComfortResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &EyeComfortResetButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_EyeComfortResetButton, &EyeComfortResetButton, Localize("Reset to defaults"));
-	if(EyeComfortResetClicked)
-		g_Config.m_BcEyeComfortStrength = DefaultConfig::BcEyeComfortStrength;
-	Ui()->DoLabel(&EyeComfortTitleLabel, Localize("Eye Comfort"), HeadlineFontSize, TEXTALIGN_ML);
+	CUIRect CursorTrailTitleLabel, CursorTrailResetButton;
+	Label.VSplitRight(LineSize + 8.0f, &CursorTrailTitleLabel, &CursorTrailResetButton);
+	static CButtonContainer s_CursorTrailResetButton;
+	if(Ui()->DoButton_FontIcon(&s_CursorTrailResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &CursorTrailResetButton, BUTTONFLAG_LEFT))
+	{
+		g_Config.m_BcCursorTrailMode = DefaultConfig::BcCursorTrailMode;
+		g_Config.m_BcCursorTrailTrailImage[0] = '\0';
+		g_Config.m_BcCursorTrailTrailSize = DefaultConfig::BcCursorTrailTrailSize;
+		g_Config.m_BcCursorTrailNumberOfFrames = DefaultConfig::BcCursorTrailNumberOfFrames;
+		g_Config.m_BcCursorTrailOpacity = DefaultConfig::BcCursorTrailOpacity;
+		g_Config.m_BcCursorTrailSamplingFps = DefaultConfig::BcCursorTrailSamplingFps;
+		g_Config.m_BcCursorTrailDisableMovement = DefaultConfig::BcCursorTrailDisableMovement;
+		GameClient()->m_Hud.ReloadCursorTrail();
+	}
+	CursorTrailTitleLabel.VSplitRight(10.0f, &CursorTrailTitleLabel, nullptr);
+	DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &CursorTrailTitleLabel, "NEW", 11.0f,
+		ColorRGBA(0.35f, 0.85f, 0.45f, 1.0f), ColorRGBA(0.15f, 0.55f, 0.25f, 1.0f), MarginSmall);
+	Ui()->DoLabel(&CursorTrailTitleLabel, Localize("Cursor Trail"), HeadlineFontSize, TEXTALIGN_ML);
 	MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-
 	MainView.HSplitTop(LineSize, &Content, &MainView);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcEyeComfort, Localize("Enable Eye Comfort"), &g_Config.m_BcEyeComfort, &Content, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcCursorTrail, Localize("Enable"), &g_Config.m_BcCursorTrail, &Content, LineSize);
 
-	if(EyeComfortExpandedHeight > 0.5f)
+	if(CursorTrailExpanded && s_CursorTrailRevealPhase > 0.0f)
 	{
 		CUIRect Visible = MainView;
-		Visible.h = EyeComfortExpandedHeight;
+		Visible.h = CursorTrailTargetHeight * BCUiAnimations::EaseOutCubic(s_CursorTrailRevealPhase);
 		Ui()->ClipEnable(&Visible);
-
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		MainView.HSplitTop(LineSize, &Content, &MainView);
+		static CUi::SDropDownState s_CursorTrailModeState;
+		static CScrollRegion s_CursorTrailModeScrollRegion;
+		s_CursorTrailModeState.m_SelectionPopupContext.m_pScrollRegion = &s_CursorTrailModeScrollRegion;
+		const char *apCursorTrailModes[] = {Localize("Cursor"), Localize("Custom")};
+		CUIRect ModeLabel, ModeRow;
+		Content.VSplitLeft(110.0f, &ModeLabel, &ModeRow);
+		Ui()->DoLabel(&ModeLabel, Localize("Mode"), 12.0f, TEXTALIGN_ML);
+		g_Config.m_BcCursorTrailMode = Ui()->DoDropDown(&ModeRow, g_Config.m_BcCursorTrailMode, apCursorTrailModes, std::size(apCursorTrailModes), s_CursorTrailModeState);
 		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 		MainView.HSplitTop(LineSize, &Button, &MainView);
-		Ui()->DoScrollbarOption(&g_Config.m_BcEyeComfortStrength, &g_Config.m_BcEyeComfortStrength, &Button, Localize("Comfort level"), 0, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
-
+		Ui()->DoScrollbarOption(&g_Config.m_BcCursorTrailTrailSize, &g_Config.m_BcCursorTrailTrailSize, &Button, Localize("Trail size"), 10, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		MainView.HSplitTop(LineSize, &Button, &MainView);
+		Ui()->DoScrollbarOption(&g_Config.m_BcCursorTrailNumberOfFrames, &g_Config.m_BcCursorTrailNumberOfFrames, &Button, Localize("Number of frames"), 1, 10);
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		MainView.HSplitTop(LineSize, &Button, &MainView);
+		Ui()->DoScrollbarOption(&g_Config.m_BcCursorTrailOpacity, &g_Config.m_BcCursorTrailOpacity, &Button, Localize("Opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		MainView.HSplitTop(LineSize, &Button, &MainView);
+		Ui()->DoScrollbarOption(&g_Config.m_BcCursorTrailSamplingFps, &g_Config.m_BcCursorTrailSamplingFps, &Button, Localize("Sampling FPS"), 24, 120);
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		MainView.HSplitTop(LineSize, &Content, &MainView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcCursorTrailDisableMovement, Localize("Disable movement"), &g_Config.m_BcCursorTrailDisableMovement, &Content, LineSize);
+		if(CursorTrailCustom)
+		{
+			MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+			struct SCursorTrailFileListContext
+			{
+				std::vector<std::string> *m_pLabels;
+				std::vector<std::string> *m_pPaths;
+			};
+			auto CursorTrailFileListScan = [](const char *pName, int IsDir, int StorageType, void *pUser) {
+				(void)StorageType;
+				if(IsDir)
+					return 0;
+				const std::string Ext = MediaDecoder::ExtractExtensionLower(pName);
+				if(Ext != "png" && Ext != "jpg" && Ext != "jpeg" && Ext != "webp" && Ext != "bmp" && Ext != "avif")
+					return 0;
+				auto *pContext = static_cast<SCursorTrailFileListContext *>(pUser);
+				pContext->m_pLabels->emplace_back(pName);
+				pContext->m_pPaths->emplace_back(std::string("BestClient/CTrails/") + pName);
+				return 0;
+			};
+			Storage()->CreateFolder("BestClient", IStorage::TYPE_SAVE);
+			Storage()->CreateFolder("BestClient/CTrails", IStorage::TYPE_SAVE);
+			static std::vector<std::string> s_vCursorTrailFileLabels, s_vCursorTrailFilePaths;
+			s_vCursorTrailFileLabels.clear();
+			s_vCursorTrailFilePaths.clear();
+			SCursorTrailFileListContext CursorTrailFileContext{&s_vCursorTrailFileLabels, &s_vCursorTrailFilePaths};
+			Storage()->ListDirectory(IStorage::TYPE_SAVE, "BestClient/CTrails", CursorTrailFileListScan, &CursorTrailFileContext);
+			std::vector<int> vSortedCursorTrailIndices(s_vCursorTrailFileLabels.size());
+			for(size_t i = 0; i < vSortedCursorTrailIndices.size(); ++i)
+				vSortedCursorTrailIndices[i] = (int)i;
+			std::sort(vSortedCursorTrailIndices.begin(), vSortedCursorTrailIndices.end(), [&](int Left, int Right) {
+				return str_comp_nocase(s_vCursorTrailFileLabels[Left].c_str(), s_vCursorTrailFileLabels[Right].c_str()) < 0;
+			});
+			static std::vector<std::string> s_vCursorTrailDropDownLabels;
+			static std::vector<const char *> s_vCursorTrailDropDownLabelPtrs;
+			s_vCursorTrailDropDownLabels.clear();
+			s_vCursorTrailDropDownLabelPtrs.clear();
+			for(int Index : vSortedCursorTrailIndices)
+				s_vCursorTrailDropDownLabels.push_back(s_vCursorTrailFileLabels[Index]);
+			for(const std::string &LabelString : s_vCursorTrailDropDownLabels)
+				s_vCursorTrailDropDownLabelPtrs.push_back(LabelString.c_str());
+			int SelectedCursorTrailFile = -1;
+			for(size_t i = 0; i < vSortedCursorTrailIndices.size(); ++i)
+				if(str_comp(g_Config.m_BcCursorTrailTrailImage, s_vCursorTrailFilePaths[vSortedCursorTrailIndices[i]].c_str()) == 0)
+					SelectedCursorTrailFile = (int)i;
+			CUIRect CursorTrailPathRow, CursorTrailFolderButton, CursorTrailReloadButton;
+			MainView.HSplitTop(LineSize, &CursorTrailPathRow, &MainView);
+			CursorTrailPathRow.VSplitRight(20.0f, &CursorTrailPathRow, &CursorTrailFolderButton);
+			CursorTrailPathRow.VSplitRight(MarginSmall, &CursorTrailPathRow, nullptr);
+			CursorTrailPathRow.VSplitRight(20.0f, &CursorTrailPathRow, &CursorTrailReloadButton);
+			CursorTrailPathRow.VSplitRight(MarginSmall, &CursorTrailPathRow, nullptr);
+			if(s_vCursorTrailDropDownLabelPtrs.empty())
+			{
+				static CButtonContainer s_CursorTrailEmptyButton;
+				CUIRect CursorTrailPathLabel, CursorTrailEmptyRow;
+				CursorTrailPathRow.VSplitLeft(110.0f, &CursorTrailPathLabel, &CursorTrailEmptyRow);
+				Ui()->DoLabel(&CursorTrailPathLabel, Localize("Trail image"), 12.0f, TEXTALIGN_ML);
+				DoButton_Menu(&s_CursorTrailEmptyButton, Localize("No images in CTrails folder"), -1, &CursorTrailEmptyRow);
+			}
+			else
+			{
+				static CUi::SDropDownState s_CursorTrailFileDropDownState;
+				static CScrollRegion s_CursorTrailFileDropDownScrollRegion;
+				s_CursorTrailFileDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_CursorTrailFileDropDownScrollRegion;
+				CUIRect CursorTrailPathLabel, CursorTrailDropDown;
+				CursorTrailPathRow.VSplitLeft(110.0f, &CursorTrailPathLabel, &CursorTrailDropDown);
+				Ui()->DoLabel(&CursorTrailPathLabel, Localize("Trail image"), 12.0f, TEXTALIGN_ML);
+				const int NewSelectedCursorTrailFile = Ui()->DoDropDown(&CursorTrailDropDown, SelectedCursorTrailFile, s_vCursorTrailDropDownLabelPtrs.data(), s_vCursorTrailDropDownLabelPtrs.size(), s_CursorTrailFileDropDownState);
+				if(NewSelectedCursorTrailFile != SelectedCursorTrailFile && NewSelectedCursorTrailFile >= 0 && NewSelectedCursorTrailFile < (int)vSortedCursorTrailIndices.size())
+				{
+					const int SortedIndex = vSortedCursorTrailIndices[NewSelectedCursorTrailFile];
+					str_copy(g_Config.m_BcCursorTrailTrailImage, s_vCursorTrailFilePaths[SortedIndex].c_str(), sizeof(g_Config.m_BcCursorTrailTrailImage));
+					GameClient()->m_Hud.ReloadCursorTrail();
+				}
+			}
+			static CButtonContainer s_CursorTrailFolderButton, s_CursorTrailReloadButton;
+			if(Ui()->DoButton_FontIcon(&s_CursorTrailReloadButton, FontIcon::ARROW_ROTATE_RIGHT, 0, &CursorTrailReloadButton, BUTTONFLAG_LEFT))
+				GameClient()->m_Hud.ReloadCursorTrail();
+			if(Ui()->DoButton_FontIcon(&s_CursorTrailFolderButton, FontIcon::FOLDER, 0, &CursorTrailFolderButton, BUTTONFLAG_LEFT))
+			{
+				Storage()->CreateFolder("BestClient", IStorage::TYPE_SAVE);
+				Storage()->CreateFolder("BestClient/CTrails", IStorage::TYPE_SAVE);
+				char aBuf[IO_MAX_PATH_LENGTH];
+				Storage()->GetCompletePath(IStorage::TYPE_SAVE, "BestClient/CTrails", aBuf, sizeof(aBuf));
+				Client()->ViewFile(aBuf);
+			}
+		}
 		Ui()->ClipDisable();
 	}
 
@@ -1292,14 +1489,11 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 		static CUi::SDropDownState s_MusicPlayerColorModeState;
 		static CScrollRegion s_MusicPlayerColorModeScrollRegion;
 		s_MusicPlayerColorModeState.m_SelectionPopupContext.m_pScrollRegion = &s_MusicPlayerColorModeScrollRegion;
-		const char *apMusicPlayerColorModes[3] = {
+		const char *apMusicPlayerColorModes[2] = {
 			Localize("Static"),
 			Localize("Cover"),
-			Localize("Translucent"),
 		};
-		if(g_Config.m_BcMusicPlayerColorMode > 2)
-			g_Config.m_BcMusicPlayerColorMode = 2;
-		g_Config.m_BcMusicPlayerColorMode = std::clamp(g_Config.m_BcMusicPlayerColorMode, 0, 2);
+		g_Config.m_BcMusicPlayerColorMode = std::clamp(g_Config.m_BcMusicPlayerColorMode, 0, 1);
 		g_Config.m_BcMusicPlayerColorMode = Ui()->DoDropDown(&MusicPlayerColorModeSelect, g_Config.m_BcMusicPlayerColorMode, apMusicPlayerColorModes, (int)std::size(apMusicPlayerColorModes), s_MusicPlayerColorModeState);
 
 		if(MusicPlayerShowStaticColor)
@@ -1389,7 +1583,7 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 
 	const float KeystrokesClassicPresetHeight = (MarginSmall + LineSize) * BCUiAnimations::EaseOutCubic(s_KeystrokesKeyboardRevealPhase);
 	const float KeystrokesMouseExpandedHeight = (MarginSmall + LineSize) * BCUiAnimations::EaseOutCubic(s_KeystrokesMouseRevealPhase);
-	const float KeystrokesMcOptionsRows = 1.0f + (g_Config.m_BcKeystrokesMcLayout == 1 ? 3.0f : 0.0f); // layout + LMB/RMB/Space for Only A/D
+	const float KeystrokesMcOptionsRows = 2.0f + (g_Config.m_BcKeystrokesMcLayout == 1 ? 3.0f : 0.0f); // layout + pressed opacity + LMB/RMB/Space for Only A/D
 	const float KeystrokesMinecraftExpandedHeight = (MarginSmall + LineSize) * KeystrokesMcOptionsRows * BCUiAnimations::EaseOutCubic(s_KeystrokesMinecraftRevealPhase);
 	const float KeystrokesClassicBodyHeight = LineSize + KeystrokesClassicPresetHeight + MarginSmall + LineSize + KeystrokesMouseExpandedHeight;
 	const float KeystrokesMinecraftBodyHeight = LineSize + KeystrokesMinecraftExpandedHeight;
@@ -1422,10 +1616,10 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 		g_Config.m_BcKeystrokesKeyboardPreset = DefaultConfig::BcKeystrokesKeyboardPreset;
 		g_Config.m_BcKeystrokesMousePreset = DefaultConfig::BcKeystrokesMousePreset;
 		g_Config.m_BcKeystrokesMcLayout = DefaultConfig::BcKeystrokesMcLayout;
-		g_Config.m_BcKeystrokesMcShowWs = DefaultConfig::BcKeystrokesMcShowWs;
 		g_Config.m_BcKeystrokesMcShowLmb = DefaultConfig::BcKeystrokesMcShowLmb;
 		g_Config.m_BcKeystrokesMcShowRmb = DefaultConfig::BcKeystrokesMcShowRmb;
 		g_Config.m_BcKeystrokesMcShowSpace = DefaultConfig::BcKeystrokesMcShowSpace;
+		g_Config.m_BcKeystrokesMcPressedOpacity = DefaultConfig::BcKeystrokesMcPressedOpacity;
 	}
 	static CButtonContainer s_KeystrokesHudEditorButton;
 	const bool KeystrokesCanOpenHudEditor = Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK;
@@ -1523,6 +1717,10 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 			g_Config.m_BcKeystrokesMcLayout = 0;
 		if(DoButton_Menu(&s_McLayoutOnlyAd, Localize("Only A/D"), g_Config.m_BcKeystrokesMcLayout == 1, &McOnlyAdButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
 			g_Config.m_BcKeystrokesMcLayout = 1;
+
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		MainView.HSplitTop(LineSize, &Button, &MainView);
+		Ui()->DoScrollbarOption(&g_Config.m_BcKeystrokesMcPressedOpacity, &g_Config.m_BcKeystrokesMcPressedOpacity, &Button, Localize("Pressed opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
 
 		if(g_Config.m_BcKeystrokesMcLayout == 1)
 		{
@@ -1806,8 +2004,6 @@ void CMenus::RenderSettingsBestClientVisuals(CUIRect MainView)
 	MainView.HSplitTop(LineSize, &Label, &MainView);
 	CUIRect PhysicBallsTitleLabel = Label;
 	PhysicBallsTitleLabel.VSplitRight(MarginSmall, &PhysicBallsTitleLabel, nullptr);
-	DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &PhysicBallsTitleLabel, Localize("NEW"), 12.0f,
-		ColorRGBA(0.25f, 0.85f, 0.40f, 1.0f), ColorRGBA(0.10f, 0.60f, 0.25f, 1.0f), MarginSmall);
 	DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &PhysicBallsTitleLabel, "E-Client", 12.0f,
 		ColorRGBA(0.95f, 0.80f, 0.20f, 1.0f), ColorRGBA(0.75f, 0.55f, 0.05f, 1.0f), MarginSmall);
 	Ui()->DoLabel(&PhysicBallsTitleLabel, Localize("Physic Balls"), HeadlineFontSize, TEXTALIGN_ML);
@@ -1901,8 +2097,10 @@ void CMenus::RenderSettingsBestClientGameplay(CUIRect MainView)
 	vec2 GameplayScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams GameplayScrollParams;
 	GameplayScrollParams.m_ScrollUnit = 60.0f;
+	GameplayScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	GameplayScrollParams.m_ScrollbarMargin = 5.0f;
-	s_GameplayScrollRegion.Begin(&MainView, &GameplayScrollParams);
+	s_GameplayScrollRegion.Begin(&MainView, &GameplayScrollOffset, &GameplayScrollParams);
+	MainView.y += GameplayScrollOffset.y;
 	MainView.VSplitRight(5.0f, &MainView, nullptr);
 	MainView.VSplitLeft(5.0f, nullptr, &MainView);
 
@@ -2300,8 +2498,6 @@ void CMenus::RenderSettingsBestClientGameplay(CUIRect MainView)
 	MainView.HSplitTop(LineSize, &Label, &MainView);
 	CUIRect PerformanceTitleLabel = Label;
 	PerformanceTitleLabel.VSplitRight(MarginSmall, &PerformanceTitleLabel, nullptr);
-	DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &PerformanceTitleLabel, Localize("NEW"), 12.0f,
-		ColorRGBA(0.25f, 0.85f, 0.40f, 1.0f), ColorRGBA(0.10f, 0.60f, 0.25f, 1.0f), MarginSmall);
 	Ui()->DoLabel(&PerformanceTitleLabel, Localize("Performance"), HeadlineFontSize, TEXTALIGN_ML);
 	MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 
@@ -2675,8 +2871,7 @@ void CMenus::RenderSettingsBestClientGameplay(CUIRect MainView)
 	const float FinishPredictionExpandedTargetHeight = (MarginSmall + LineSize) // Show time checkbox
 							    + FinishPredictionTimeExpandedHeight
 							    + MarginSmall + LineSize // Show percentage checkbox
-							    + MarginSmall + LineSize // Show always checkbox
-							    + MarginSmall + LineSize; // Analyse teleports/freeze
+							    + MarginSmall + LineSize; // Show always checkbox
 	const float FinishPredictionExpandedHeight = FinishPredictionExpandedTargetHeight * BCUiAnimations::EaseOutCubic(s_FinishPredictionRevealPhase);
 	const float FinishPredictionBlockHeight = LineSize + MarginSmall + LineSize + FinishPredictionExpandedHeight;
 
@@ -2757,15 +2952,6 @@ void CMenus::RenderSettingsBestClientGameplay(CUIRect MainView)
 		FinishPredictionView.HSplitTop(LineSize, &Content, &FinishPredictionView);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcFinishPredictionShowAlways, Localize("Show always"), &g_Config.m_BcFinishPredictionShowAlways, &Content, LineSize);
 
-		FinishPredictionView.HSplitTop(MarginSmall, nullptr, &FinishPredictionView);
-		FinishPredictionView.HSplitTop(LineSize, &Content, &FinishPredictionView);
-		{
-			CUIRect AnalyseRow = Content;
-			DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &AnalyseRow, Localize("BETA"), 10.0f,
-				ColorRGBA(0.95f, 0.25f, 0.25f, 1.0f), ColorRGBA(0.75f, 0.08f, 0.08f, 1.0f), MarginSmall);
-			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcFinishPredictionAnalyseTeleFreeze, Localize("Analyse teleports/freeze"), &g_Config.m_BcFinishPredictionAnalyseTeleFreeze, &AnalyseRow, LineSize);
-		}
-
 		Ui()->ClipDisable();
 	}
 
@@ -2841,6 +3027,61 @@ void CMenus::RenderSettingsBestClientGameplay(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
+	// Edge Info (right column block, from RushieClient)
+	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
+
+	const float EdgeInfoColorPickerLineSize = 25.0f;
+	const float EdgeInfoBlockHeight = LineSize + MarginSmall + LineSize + MarginSmall + 2.0f * (LineSize + MarginSmall) + 3.0f * (EdgeInfoColorPickerLineSize + MarginSmall);
+	CUIRect EdgeInfoBlock;
+	RightColumn.HSplitTop(EdgeInfoBlockHeight, &EdgeInfoBlock, &RightColumn);
+
+	CUIRect EdgeInfoBlockBg = EdgeInfoBlock;
+	EdgeInfoBlockBg.w += BlockPadding;
+	EdgeInfoBlockBg.h += BlockPadding;
+	EdgeInfoBlockBg.x -= BlockPadding * 0.5f;
+	EdgeInfoBlockBg.y -= BlockPadding * 0.5f;
+	EdgeInfoBlockBg.Draw(BlockColor, IGraphics::CORNER_ALL, 10.0f);
+
+	EdgeInfoBlock.HSplitTop(LineSize, &Label, &EdgeInfoBlock);
+	CUIRect EdgeInfoTitleLabel, EdgeInfoHudEditorButton;
+	Label.VSplitRight(LineSize + 8.0f, &EdgeInfoTitleLabel, &EdgeInfoHudEditorButton);
+	EdgeInfoTitleLabel.VSplitRight(MarginSmall, &EdgeInfoTitleLabel, nullptr);
+	static CButtonContainer s_EdgeInfoHudEditorButton;
+	const bool EdgeInfoCanOpenHudEditor = Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK;
+	const bool EdgeInfoHudEditorClicked = Ui()->DoButton_FontIcon(&s_EdgeInfoHudEditorButton, FontIcon::UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER, EdgeInfoCanOpenHudEditor ? 0 : -1, &EdgeInfoHudEditorButton, BUTTONFLAG_LEFT);
+	GameClient()->m_Tooltips.DoToolTip(&s_EdgeInfoHudEditorButton, &EdgeInfoHudEditorButton, EdgeInfoCanOpenHudEditor ? Localize("Open in HUD editor") : Localize("Join a game first"));
+	GameClient()->m_Tooltips.SetFadeTime(&s_EdgeInfoHudEditorButton, 0.0f);
+	if(EdgeInfoHudEditorClicked && EdgeInfoCanOpenHudEditor)
+	{
+		SetActive(false);
+		GameClient()->m_HudEditor.Activate();
+	}
+	DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &EdgeInfoTitleLabel, "R-Client", 12.0f,
+		ColorRGBA(0.30f, 0.55f, 0.95f, 1.0f), ColorRGBA(0.15f, 0.35f, 0.75f, 1.0f), MarginSmall);
+	Ui()->DoLabel(&EdgeInfoTitleLabel, Localize("Edge Info"), HeadlineFontSize, TEXTALIGN_ML);
+	EdgeInfoBlock.HSplitTop(MarginSmall, nullptr, &EdgeInfoBlock);
+
+	EdgeInfoBlock.HSplitTop(LineSize, &Label, &EdgeInfoBlock);
+	static CButtonContainer s_EdgeInfoBindReader;
+	static CButtonContainer s_EdgeInfoBindClear;
+	DoLine_KeyReader(Label, s_EdgeInfoBindReader, s_EdgeInfoBindClear, Localize("Show edge info"), "ri_toggle_edgeinfo");
+
+	EdgeInfoBlock.HSplitTop(MarginSmall, nullptr, &EdgeInfoBlock);
+	EdgeInfoBlock.HSplitTop(LineSize, &Content, &EdgeInfoBlock);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_RiEdgeInfoCords, Localize("Show edge info about freeze"), &g_Config.m_RiEdgeInfoCords, &Content, LineSize);
+
+	EdgeInfoBlock.HSplitTop(MarginSmall, nullptr, &EdgeInfoBlock);
+	EdgeInfoBlock.HSplitTop(LineSize, &Content, &EdgeInfoBlock);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_RiEdgeInfoJump, Localize("Show edge info about jumps"), &g_Config.m_RiEdgeInfoJump, &Content, LineSize);
+
+	static CButtonContainer s_EdgeInfoFreezeColorButton;
+	static CButtonContainer s_EdgeInfoKillColorButton;
+	static CButtonContainer s_EdgeInfoSafeColorButton;
+	EdgeInfoBlock.HSplitTop(MarginSmall, nullptr, &EdgeInfoBlock);
+	DoLine_ColorPicker(&s_EdgeInfoFreezeColorButton, EdgeInfoColorPickerLineSize, 13.0f, MarginSmall, &EdgeInfoBlock, Localize("Color when over freeze"), &g_Config.m_RiEdgeInfoColorFreeze, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::RiEdgeInfoColorFreeze)), false);
+	DoLine_ColorPicker(&s_EdgeInfoKillColorButton, EdgeInfoColorPickerLineSize, 13.0f, MarginSmall, &EdgeInfoBlock, Localize("Color when over kill"), &g_Config.m_RiEdgeInfoColorKill, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::RiEdgeInfoColorKill)), false);
+	DoLine_ColorPicker(&s_EdgeInfoSafeColorButton, EdgeInfoColorPickerLineSize, 13.0f, MarginSmall, &EdgeInfoBlock, Localize("Color when falling safely"), &g_Config.m_RiEdgeInfoColorSafe, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::RiEdgeInfoColorSafe)), false);
+
 	const float RightColumnEndY = RightColumn.y;
 	CUIRect GameplayScrollContentRect;
 	GameplayScrollContentRect.x = MainView.x;
@@ -2864,8 +3105,10 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 	vec2 OthersScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams OthersScrollParams;
 	OthersScrollParams.m_ScrollUnit = 60.0f;
+	OthersScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	OthersScrollParams.m_ScrollbarMargin = 5.0f;
-	s_OthersScrollRegion.Begin(&MainView, &OthersScrollParams);
+	s_OthersScrollRegion.Begin(&MainView, &OthersScrollOffset, &OthersScrollParams);
+	MainView.y += OthersScrollOffset.y;
 	MainView.VSplitRight(5.0f, &MainView, nullptr);
 	MainView.VSplitLeft(5.0f, nullptr, &MainView);
 
@@ -2890,7 +3133,7 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 	const float AutoLockDelayHeight = g_Config.m_BcAutoTeamLock ? LineSize : 0.0f;
 	const float SpecMovedNotifyTextHeight = g_Config.m_BcSpecMovedNotify ? LineSize : 0.0f;
 	const float CinematicCameraStrengthHeight = g_Config.m_BcCinematicCamera ? LineSize : 0.0f;
-	const float MiscBlockHeight = LineSize + MarginSmall + AutoUpdateHeight + 19.0f * LineSize + 2.5f + AutoLockDelayHeight + SpecMovedNotifyTextHeight + RealHitboxColorHeight + CinematicCameraStrengthHeight;
+	const float MiscBlockHeight = LineSize + MarginSmall + AutoUpdateHeight + 17.0f * LineSize + 2.5f + AutoLockDelayHeight + SpecMovedNotifyTextHeight + RealHitboxColorHeight + CinematicCameraStrengthHeight;
 	CUIRect MiscBlock;
 	Column.HSplitTop(MiscBlockHeight, &MiscBlock, &Column);
 
@@ -2911,14 +3154,15 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 #if defined(CONF_AUTOUPDATE)
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcAutoUpdate, Localize("Automatic update"), &g_Config.m_BcAutoUpdate, &MiscBlock, LineSize);
 #endif
-	static CButtonContainer s_SettingsLayoutButton;
-	int UseNewMenuLayout = g_Config.m_BcSettingsLayout == 0 ? 1 : 0;
-	DoButton_CheckBoxAutoVMarginAndSet(&s_SettingsLayoutButton, Localize("Use new menu layout"), &UseNewMenuLayout, &MiscBlock, LineSize);
-	g_Config.m_BcSettingsLayout = UseNewMenuLayout ? 0 : 1;
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcHideHudInSettings, Localize("Hide hud in settings"), &g_Config.m_BcHideHudInSettings, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcChatSaveDraft, Localize("Save unsent messages"), &g_Config.m_BcChatSaveDraft, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcSilentTyping, Localize("Silent typing"), &g_Config.m_BcSilentTyping, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcChatAltCommandLayout, Localize("Commands in other layout"), &g_Config.m_BcChatAltCommandLayout, &MiscBlock, LineSize);
+	{
+		CUIRect ConfirmQuitRow;
+		MiscBlock.HSplitTop(LineSize, &ConfirmQuitRow, &MiscBlock);
+		if(DoButton_CheckBox(&g_Config.m_BcConfirmQuit, Localize("Confirm before quitting"), g_Config.m_BcConfirmQuit, &ConfirmQuitRow))
+			g_Config.m_BcConfirmQuit ^= 1;
+	}
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcCinematicCamera, Localize("Cinematic camera"), &g_Config.m_BcCinematicCamera, &MiscBlock, LineSize);
 	if(g_Config.m_BcCinematicCamera)
 	{
@@ -2928,8 +3172,6 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 	{
 		CUIRect BetterSpectateRow;
 		MiscBlock.HSplitTop(LineSize, &BetterSpectateRow, &MiscBlock);
-		DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &BetterSpectateRow, Localize("NEW"), 12.0f,
-			ColorRGBA(0.25f, 0.85f, 0.40f, 1.0f), ColorRGBA(0.10f, 0.60f, 0.25f, 1.0f), MarginSmall);
 		DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &BetterSpectateRow, "E-Client", 12.0f,
 			ColorRGBA(0.95f, 0.80f, 0.20f, 1.0f), ColorRGBA(0.75f, 0.55f, 0.05f, 1.0f), MarginSmall);
 		if(DoButton_CheckBox(&g_Config.m_BcBetterSpectate, Localize("Better spectate"), g_Config.m_BcBetterSpectate, &BetterSpectateRow))
@@ -2950,9 +3192,8 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 		Ui()->DoLabel(&TextLabel, Localize("Notification text"), 14.0f, TEXTALIGN_ML);
 		Ui()->DoEditBox(&s_SpecMovedNotifyTextInput, &TextField, 14.0f);
 	}
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcScoreboardTeamGradients, Localize("Gradient team colors"), &g_Config.m_BcScoreboardTeamGradients, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowPointsInTab, Localize("Show points in tab"), &g_Config.m_BcShowPointsInTab, &MiscBlock, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcMastersrv, Localize("Use 667 Client MasterServer"), &g_Config.m_BcMastersrv, &MiscBlock, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcMastersrv, Localize("Use BestClient MasterServer"), &g_Config.m_BcMastersrv, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowhudDummyCoordIndicator, Localize("Show player below indicator"), &g_Config.m_BcShowhudDummyCoordIndicator, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowCorrectCheckpoint, Localize("Show current checkpoint in hud"), &g_Config.m_BcShowCorrectCheckpoint, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowRealHitbox, Localize("Show real hitbox"), &g_Config.m_BcShowRealHitbox, &MiscBlock, LineSize);
@@ -2979,7 +3220,7 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 
 	// Twitch Chat Integration
 	const float TwitchLogLineSize = 14.0f;
-	const float TwitchChatBlockHeight = LineSize + MarginSmall + LineSize + MarginSmall + LineSize + MarginSmall + LineSize;
+	const float TwitchChatBlockHeight = LineSize + MarginSmall + LineSize + MarginSmall + LineSize;
 
 	CUIRect TwitchChatBlock;
 	Column.HSplitTop(TwitchChatBlockHeight, &TwitchChatBlock, &Column);
@@ -2994,8 +3235,6 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 	TwitchChatBlock.HSplitTop(LineSize, &Label, &TwitchChatBlock);
 	CUIRect TwitchTitleLabel = Label;
 	TwitchTitleLabel.VSplitRight(MarginSmall, &TwitchTitleLabel, nullptr);
-	DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &TwitchTitleLabel, Localize("NEW"), 12.0f,
-		ColorRGBA(0.25f, 0.85f, 0.40f, 1.0f), ColorRGBA(0.10f, 0.60f, 0.25f, 1.0f), MarginSmall);
 	Ui()->DoLabel(&TwitchTitleLabel, Localize("Twitch Chat"), HeadlineFontSize, TEXTALIGN_ML);
 	TwitchChatBlock.HSplitTop(MarginSmall, nullptr, &TwitchChatBlock);
 
@@ -3010,8 +3249,9 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 	TwitchChatBlock.HSplitTop(MarginSmall, nullptr, &TwitchChatBlock);
 
 	TwitchChatBlock.HSplitTop(LineSize, &Button, &TwitchChatBlock);
-	CUIRect TwitchStartButton;
-	Button.VSplitRight(100.0f, nullptr, &TwitchStartButton);
+	CUIRect TwitchLogRect, TwitchStartButton;
+	Button.VSplitRight(100.0f, &TwitchLogRect, &TwitchStartButton);
+	TwitchLogRect.VSplitRight(MarginSmall, &TwitchLogRect, nullptr);
 	static CButtonContainer s_TwitchStartButton;
 	const bool TwitchActive = GameClient()->m_TwitchChat.IsActive();
 	if(DoButton_Menu(&s_TwitchStartButton, TwitchActive ? Localize("Stop") : Localize("Start"), 0, &TwitchStartButton))
@@ -3021,69 +3261,14 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 		else
 			GameClient()->m_TwitchChat.Start();
 	}
-	TwitchChatBlock.HSplitTop(MarginSmall, nullptr, &TwitchChatBlock);
-
-	CUIRect TwitchLogRect;
-	TwitchChatBlock.HSplitTop(LineSize, &TwitchLogRect, &TwitchChatBlock);
 	char aTwitchStatus[128];
 	GameClient()->m_TwitchChat.GetStatusText(aTwitchStatus, sizeof(aTwitchStatus));
 	Ui()->DoLabel(&TwitchLogRect, aTwitchStatus, TwitchLogLineSize, TEXTALIGN_ML);
 
+	// Browser Utils
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
-	const bool RollbackExpanded = g_Config.m_ClReplays != 0;
-	static float s_RollbackRevealPhase = 0.0f;
-	UpdateModuleRevealPhase(s_RollbackRevealPhase, RollbackExpanded, Client()->RenderFrameTime());
-	const float HeaderHeight = LineSize + MarginSmall + LineSize;
-	const float ExpandedHeight = 2.0f * (MarginSmall + LineSize) * BCUiAnimations::EaseOutCubic(s_RollbackRevealPhase);
-	const float BlockHeight = HeaderHeight + ExpandedHeight;
-
-	CUIRect Block;
-	Column.HSplitTop(BlockHeight, &Block, &Column);
-
-	CUIRect BlockBg = Block;
-	BlockBg.w += BlockPadding;
-	BlockBg.h += BlockPadding;
-	BlockBg.x -= BlockPadding * 0.5f;
-	BlockBg.y -= BlockPadding * 0.5f;
-	BlockBg.Draw(BlockColor, IGraphics::CORNER_ALL, 10.0f);
-
-	Block.HSplitTop(LineSize, &Label, &Block);
-	Ui()->DoLabel(&Label, Localize("Rollback Demo"), HeadlineFontSize, TEXTALIGN_ML);
-	Block.HSplitTop(MarginSmall, nullptr, &Block);
-
-	Block.HSplitTop(LineSize, &Content, &Block);
-	if(DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClReplays, Localize("Enable rollback demo recording"), &g_Config.m_ClReplays, &Content, LineSize))
-	{
-		if(Client()->State() == IClient::STATE_ONLINE)
-			Client()->DemoRecorder_UpdateReplayRecorder();
-	}
-
-	if(ExpandedHeight > 0.5f)
-	{
-		CUIRect Visible = Block;
-		Visible.h = ExpandedHeight;
-		Ui()->ClipEnable(&Visible);
-
-		g_Config.m_ClReplayLength = std::clamp(g_Config.m_ClReplayLength, 10, 60);
-
-		Block.HSplitTop(MarginSmall, nullptr, &Block);
-		Block.HSplitTop(LineSize, &Button, &Block);
-		Ui()->DoScrollbarOption(&g_Config.m_ClReplayLength, &g_Config.m_ClReplayLength, &Button, Localize("Rollback length"), 10, 60, &CUi::ms_LinearScrollbarScale, 0, " s");
-
-		Block.HSplitTop(MarginSmall, nullptr, &Block);
-		Block.HSplitTop(LineSize, &Button, &Block);
-		static CButtonContainer s_RollbackBindReader;
-		static CButtonContainer s_RollbackBindClear;
-		DoLine_KeyReader(Button, s_RollbackBindReader, s_RollbackBindClear, Localize("Rollback bind"), "BC_save_rollback");
-
-		Ui()->ClipDisable();
-	}
-
-	// Browser Utils (below Rollback Demo)
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
-
-	const float BrowserUtilsBlockHeight = 4.0f * LineSize + 3.0f * MarginSmall;
+	const float BrowserUtilsBlockHeight = 5.0f * LineSize + 4.0f * MarginSmall;
 
 	CUIRect BrowserUtilsBlock;
 	Column.HSplitTop(BrowserUtilsBlockHeight, &BrowserUtilsBlock, &Column);
@@ -3108,7 +3293,11 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 
 	BrowserUtilsBlock.HSplitTop(MarginSmall, nullptr, &BrowserUtilsBlock);
 	BrowserUtilsBlock.HSplitTop(LineSize, &Content, &BrowserUtilsBlock);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcUseShortKogServerName, Localize("Use short KoG server name"), &g_Config.m_BcUseShortKogServerName, &Content, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcUseShortKogServerName, Localize("Short EGO/KoG server name"), &g_Config.m_BcUseShortKogServerName, &Content, LineSize);
+
+	BrowserUtilsBlock.HSplitTop(MarginSmall, nullptr, &BrowserUtilsBlock);
+	BrowserUtilsBlock.HSplitTop(LineSize, &Content, &BrowserUtilsBlock);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowFinishedMapOnEgo, Localize("Show finished map on EGO"), &g_Config.m_BcShowFinishedMapOnEgo, &Content, LineSize);
 
 	// Chat Filter
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
@@ -3198,10 +3387,8 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 	static float s_SwapTimerRevealPhase = 0.0f;
 	UpdateModuleRevealPhase(s_SwapTimerRevealPhase, SwapTimerExpanded, Client()->RenderFrameTime());
 	const float SwapTimerHeaderHeight = LineSize + MarginSmall + LineSize;
-	// Style + size + 2 checkboxes + 3 keybinds; nameplate adds cooldown/remaining fields
-	float SwapTimerExpandedTargetHeight = (MarginSmall + LineSize) * 5.0f + LineSize * 3.0f;
-	if(g_Config.m_BcSwapTimerStyle == 1)
-		SwapTimerExpandedTargetHeight += (MarginSmall + LineSize) * 2.0f;
+	// Style + size + 2 checkboxes + 3 keybinds
+	const float SwapTimerExpandedTargetHeight = (MarginSmall + LineSize) * 5.0f + LineSize * 3.0f;
 	const float SwapTimerExpandedHeight = SwapTimerExpandedTargetHeight * BCUiAnimations::EaseOutCubic(s_SwapTimerRevealPhase);
 	const float SwapTimerBlockHeight = SwapTimerHeaderHeight + SwapTimerExpandedHeight;
 
@@ -3231,8 +3418,6 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 		g_Config.m_BcSwapTimerShowHotkeys = DefaultConfig::BcSwapTimerShowHotkeys;
 		g_Config.m_BcSwapTimerShowTees = DefaultConfig::BcSwapTimerShowTees;
 		g_Config.m_BcSwapTimerStyle = DefaultConfig::BcSwapTimerStyle;
-		str_copy(g_Config.m_BcSwapTimerWaitText, DefaultConfig::BcSwapTimerWaitText, sizeof(g_Config.m_BcSwapTimerWaitText));
-		str_copy(g_Config.m_BcSwapTimerLeftText, DefaultConfig::BcSwapTimerLeftText, sizeof(g_Config.m_BcSwapTimerLeftText));
 	}
 	static CButtonContainer s_SwapTimerHudEditorButton;
 	const bool SwapTimerCanOpenHudEditor = Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK;
@@ -3245,8 +3430,6 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 		GameClient()->m_HudEditor.Activate();
 	}
 	SwapTimerTitleLabel.VSplitRight(MarginSmall, &SwapTimerTitleLabel, nullptr);
-	DrawBcMenuBadge(Graphics(), Ui(), TextRender(), &SwapTimerTitleLabel, Localize("NEW"), 12.0f,
-		ColorRGBA(0.25f, 0.85f, 0.40f, 1.0f), ColorRGBA(0.10f, 0.60f, 0.25f, 1.0f), MarginSmall);
 	Ui()->DoLabel(&SwapTimerTitleLabel, Localize("Swap timer"), HeadlineFontSize, TEXTALIGN_ML);
 	SwapView.HSplitTop(MarginSmall, nullptr, &SwapView);
 
@@ -3271,29 +3454,6 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 			g_Config.m_BcSwapTimerStyle = 0;
 		if(DoButton_Menu(&s_SwapTimerStyleNameplate, Localize("Nameplate"), g_Config.m_BcSwapTimerStyle == 1, &SwapNameplateStyleButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
 			g_Config.m_BcSwapTimerStyle = 1;
-
-		if(g_Config.m_BcSwapTimerStyle == 1)
-		{
-			CUIRect MinimalLabel, MinimalField;
-
-			SwapView.HSplitTop(MarginSmall, nullptr, &SwapView);
-			SwapView.HSplitTop(LineSize, &Content, &SwapView);
-			Content.VSplitMid(&MinimalLabel, &MinimalField);
-			Ui()->DoLabel(&MinimalLabel, Localize("Cooldown text"), 14.0f, TEXTALIGN_ML);
-			static CLineInput s_SwapWaitTextInput(g_Config.m_BcSwapTimerWaitText, sizeof(g_Config.m_BcSwapTimerWaitText));
-			s_SwapWaitTextInput.SetEmptyText("[%ds]");
-			Ui()->DoEditBox(&s_SwapWaitTextInput, &MinimalField, 12.0f);
-			GameClient()->m_Tooltips.DoToolTip(&s_SwapWaitTextInput, &MinimalField, Localize("%d seconds, %y your name, %n other name"));
-
-			SwapView.HSplitTop(MarginSmall, nullptr, &SwapView);
-			SwapView.HSplitTop(LineSize, &Content, &SwapView);
-			Content.VSplitMid(&MinimalLabel, &MinimalField);
-			Ui()->DoLabel(&MinimalLabel, Localize("Remaining text"), 14.0f, TEXTALIGN_ML);
-			static CLineInput s_SwapLeftTextInput(g_Config.m_BcSwapTimerLeftText, sizeof(g_Config.m_BcSwapTimerLeftText));
-			s_SwapLeftTextInput.SetEmptyText("[%ds]");
-			GameClient()->m_Tooltips.DoToolTip(&s_SwapLeftTextInput, &MinimalField, Localize("%d seconds, %y your name, %n other name"));
-			Ui()->DoEditBox(&s_SwapLeftTextInput, &MinimalField, 12.0f);
-		}
 
 		SwapView.HSplitTop(MarginSmall, nullptr, &SwapView);
 		SwapView.HSplitTop(LineSize, &Button, &SwapView);
@@ -3546,8 +3706,11 @@ CUi::EPopupMenuFunctionResult CMenus::PopupVoiceModeration(void *pContext, CUIRe
 	static vec2 s_VoiceModScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ScrollUnit = RowH + 4.0f;
+	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	ScrollParams.m_ScrollbarMargin = 4.0f;
-	s_VoiceModScroll.Begin(&View, &ScrollParams);
+	s_VoiceModScroll.Begin(&View, &s_VoiceModScrollOffset, &ScrollParams);
+	View.y += s_VoiceModScrollOffset.y;
+
 	for(size_t i = 0; i < Players.size(); ++i)
 	{
 		const CVoiceChat::SModPlayer &Player = Players[i];
@@ -3604,9 +3767,16 @@ void CMenus::RenderSettingsBestClientInfo(CUIRect MainView)
 	RightView.VSplitRight(MarginSmall, &RightView, nullptr);
 	LeftView.HSplitMid(&LeftView, &LowerLeftView, 0.0f);
 
-	// ── 667 Client Links ───────────────────────────────────────────────────
+	static CButtonContainer s_GamesButton;
+	CUIRect GamesButton;
+	LeftView.HSplitTop(LineSize * 2.0f, &GamesButton, &LeftView);
+	if(DoButtonLineSize_Menu(&s_GamesButton, Localize("Games"), 0, &GamesButton, LineSize, false, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		s_CurBestClientTab = BESTCLIENT_TAB_FUN;
+	LeftView.HSplitTop(MarginBetweenViews, nullptr, &LeftView);
+
+	// ── BestClient Links ───────────────────────────────────────────────────
 	LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
-	Ui()->DoLabel(&Label, Localize("667 Client Links"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, Localize("BestClient Links"), HeadlineFontSize, TEXTALIGN_ML);
 	LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 
 	static CButtonContainer s_DiscordButton, s_WebsiteButton, s_TelegramButton, s_CheckUpdateButton;
@@ -3640,15 +3810,15 @@ void CMenus::RenderSettingsBestClientInfo(CUIRect MainView)
 	BestClientConfig = Button;
 
 	static CButtonContainer s_Config;
-	if(DoButtonLineSize_Menu(&s_Config, Localize("667 Client Settings"), 0, &BestClientConfig, LineSize, false, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+	if(DoButtonLineSize_Menu(&s_Config, Localize("BestClient Settings"), 0, &BestClientConfig, LineSize, false, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 	{
 		Storage()->GetCompletePath(IStorage::TYPE_SAVE, s_aConfigDomains[ConfigDomain::BESTCLIENT].m_aConfigPath, aBuf, sizeof(aBuf));
 		Client()->ViewFile(aBuf);
 	}
 
-	// ── 667 Client Developers ─────────────────────────────────────────────
+	// ── BestClient Developers ─────────────────────────────────────────────
 	RightView.HSplitTop(HeadlineHeight, &Label, &RightView);
-	Ui()->DoLabel(&Label, Localize("667 Client Developers"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, Localize("BestClient Developers"), HeadlineFontSize, TEXTALIGN_ML);
 	RightView.HSplitTop(MarginSmall, nullptr, &RightView);
 	RightView.HSplitTop(MarginSmall, nullptr, &RightView);
 

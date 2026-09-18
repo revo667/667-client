@@ -1,7 +1,6 @@
 #include "physicball.h"
 
 #include <base/color.h>
-#include <base/log.h>
 #include <base/math.h>
 #include <base/time.h>
 #include <base/vmath.h>
@@ -24,10 +23,8 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <cstdlib>
 #include <limits>
-#include <vector>
 
 constexpr float PhysicBallSize = 60.0f;
 
@@ -165,14 +162,15 @@ void CPhysicBalls::RenderBalls()
 	if(!pSkin)
 		return;
 
-	const CScreenRect ScreenRect = Graphics()->GetScreen();
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 
 	m_vpVisibleBalls.clear();
 	for(const CBall &Ball : m_vBalls)
 	{
 		const float HalfSize = Ball.m_Size * 0.75f;
-		if(Ball.m_Pos.x + HalfSize < ScreenRect.m_TopLeft.x || Ball.m_Pos.x - HalfSize > ScreenRect.m_BottomRight.x ||
-			Ball.m_Pos.y + HalfSize < ScreenRect.m_TopLeft.y || Ball.m_Pos.y - HalfSize > ScreenRect.m_BottomRight.y)
+		if(Ball.m_Pos.x + HalfSize < ScreenX0 || Ball.m_Pos.x - HalfSize > ScreenX1 ||
+			Ball.m_Pos.y + HalfSize < ScreenY0 || Ball.m_Pos.y - HalfSize > ScreenY1)
 			continue;
 		m_vpVisibleBalls.push_back(&Ball);
 	}
@@ -778,11 +776,6 @@ bool CPhysicBalls::GetNearestAirPos(vec2 Pos, vec2 PrevPos, vec2 *pOutPos, float
 	}
 
 	return false;
-}
-
-bool CPhysicBalls::HoldingHook() const
-{
-	return GameClient()->m_Controls.m_aInputData[g_Config.m_ClDummy].m_Hook == 1;
 }
 
 bool CPhysicBalls::HoldingFire() const

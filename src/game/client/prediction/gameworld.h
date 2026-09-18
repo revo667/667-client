@@ -37,7 +37,7 @@ public:
 
 	CGameWorld();
 	~CGameWorld();
-	void Init(CCollision *pCollision, CTuningParams *pTuningList, LOCKED_TUNES *pLockedTuningList, const CMapBugs *pMapBugs);
+	void Init(CCollision *pCollision, CTuningParams *pTuningList, const CMapBugs *pMapBugs);
 
 	CEntity *FindFirst(int Type);
 	CEntity *FindLast(int Type);
@@ -51,7 +51,6 @@ public:
 
 	// DDRace
 	void ReleaseHooked(int ClientId);
-	std::vector<CCharacter *> IntersectedCharacters(vec2 Pos0, vec2 Pos1, float Radius, const CEntity *pNotThis = nullptr);
 
 	int m_GameTick;
 
@@ -97,7 +96,7 @@ public:
 	bool IsLocalTeam(int OwnerId) const;
 	void OnModified() const;
 	void NetObjBegin(CTeamsCore Teams, int LocalClientId);
-	void NetCharAdd(int ObjId, CNetObj_Character *pChar, CNetObj_DDNetCharacter *pExtended, CNetObj_CharacterTuning *pTuning, int GameTeam, bool IsLocal);
+	void NetCharAdd(int ObjId, CNetObj_Character *pChar, CNetObj_DDNetCharacter *pExtended, int GameTeam, bool IsLocal);
 	void NetObjAdd(int ObjId, int ObjType, const void *pObjData, const CNetObj_EntityEx *pDataEx);
 	void NetObjEnd();
 	void CopyWorld(CGameWorld *pFrom);
@@ -105,15 +104,12 @@ public:
 	CEntity *FindMatch(int ObjId, int ObjType, const void *pObjData);
 	void Clear();
 
-	CTuningParams *TuningFromChrOrZone(int ClientId, int Zone = -1);
 	const CTuningParams *TuningList() const { return m_pTuningList; }
 	CTuningParams *TuningList() { return m_pTuningList; }
 	const CTuningParams *GlobalTuning() const { return &TuningList()[0]; }
 	CTuningParams *GlobalTuning() { return &TuningList()[0]; }
 	const CTuningParams *GetTuning(int i) const { return &TuningList()[i]; }
 	CTuningParams *GetTuning(int i) { return &TuningList()[i]; }
-
-	LOCKED_TUNES *LockedTuning() { return m_vpLockedTuning; }
 
 	bool EmulateBug(int Bug) const;
 
@@ -138,7 +134,6 @@ public:
 
 	void CreatePredictedEvent(const CPredictedEvent &NewEvent);
 	bool CheckPredictedEventHandled(const CPredictedEvent &CheckEvent);
-	void PlayPredictedEvents(int Tick);
 
 	void CreatePredictedSound(vec2 Pos, int SoundId, int Id = -1);
 	void CreatePredictedExplosionEvent(vec2 Pos, int Id = -1);
@@ -155,7 +150,6 @@ private:
 
 	CCollision *m_pCollision;
 	CTuningParams *m_pTuningList;
-	LOCKED_TUNES *m_vpLockedTuning;
 	const CMapBugs *m_pMapBugs;
 };
 

@@ -35,7 +35,6 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
-#include <map>
 #include <queue>
 #include <vector>
 
@@ -553,7 +552,8 @@ namespace
 		if(W <= 0.0f || H <= 0.0f)
 			return;
 
-		const ColorRGBA Bg = Active ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.92f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.55f);
+		const float PressedOpacity = std::clamp(g_Config.m_BcKeystrokesMcPressedOpacity * 0.01f, 0.0f, 1.0f);
+		const ColorRGBA Bg = Active ? ColorRGBA(1.0f, 1.0f, 1.0f, PressedOpacity) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.55f);
 		pGraphics->DrawRect(X, Y, W, H, Bg, IGraphics::CORNER_NONE, 0.0f);
 
 		if(pLabel == nullptr)
@@ -672,6 +672,12 @@ void CHud::OnWindowResize()
 
 void CHud::OnReset()
 {
+	m_vCursorTrail.clear();
+	m_CursorTrailMode = -1;
+	m_CursorTrailFrames = -1;
+	m_CursorTrailDisableMovement = -1;
+	m_CursorTrailSampleTime = 0.0f;
+	m_CursorTrailAnchorValid = false;
 	m_TimeCpDiff = 0.0f;
 	m_DDRaceTime = 0;
 	m_FinishTimeLastReceivedTick = 0;
@@ -699,7 +705,6 @@ void CHud::OnReset()
 	m_FinishPredictionLastPredictTick = -1;
 	m_FinishPredictionFinishedRaceTick = -1;
 	m_FinishPredictionUsingFastPractice = false;
-	m_FinishPredictionAnalyseTeleFreeze = false;
 	m_KeystrokesMouse1EndTime = 0;
 	m_KeystrokesWheelUpEndTime = 0;
 	m_KeystrokesWheelDownEndTime = 0;
@@ -711,6 +716,7 @@ void CHud::OnReset()
 void CHud::OnInit()
 {
 	OnReset();
+	ReloadCursorTrail();
 
 	m_KeystrokesKeyboardTexture = Graphics()->LoadTexture("BestClient/keystrokes/wasd.png", IStorage::TYPE_ALL);
 	m_KeystrokesMouseTexture = Graphics()->LoadTexture("BestClient/keystrokes/mouse.png", IStorage::TYPE_ALL);
@@ -739,6 +745,17 @@ void CHud::OnInit()
 	PreparePlayerStateQuads();
 
 	Graphics()->QuadContainerUpload(m_HudQuadContainerIndex);
+}
+
+void CHud::ReloadCursorTrail()
+{
+	m_vCursorTrail.clear();
+	if(!m_CursorTrailTexture.IsNullTexture())
+		Graphics()->UnloadTexture(&m_CursorTrailTexture);
+	m_CursorTrailTexture = IGraphics::CTextureHandle();
+	str_copy(m_aCursorTrailPath, g_Config.m_BcCursorTrailTrailImage, sizeof(m_aCursorTrailPath));
+	if(m_aCursorTrailPath[0] != '\0')
+		m_CursorTrailTexture = Graphics()->LoadTexture(m_aCursorTrailPath, IStorage::TYPE_ALL);
 }
 
 void CHud::RenderGameTimer()
@@ -869,7 +886,7 @@ void CHud::RenderScoreHud(bool ForcePreview)
 		CTextCursor Cursor;
 		Cursor.SetPosition(vec2(X, Y));
 		Cursor.m_FontSize = Size;
-		if(Id >= 0 && Id < MAX_CLIENTS && g_Config.m_BcNameplateGradient)
+		if(Id >= 0 && Id < MAX_CLIENTS && g_Config.m_BcNameplateGradient && CBcGradient::AppliesTo(Id, GameClient()))
 		{
 			const float Phase = CBcGradient::AnimatePhase(Client()->GlobalTime());
 			const std::vector<STextColorSplit> vGradientSplits = CBcGradient::BuildAnimatedTextSplits(pName, Id, GameClient(), Phase);
@@ -1078,30 +1095,22 @@ void CHud::RenderScoreHud(bool ForcePreview)
 
 void CHud::RenderWarmupTimer()
 {
-	if(GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer <= 0 ||
-		(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_RACETIME) != 0)
+	// render warmup timer
+	if(GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer > 0 && !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_RACETIME))
 	{
-		return;
-	}
+		char aBuf[256];
+		float FontSize = 20.0f;
+		float w = TextRender()->TextWidth(FontSize, Localize("Warmup"), -1, -1.0f);
+		TextRender()->Text(150 * Graphics()->ScreenAspect() + -w / 2, 50, FontSize, Localize("Warmup"), -1.0f);
 
-	const float FontSize = 20.0f;
-	const char *pTitle = Localize("Warmup");
-	TextRender()->Text(150.0f * Graphics()->ScreenAspect() - TextRender()->TextWidth(FontSize, pTitle) / 2.0f, 50.0f, FontSize, pTitle);
-
-	const int Seconds = GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer / Client()->GameTickSpeed();
-	char aWarmupTime[16];
-	float TextWidth;
-	if(Seconds < 5)
-	{
-		str_format(aWarmupTime, sizeof(aWarmupTime), "%d.%d", Seconds, (GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer * 10 / Client()->GameTickSpeed()) % 10);
-		TextWidth = TextRender()->TextWidth(FontSize, "0.0"); // Calculate width with fixed string to avoid slight changes when using aWarmupTime
+		int Seconds = GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer / Client()->GameTickSpeed();
+		if(Seconds < 5)
+			str_format(aBuf, sizeof(aBuf), "%d.%d", Seconds, (GameClient()->m_Snap.m_pGameInfoObj->m_WarmupTimer * 10 / Client()->GameTickSpeed()) % 10);
+		else
+			str_format(aBuf, sizeof(aBuf), "%d", Seconds);
+		w = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
+		TextRender()->Text(150 * Graphics()->ScreenAspect() + -w / 2, 75, FontSize, aBuf, -1.0f);
 	}
-	else
-	{
-		str_format(aWarmupTime, sizeof(aWarmupTime), "%d", Seconds);
-		TextWidth = TextRender()->TextWidth(FontSize, aWarmupTime);
-	}
-	TextRender()->Text(150.0f * Graphics()->ScreenAspect() - TextWidth / 2.0f, 75.0f, FontSize, aWarmupTime);
 }
 
 void CHud::RenderSpeedrunTimer()
@@ -1686,10 +1695,11 @@ void CHud::RenderKeystrokesKeyboardInternal(bool ForcePreview, bool IgnoreModule
 	if(IsKeystrokesMinecraftStyle())
 	{
 		const int64_t Now = time_get();
+		const int64_t HighlightDuration = time_freq() * KEYSTROKES_WHEEL_HIGHLIGHT_MS / 1000;
 		if(!ForcePreview && HasTrackedPlayer && pTrackedInput == nullptr && pTrackedCharacter != nullptr && pPrevTrackedCharacter != nullptr &&
 			pPrevTrackedCharacter->m_AttackTick != pTrackedCharacter->m_AttackTick)
 		{
-			m_KeystrokesMouse1EndTime = Now + time_freq() * KEYSTROKES_WHEEL_HIGHLIGHT_MS / 1000;
+			m_KeystrokesMouse1EndTime = Now + HighlightDuration;
 		}
 
 		const auto McLayout = BuildKeystrokesMcLayout();
@@ -1778,6 +1788,7 @@ void CHud::RenderKeystrokesMouseInternal(bool ForcePreview, bool IgnoreModuleEna
 	const auto &Preset = GetKeystrokesMousePreset(g_Config.m_BcKeystrokesMousePreset);
 	const float Scale = GetKeystrokesScale(Layout);
 	const int64_t Now = time_get();
+	const int64_t HighlightDuration = time_freq() * KEYSTROKES_WHEEL_HIGHLIGHT_MS / 1000;
 	const int TrackedClientId = ForcePreview ? -1 : GetKeystrokesTrackedClientId();
 	const bool HasTrackedPlayer = TrackedClientId >= 0;
 	const CNetObj_PlayerInput *pTrackedInput = ForcePreview ? nullptr : GetKeystrokesTrackedInput();
@@ -1790,13 +1801,13 @@ void CHud::RenderKeystrokesMouseInternal(bool ForcePreview, bool IgnoreModuleEna
 	if(!ForcePreview)
 	{
 		if(!HasTrackedPlayer && pTrackedInput == nullptr && Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-			m_KeystrokesWheelUpEndTime = Now + time_freq() * KEYSTROKES_WHEEL_HIGHLIGHT_MS / 1000;
+			m_KeystrokesWheelUpEndTime = Now + HighlightDuration;
 		if(!HasTrackedPlayer && pTrackedInput == nullptr && Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-			m_KeystrokesWheelDownEndTime = Now + time_freq() * KEYSTROKES_WHEEL_HIGHLIGHT_MS / 1000;
+			m_KeystrokesWheelDownEndTime = Now + HighlightDuration;
 		if(HasTrackedPlayer && pTrackedInput == nullptr && pTrackedCharacter != nullptr && pPrevTrackedCharacter != nullptr &&
 			pPrevTrackedCharacter->m_AttackTick != pTrackedCharacter->m_AttackTick)
 		{
-			m_KeystrokesMouse1EndTime = Now + time_freq() * KEYSTROKES_WHEEL_HIGHLIGHT_MS / 1000;
+			m_KeystrokesMouse1EndTime = Now + HighlightDuration;
 		}
 	}
 
@@ -1859,7 +1870,7 @@ void CHud::RenderKeystrokesMouseInternal(bool ForcePreview, bool IgnoreModuleEna
 
 		if(Element.m_ActiveOnly && !Active)
 			continue;
-		if(Element.m_InputKind == EKeystrokesInputKind::WHEEL && !Element.m_ActiveOnly && !Active)
+		if(Element.m_InputKind == EKeystrokesInputKind::WHEEL && !Active)
 			continue;
 
 		int MapY = Element.m_MapY;
@@ -1944,16 +1955,18 @@ void CHud::RenderCursor()
 
 	int CurWeapon = 0;
 	vec2 TargetPos;
+	vec2 TrailTargetPos;
 	float Alpha = 1.0f;
 
 	const vec2 Center = GameClient()->m_Camera.m_Center;
-	CScreenRect ScreenRect = Graphics()->MapScreenToWorld(Center.x, Center.y, 100.0f, 100.0f, 100.0f, 0, 0, Graphics()->ScreenAspect(), 1.0f);
-	Graphics()->MapScreen(ScreenRect);
+	float aPoints[4];
+	Graphics()->MapScreenToWorld(Center.x, Center.y, 100.0f, 100.0f, 100.0f, 0, 0, Graphics()->ScreenAspect(), 1.0f, aPoints);
+	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && GameClient()->m_Snap.m_pLocalCharacter)
 	{
 		// Render local cursor
-		CurWeapon = std::max(0, GameClient()->m_aClients[GameClient()->m_Snap.m_LocalClientId].m_Predicted.m_ActiveWeapon);
+		CurWeapon = maximum(0, GameClient()->m_aClients[GameClient()->m_Snap.m_LocalClientId].m_Predicted.m_ActiveWeapon);
 		TargetPos = GameClient()->m_Controls.m_aTargetPos[g_Config.m_ClDummy];
 	}
 	else
@@ -1976,18 +1989,98 @@ void CHud::RenderCursor()
 		}
 
 		// Calculate factor to keep cursor on screen
-		const vec2 HalfSize = Center - ScreenRect.m_TopLeft;
+		const vec2 HalfSize = vec2(Center.x - aPoints[0], Center.y - aPoints[1]);
 		const vec2 ScreenPos = (GameClient()->m_CursorInfo.WorldTarget() - Center) / GameClient()->m_Camera.m_Zoom;
-		const float ClampFactor = std::max({
+		const float ClampFactor = maximum(
 			1.0f,
 			absolute(ScreenPos.x / HalfSize.x),
-			absolute(ScreenPos.y / HalfSize.y),
-		});
+			absolute(ScreenPos.y / HalfSize.y));
 
-		CurWeapon = std::max(0, GameClient()->m_CursorInfo.Weapon() % NUM_WEAPONS);
+		CurWeapon = maximum(0, GameClient()->m_CursorInfo.Weapon() % NUM_WEAPONS);
 		TargetPos = ScreenPos / ClampFactor + Center;
 		if(ClampFactor != 1.0f)
 			Alpha /= 2.0f;
+	}
+	TrailTargetPos = TargetPos;
+	if(g_Config.m_BcCursorTrailDisableMovement && Client()->State() != IClient::STATE_DEMOPLAYBACK && GameClient()->m_Snap.m_pLocalCharacter)
+	{
+		const vec2 PlayerPos = GameClient()->m_LocalCharacterPos;
+		if(!m_CursorTrailAnchorValid)
+		{
+			m_CursorTrailPreviousPlayerPos = PlayerPos;
+			m_CursorTrailAnchorValid = true;
+		}
+		else
+		{
+			const vec2 PlayerDelta = PlayerPos - m_CursorTrailPreviousPlayerPos;
+			for(SCursorTrailPoint &Point : m_vCursorTrail)
+				Point.m_Pos += PlayerDelta;
+			m_CursorTrailPreviousPlayerPos = PlayerPos;
+		}
+	}
+	else
+		m_CursorTrailAnchorValid = false;
+
+	if(str_comp(m_aCursorTrailPath, g_Config.m_BcCursorTrailTrailImage) != 0)
+		ReloadCursorTrail();
+	if(m_CursorTrailMode != g_Config.m_BcCursorTrailMode || m_CursorTrailFrames != g_Config.m_BcCursorTrailNumberOfFrames || m_CursorTrailDisableMovement != g_Config.m_BcCursorTrailDisableMovement)
+	{
+		m_vCursorTrail.clear();
+		m_CursorTrailSampleTime = 0.0f;
+		m_CursorTrailMode = g_Config.m_BcCursorTrailMode;
+		m_CursorTrailFrames = g_Config.m_BcCursorTrailNumberOfFrames;
+		m_CursorTrailDisableMovement = g_Config.m_BcCursorTrailDisableMovement;
+	}
+	if(!g_Config.m_BcCursorTrail)
+	{
+		m_vCursorTrail.clear();
+		m_CursorTrailSampleTime = 0.0f;
+	}
+	else if(g_Config.m_BcCursorTrailMode == 1 && (g_Config.m_BcCursorTrailTrailImage[0] == '\0' || m_CursorTrailTexture.IsNullTexture()))
+	{
+		m_vCursorTrail.clear();
+		m_CursorTrailSampleTime = 0.0f;
+	}
+	else if(g_Config.m_BcCursorTrailMode == 0 || (g_Config.m_BcCursorTrailTrailImage[0] != '\0' && !m_CursorTrailTexture.IsNullTexture()))
+	{
+		const float TrailSize = Scale * g_Config.m_BcCursorTrailTrailSize / 100.0f;
+		for(SCursorTrailPoint &Point : m_vCursorTrail)
+			Point.m_Age += Client()->RenderFrameTime();
+		constexpr float Lifetime = 0.2f;
+		m_vCursorTrail.erase(std::remove_if(m_vCursorTrail.begin(), m_vCursorTrail.end(), [Lifetime](const SCursorTrailPoint &Point) { return Point.m_Age >= Lifetime; }), m_vCursorTrail.end());
+		m_CursorTrailSampleTime += Client()->RenderFrameTime();
+		const float SampleInterval = 1.0f / g_Config.m_BcCursorTrailSamplingFps;
+		if(m_CursorTrailSampleTime >= SampleInterval && (m_vCursorTrail.empty() || m_vCursorTrail.front().m_Pos != TrailTargetPos))
+		{
+			m_vCursorTrail.insert(m_vCursorTrail.begin(), {TrailTargetPos, 0.0f});
+			m_CursorTrailSampleTime = 0.0f;
+		}
+		while((int)m_vCursorTrail.size() > g_Config.m_BcCursorTrailNumberOfFrames)
+			m_vCursorTrail.pop_back();
+
+		const float TrailAlphaMultiplier = g_Config.m_BcCursorTrailOpacity / 100.0f;
+		for(int i = (int)m_vCursorTrail.size() - 1; i >= 0; --i)
+		{
+			const SCursorTrailPoint &Point = m_vCursorTrail[i];
+			const float TrailAlpha = Alpha * TrailAlphaMultiplier * (1.0f - Point.m_Age / Lifetime);
+			const vec2 &Position = Point.m_Pos;
+			if(g_Config.m_BcCursorTrailMode == 0)
+			{
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, TrailAlpha);
+				Graphics()->TextureSet(GameClient()->m_GameSkin.m_aSpriteWeaponCursors[CurWeapon]);
+				Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_aCursorOffset[CurWeapon], Position.x, Position.y, TrailSize, TrailSize);
+			}
+			else
+			{
+				Graphics()->TextureSet(m_CursorTrailTexture);
+				Graphics()->QuadsSetSubset(0, 0, 1, 1);
+				IGraphics::CQuadItem Quad(Position.x, Position.y, 64.0f * TrailSize, 64.0f * TrailSize);
+				Graphics()->QuadsBegin();
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, TrailAlpha);
+				Graphics()->QuadsDraw(&Quad, 1);
+				Graphics()->QuadsEnd();
+			}
+		}
 	}
 
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
@@ -2110,18 +2203,16 @@ void CHud::RenderAmmoHealthAndArmor(const CNetObj_Character *pCharacter)
 	if(GameClient()->m_GameInfo.m_HudHealthArmor)
 	{
 		// health display
-		const int DisplayHealth = std::min(pCharacter->m_Health, 10);
 		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHealthFull);
-		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_HealthOffset + QuadOffsetSixup, DisplayHealth);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_HealthOffset + QuadOffsetSixup, minimum(pCharacter->m_Health, 10));
 		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHealthEmpty);
-		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_EmptyHealthOffset + QuadOffsetSixup + DisplayHealth, 10 - DisplayHealth);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_EmptyHealthOffset + QuadOffsetSixup + minimum(pCharacter->m_Health, 10), 10 - minimum(pCharacter->m_Health, 10));
 
 		// armor display
-		const int DisplayArmor = std::min(pCharacter->m_Armor, 10);
 		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteArmorFull);
-		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_ArmorOffset + QuadOffsetSixup, DisplayArmor);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_ArmorOffset + QuadOffsetSixup, minimum(pCharacter->m_Armor, 10));
 		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteArmorEmpty);
-		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_ArmorOffset + QuadOffsetSixup + DisplayArmor, 10 - DisplayArmor);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_ArmorOffset + QuadOffsetSixup + minimum(pCharacter->m_Armor, 10), 10 - minimum(pCharacter->m_Armor, 10));
 	}
 }
 
@@ -2197,7 +2288,17 @@ void CHud::RenderPlayerState(const int ClientId)
 		int AvailableJumpsToDisplay;
 		if(GameClient()->m_Snap.m_aCharacters[ClientId].m_HasExtendedDisplayInfo)
 		{
-			const bool Grounded = Collision()->IsOnGround(vec2(pPlayer->m_X, pPlayer->m_Y), CCharacterCore::PhysicalSize());
+			bool Grounded = false;
+			if(Collision()->CheckPoint(pPlayer->m_X + CCharacterCore::PhysicalSize() / 2,
+				   pPlayer->m_Y + CCharacterCore::PhysicalSize() / 2 + 5))
+			{
+				Grounded = true;
+			}
+			if(Collision()->CheckPoint(pPlayer->m_X - CCharacterCore::PhysicalSize() / 2,
+				   pPlayer->m_Y + CCharacterCore::PhysicalSize() / 2 + 5))
+			{
+				Grounded = true;
+			}
 
 			int UsedJumps = pCharacter->m_JumpedTotal;
 			if(pCharacter->m_Jumps > 1)
@@ -2226,8 +2327,8 @@ void CHud::RenderPlayerState(const int ClientId)
 				// In some edge cases when the player just got another number of jumps, UnusedJumps is not correct
 				UnusedJumps = 1;
 			}
-			TotalJumpsToDisplay = std::clamp(absolute(pCharacter->m_Jumps), 0, 10);
-			AvailableJumpsToDisplay = std::clamp(UnusedJumps, 0, TotalJumpsToDisplay);
+			TotalJumpsToDisplay = maximum(minimum(absolute(pCharacter->m_Jumps), 10), 0);
+			AvailableJumpsToDisplay = maximum(minimum(UnusedJumps, TotalJumpsToDisplay), 0);
 		}
 		else
 		{
@@ -3469,7 +3570,7 @@ CUIRect CHud::GetLocalTimeRect(bool ForcePreview) const
 
 	const bool Seconds = g_Config.m_TcShowLocalTimeSeconds; // TClient
 	char aTimeStr[16];
-	str_timestamp_format(aTimeStr, sizeof(aTimeStr), Seconds ? "%H:%M.%S" : "%H:%M");
+	str_timestamp_format(aTimeStr, sizeof(aTimeStr), Seconds ? "%H:%M:%S" : "%H:%M");
 	const float FontSize = 5.0f * Scale;
 	const float Padding = 5.0f * Scale;
 	const float Width = std::round(TextRender()->TextBoundingBox(FontSize, aTimeStr).m_W);
@@ -3489,7 +3590,7 @@ void CHud::RenderLocalTime(bool ForcePreview)
 	const bool Seconds = g_Config.m_TcShowLocalTimeSeconds; // TClient
 
 	char aTimeStr[16];
-	str_timestamp_format(aTimeStr, sizeof(aTimeStr), Seconds ? "%H:%M.%S" : "%H:%M");
+	str_timestamp_format(aTimeStr, sizeof(aTimeStr), Seconds ? "%H:%M:%S" : "%H:%M");
 	const float FontSize = 5.0f * Scale;
 	const float Padding = 5.0f * Scale;
 
@@ -3513,7 +3614,6 @@ bool CHud::RebuildFinishPredictionPathData() const
 	m_FinishPredictionSmoothedFinishTimeMs = -1;
 	m_FinishPredictionLastPredictTick = -1;
 	m_FinishPredictionFinishedRaceTick = -1;
-	m_FinishPredictionAnalyseTeleFreeze = g_Config.m_BcFinishPredictionAnalyseTeleFreeze != 0;
 
 	if(!Collision() || Collision()->GetWidth() <= 0 || Collision()->GetHeight() <= 0)
 		return false;
@@ -3524,39 +3624,10 @@ bool CHud::RebuildFinishPredictionPathData() const
 	m_vFinishPredictionDistances.assign(MapSize, -1);
 	m_vFinishPredictionPassable.assign(MapSize, 0);
 
-	const bool AnalyseTeleFreeze = m_FinishPredictionAnalyseTeleFreeze;
-	const auto IsFreezeTile = [](int GameTile, int FrontTile) {
-		return GameTile == TILE_FREEZE || GameTile == TILE_DFREEZE || GameTile == TILE_LFREEZE ||
-		       FrontTile == TILE_FREEZE || FrontTile == TILE_DFREEZE || FrontTile == TILE_LFREEZE;
-	};
-	const auto IsUnfreezeTile = [](int GameTile, int FrontTile) {
-		return GameTile == TILE_UNFREEZE || GameTile == TILE_DUNFREEZE || GameTile == TILE_LUNFREEZE ||
-		       FrontTile == TILE_UNFREEZE || FrontTile == TILE_DUNFREEZE || FrontTile == TILE_LUNFREEZE;
-	};
-	const auto IsSolidWallTile = [](int GameTile, int FrontTile) {
-		return GameTile == TILE_SOLID || GameTile == TILE_NOHOOK ||
-		       FrontTile == TILE_SOLID || FrontTile == TILE_NOHOOK;
-	};
-	const auto HasNearbyTile = [&](int TileX, int TileY, int Radius, const auto &Pred) {
-		for(int y = maximum(0, TileY - Radius); y <= minimum(m_FinishPredictionMapHeight - 1, TileY + Radius); ++y)
-		{
-			for(int x = maximum(0, TileX - Radius); x <= minimum(m_FinishPredictionMapWidth - 1, TileX + Radius); ++x)
-			{
-				const int NearbyIndex = y * m_FinishPredictionMapWidth + x;
-				if(Pred(Collision()->GetTileIndex(NearbyIndex), Collision()->GetFrontTileIndex(NearbyIndex)))
-					return true;
-			}
-		}
-		return false;
-	};
-
 	// Use tile solidity instead of TestBox-per-tile: TestBox does 4 collision probes
 	// and freezes the main thread for seconds on large maps.
 	using TDistanceNode = std::pair<int, int>;
 	std::priority_queue<TDistanceNode, std::vector<TDistanceNode>, std::greater<>> PriorityQueue;
-	std::map<int, std::vector<int>> TeleInsByNumber;
-	const CTeleTile *pTeleLayer = AnalyseTeleFreeze ? Collision()->TeleLayer() : nullptr;
-
 	for(int y = 0; y < m_FinishPredictionMapHeight; ++y)
 	{
 		for(int x = 0; x < m_FinishPredictionMapWidth; ++x)
@@ -3564,32 +3635,9 @@ bool CHud::RebuildFinishPredictionPathData() const
 			const int Index = y * m_FinishPredictionMapWidth + x;
 			const int GameTile = Collision()->GetTileIndex(Index);
 			const int FrontTile = Collision()->GetFrontTileIndex(Index);
-			const bool SolidBlocked = IsSolidWallTile(GameTile, FrontTile);
-			bool Blocked = SolidBlocked;
-
-			// With analyse mode: treat freeze as blocked unless it looks like a
-			// pass-through freeze wall (solid wall nearby + unfreeze nearby).
-			if(!Blocked && AnalyseTeleFreeze && IsFreezeTile(GameTile, FrontTile))
-			{
-				const bool NearWall = HasNearbyTile(x, y, 2, IsSolidWallTile);
-				const bool NearUnfreeze = HasNearbyTile(x, y, 6, IsUnfreezeTile);
-				Blocked = !(NearWall && NearUnfreeze);
-			}
-
+			const bool Blocked = GameTile == TILE_SOLID || GameTile == TILE_NOHOOK ||
+					    FrontTile == TILE_SOLID || FrontTile == TILE_NOHOOK;
 			m_vFinishPredictionPassable[Index] = Blocked ? 0 : 1;
-
-			if(AnalyseTeleFreeze && pTeleLayer)
-			{
-				const unsigned char TeleNumber = pTeleLayer[Index].m_Number;
-				const unsigned char TeleType = pTeleLayer[Index].m_Type;
-				if(TeleNumber > 0 && (TeleType == TILE_TELEIN || TeleType == TILE_TELEINEVIL || TeleType == TILE_TELEOUT))
-				{
-					// Keep teleport endpoints walkable so reverse-search edges can connect rooms.
-					m_vFinishPredictionPassable[Index] = 1;
-					if(TeleType == TILE_TELEIN || TeleType == TILE_TELEINEVIL)
-						TeleInsByNumber[TeleNumber].push_back(Index);
-				}
-			}
 
 			const bool StartTile = GameTile == TILE_START || FrontTile == TILE_START;
 			const bool FinishTile = GameTile == TILE_FINISH || FrontTile == TILE_FINISH;
@@ -3622,18 +3670,6 @@ bool CHud::RebuildFinishPredictionPathData() const
 		{{-1, 1}, 14},
 		{{-1, -1}, 14},
 	};
-	constexpr int TeleportEdgeCost = 10;
-	auto TryRelax = [&](int NextIndex, int NextDistance) {
-		if(NextIndex < 0 || NextIndex >= MapSize)
-			return;
-		if(m_vFinishPredictionPassable[NextIndex] == 0)
-			return;
-		if(m_vFinishPredictionDistances[NextIndex] >= 0 && m_vFinishPredictionDistances[NextIndex] <= NextDistance)
-			return;
-		m_vFinishPredictionDistances[NextIndex] = NextDistance;
-		PriorityQueue.emplace(NextDistance, NextIndex);
-	};
-
 	while(!PriorityQueue.empty())
 	{
 		const auto [CurDist, Index] = PriorityQueue.top();
@@ -3659,23 +3695,12 @@ bool CHud::RebuildFinishPredictionPathData() const
 				if(m_vFinishPredictionPassable[SideIndexX] == 0 || m_vFinishPredictionPassable[SideIndexY] == 0)
 					continue;
 			}
-			TryRelax(NextIndex, CurDist + DirInfo.m_Cost);
-		}
 
-		// Reverse-search teleport edges: finish <- ... <- tele-out <- tele-in
-		if(AnalyseTeleFreeze && pTeleLayer)
-		{
-			const unsigned char TeleNumber = pTeleLayer[Index].m_Number;
-			const unsigned char TeleType = pTeleLayer[Index].m_Type;
-			if(TeleNumber > 0 && TeleType == TILE_TELEOUT)
-			{
-				const auto InsIt = TeleInsByNumber.find(TeleNumber);
-				if(InsIt != TeleInsByNumber.end())
-				{
-					for(const int TeleInIndex : InsIt->second)
-						TryRelax(TeleInIndex, CurDist + TeleportEdgeCost);
-				}
-			}
+			const int NextDistance = CurDist + DirInfo.m_Cost;
+			if(m_vFinishPredictionDistances[NextIndex] >= 0 && m_vFinishPredictionDistances[NextIndex] <= NextDistance)
+				continue;
+			m_vFinishPredictionDistances[NextIndex] = NextDistance;
+			PriorityQueue.emplace(NextDistance, NextIndex);
 		}
 	}
 
@@ -3686,11 +3711,9 @@ bool CHud::EnsureFinishPredictionPathData() const
 {
 	if(!Collision() || Collision()->GetWidth() <= 0 || Collision()->GetHeight() <= 0)
 		return false;
-	const bool AnalyseTeleFreeze = g_Config.m_BcFinishPredictionAnalyseTeleFreeze != 0;
 	if(m_FinishPredictionMapWidth != Collision()->GetWidth() ||
 		m_FinishPredictionMapHeight != Collision()->GetHeight() ||
-		m_vFinishPredictionDistances.empty() ||
-		m_FinishPredictionAnalyseTeleFreeze != AnalyseTeleFreeze)
+		m_vFinishPredictionDistances.empty())
 		return RebuildFinishPredictionPathData();
 	return !m_vFinishPredictionDistances.empty();
 }
@@ -4064,7 +4087,7 @@ CUIRect CHud::GetFinishPredictionRect(bool ForcePreview) const
 	const float PaddingY = 4.0f * Scale;
 	const float Gap = 1.5f * Scale;
 	const bool ShowTime = g_Config.m_BcFinishPredictionShowTime != 0;
-	const bool ShowPercentage = g_Config.m_BcFinishPredictionShowPercentage != 0 || !State.m_HasPredictedTime;
+	const bool ShowPercentage = g_Config.m_BcFinishPredictionShowPercentage != 0;
 	const bool ShowMillis = g_Config.m_BcFinishPredictionShowMillis != 0;
 	if(!ShowTime && !ShowPercentage)
 		return {0.0f, 0.0f, 0.0f, 0.0f};
@@ -4105,7 +4128,7 @@ void CHud::RenderFinishPrediction(bool ForcePreview)
 	const int Corners = HudLayout::BackgroundCorners(IGraphics::CORNER_ALL, Rect.x, Rect.y, Rect.w, Rect.h, m_Width, m_Height);
 	const bool ShowTime = g_Config.m_BcFinishPredictionShowTime != 0;
 	const bool ShowRemaining = g_Config.m_BcFinishPredictionTimeMode == 0;
-	const bool ShowPercentage = g_Config.m_BcFinishPredictionShowPercentage != 0 || !State.m_HasPredictedTime;
+	const bool ShowPercentage = g_Config.m_BcFinishPredictionShowPercentage != 0;
 	const bool ShowMillis = g_Config.m_BcFinishPredictionShowMillis != 0;
 
 	if(Layout.m_BackgroundEnabled)
@@ -4197,13 +4220,13 @@ void CHud::OnRender()
 	{
 		const bool IngameGamePage = GameClient()->m_Menus.IsIngameGamePage();
 		const bool IngameSettingsPage = GameClient()->m_Menus.IsIngameSettingsPage();
-		if(!IngameGamePage && (!IngameSettingsPage || g_Config.m_BcHideHudInSettings))
+		if(!IngameGamePage && !IngameSettingsPage)
 			return;
 	}
 
 	m_Width = 300.0f * Graphics()->ScreenAspect();
 	m_Height = 300.0f;
-	Graphics()->MapScreenToSize(m_Width, m_Height);
+	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);
 
 #if defined(CONF_VIDEORECORDER)
 	if((IVideo::Current() && g_Config.m_ClVideoShowhud) || (!IVideo::Current() && g_Config.m_ClShowhud))

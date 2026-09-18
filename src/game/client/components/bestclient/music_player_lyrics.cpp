@@ -4,10 +4,11 @@
 #include <base/math.h>
 #include <base/system.h>
 
-#include <engine/http.h>
+#include <engine/shared/http.h>
 #include <engine/shared/json.h>
 #include <engine/textrender.h>
 
+#include <game/client/bc_ui_animations.h>
 #include <game/client/components/bestclient/version.h>
 #include <game/client/ui.h>
 
@@ -24,13 +25,6 @@ namespace
 	static constexpr ColorRGBA LYRICS_UPCOMING_COLOR(0.45f, 0.45f, 0.48f, 1.0f);
 	static constexpr int64_t LYRICS_OFFLINE_RETRY_MS = 15000;
 	static constexpr size_t LYRICS_CACHE_MAX = 64;
-
-	static float EaseOutCubic(float T)
-	{
-		T = std::clamp(T, 0.0f, 1.0f);
-		const float Inv = 1.0f - T;
-		return 1.0f - Inv * Inv * Inv;
-	}
 
 	static const char *JsonStringOrEmpty(const json_value *pValue)
 	{
@@ -50,6 +44,8 @@ void CMusicPlayerLyrics::TickDisplay(float Delta)
 {
 	if(m_DisplayState == EDisplayState::NotFound)
 		m_NotFoundDisplayMs += maximum(0.0f, Delta) * 1000.0f;
+	else if(m_DisplayState == EDisplayState::Offline)
+		m_OfflineDisplayMs += maximum(0.0f, Delta) * 1000.0f;
 }
 
 int CMusicPlayerLyrics::ResolveDisplayLineIndex() const
@@ -84,16 +80,19 @@ float CMusicPlayerLyrics::PreferredTextSlotWidth(ITextRender *pTextRender, float
 	if(ClampedMax <= 0.0f)
 		return 0.0f;
 
-	// Only the track title shrinks to content; lyrics, errors, and countdown keep full width.
-	if(m_DisplayState != EDisplayState::NotFound || ResolveDisplayLineIndex() != FALLBACK_TITLE)
+	// Brand and track-title fallbacks shrink to content; lyrics, errors, and countdown keep full width.
+	const bool ShowBrand = m_DisplayState == EDisplayState::Idle ||
+		(m_DisplayState == EDisplayState::Offline && m_OfflineDisplayMs >= (float)OFFLINE_HOLD_MS);
+	const bool ShowTitle = m_DisplayState == EDisplayState::NotFound && ResolveDisplayLineIndex() == FALLBACK_TITLE;
+	if(!ShowBrand && !ShowTitle)
 		return ClampedMax;
 
-	const char *pTitle = FallbackText(FALLBACK_TITLE);
-	if(pTextRender == nullptr || pTitle == nullptr || pTitle[0] == '\0')
+	const char *pText = ShowBrand ? "BestClient" : FallbackText(FALLBACK_TITLE);
+	if(pTextRender == nullptr || pText == nullptr || pText[0] == '\0')
 		return ClampedMax;
 
 	const float Pad = 1.2f * Scale * WidthScale;
-	const float TextW = pTextRender->TextWidth(FontSize, pTitle, -1, -1.0f);
+	const float TextW = pTextRender->TextWidth(FontSize, pText, -1, -1.0f);
 	return std::clamp(TextW + Pad * 2.0f, 0.0f, ClampedMax);
 }
 
@@ -118,6 +117,7 @@ void CMusicPlayerLyrics::ClearActiveTrack()
 	m_vCharMetrics.clear();
 	m_BaseLineWidth = 0.0f;
 	m_NotFoundDisplayMs = 0.0f;
+	m_OfflineDisplayMs = 0.0f;
 	m_TitleMarqueeOffset = 0.0f;
 	m_ClockPositionMs = 0;
 	m_ClockTick = 0;
@@ -235,6 +235,7 @@ bool CMusicPlayerLyrics::ParseSyncedLyrics(const char *pSyncedLyrics, std::vecto
 		return false;
 
 	const char *p = pSyncedLyrics;
+	std::vector<int64_t> vTimestamps;
 	while(*p)
 	{
 		while(*p == '\r' || *p == '\n')
@@ -247,7 +248,7 @@ bool CMusicPlayerLyrics::ParseSyncedLyrics(const char *pSyncedLyrics, std::vecto
 			++p;
 		const char *pLineEnd = p;
 
-		std::vector<int64_t> vTimestamps;
+		vTimestamps.clear();
 		const char *pCursor = pLineStart;
 		while(pCursor < pLineEnd)
 		{
@@ -319,7 +320,6 @@ void CMusicPlayerLyrics::ApplyCacheEntry(const SCacheEntry &Entry)
 {
 	m_DisplayState = Entry.m_State;
 	m_vLines = Entry.m_vLines;
-	MergeConsecutiveIdenticalLines(m_vLines);
 	ClearLayoutState();
 	if(Entry.m_State == EDisplayState::NotFound)
 		m_NotFoundDisplayMs = 0.0f;
@@ -358,7 +358,7 @@ void CMusicPlayerLyrics::StartRequest(IHttp *pHttp, const char *pTitle, const ch
 	}
 
 	m_pRequest = HttpGet(aUrl);
-	m_pRequest->Timeout(CTimeout{3000, 8000, 500, 5});
+	m_pRequest->Timeout(CTimeout{10000, 0, 500, 10});
 	m_pRequest->LogProgress(HTTPLOG::FAILURE);
 	m_pRequest->FailOnErrorStatus(false);
 	m_pRequest->HeaderString("Lrclib-Client", "667Client/" BESTCLIENT_VERSION " (https://github.com/revo667/667-client)");
@@ -372,7 +372,7 @@ void CMusicPlayerLyrics::ProcessRequest()
 	if(!m_pRequest || !m_pRequest->Done())
 		return;
 
-	std::shared_ptr<IHttpRequest> pFinished = m_pRequest;
+	std::shared_ptr<CHttpRequest> pFinished = m_pRequest;
 	m_pRequest.reset();
 	const std::string FinishedKey = m_RequestKey;
 	m_RequestKey.clear();
@@ -477,7 +477,7 @@ void CMusicPlayerLyrics::Update(IHttp *pHttp, const char *pTitle, const char *pA
 
 	m_TrackTitle = (pTitle != nullptr && pTitle[0] != '\0') ? pTitle : "";
 
-	const bool HasIdentity = (pTitle && pTitle[0] != '\0') || (pArtist && pArtist[0] != '\0');
+	const bool HasIdentity = pTitle && pTitle[0] != '\0' && pArtist && pArtist[0] != '\0';
 	if(!HasIdentity)
 	{
 		if(!m_ActiveKey.empty())
@@ -754,18 +754,30 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 {
 	if(pTextRender == nullptr || pUi == nullptr || Area.w <= 0.0f || Area.h <= 0.0f)
 		return;
+	if(m_vColorSplits.capacity() < 3)
+		m_vColorSplits.reserve(3);
 
 	const char *pStatusText = nullptr;
+	bool WhiteStatusText = false;
 	switch(m_DisplayState)
 	{
 	case EDisplayState::Idle:
+		pStatusText = "BestClient";
+		WhiteStatusText = true;
+		break;
 	case EDisplayState::Loading:
 		pStatusText = "…";
 		break;
 	case EDisplayState::NotFound:
 		break;
 	case EDisplayState::Offline:
-		pStatusText = "No connection";
+		if(m_OfflineDisplayMs < (float)OFFLINE_HOLD_MS)
+			pStatusText = "No connection";
+		else
+		{
+			pStatusText = "BestClient";
+			WhiteStatusText = true;
+		}
 		break;
 	case EDisplayState::Ready:
 		break;
@@ -773,7 +785,7 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 
 	if(pStatusText != nullptr)
 	{
-		pTextRender->TextColor(LYRICS_UPCOMING_COLOR);
+		pTextRender->TextColor(WhiteStatusText ? LYRICS_PASSED_COLOR : LYRICS_UPCOMING_COLOR);
 		const float Width = pTextRender->TextWidth(FontSize, pStatusText, -1, -1.0f);
 		pTextRender->Text(Area.x + (Area.w - Width) * 0.5f, Area.y + (Area.h - FontSize) * 0.5f, FontSize, pStatusText, -1.0f);
 		return;
@@ -853,7 +865,7 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 		TextStartX = ComputeTextStartX(Area.x, Area.w, CenterX, PlayheadX);
 	}
 
-	const float SlideT = EaseOutCubic(m_LineTransitionT);
+	const float SlideT = BCUiAnimations::EaseOutCubic(m_LineTransitionT);
 	const float BaseY = Area.y + (Area.h - FontSize) * 0.5f;
 	const float IncomingY = BaseY + (1.0f - SlideT) * Area.h;
 	const float OutgoingY = BaseY - SlideT * Area.h;
@@ -896,24 +908,24 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 		CUIRect Clip = Area;
 		pUi->ClipEnable(&Clip);
 
-		std::vector<STextColorSplit> vSplits;
+		m_vColorSplits.clear();
 		if(ColorMode == 1)
-			vSplits.emplace_back(0, -1, LYRICS_UPCOMING_COLOR.WithAlpha(Alpha));
+			m_vColorSplits.emplace_back(0, -1, LYRICS_UPCOMING_COLOR.WithAlpha(Alpha));
 		else if(ColorMode == 2)
-			vSplits.emplace_back(0, -1, LYRICS_PASSED_COLOR.WithAlpha(Alpha));
+			m_vColorSplits.emplace_back(0, -1, LYRICS_PASSED_COLOR.WithAlpha(Alpha));
 		else if(IsCountdownIndex(DrawIndex) && DrawIndex == m_CurrentLineIndex)
-			BuildColorSplits(ProgressCharsForColor, Alpha, vSplits);
+			BuildColorSplits(ProgressCharsForColor, Alpha, m_vColorSplits);
 		else if(IsCountdownIndex(DrawIndex) || IsFallbackIndex(DrawIndex))
-			vSplits.emplace_back(0, -1, LYRICS_PASSED_COLOR.WithAlpha(Alpha));
+			m_vColorSplits.emplace_back(0, -1, LYRICS_PASSED_COLOR.WithAlpha(Alpha));
 		else
-			BuildColorSplits(ProgressCharsForColor, Alpha, vSplits);
+			BuildColorSplits(ProgressCharsForColor, Alpha, m_vColorSplits);
 
 		auto DrawOnce = [&](float DrawX) {
 			CTextCursor Cursor;
 			Cursor.m_FontSize = FontSize;
 			Cursor.m_Flags = TEXTFLAG_RENDER;
 			Cursor.SetPosition(vec2(DrawX, Y));
-			Cursor.m_vColorSplits = vSplits;
+			Cursor.m_vColorSplits = m_vColorSplits;
 			pTextRender->TextColor(LYRICS_UPCOMING_COLOR.WithAlpha(Alpha));
 			pTextRender->TextEx(&Cursor, pText, -1);
 		};
