@@ -246,7 +246,7 @@ void CGameClient::OnConsoleInit()
 					      &m_Particles, // doesn't render anything, just updates all the particles
 					      &m_RaceDemo,
 					      &m_Rainbow, // TClient
-					      &m_BcGradient, // BestClient
+					      &m_BcGradient, // 667 Client
 					      &m_MapSounds,
 					      &m_Censor,
 					      &m_Background, // render instead of m_MapLayersBackground when g_Config.m_ClOverlayEntities == 100
@@ -256,32 +256,32 @@ void CGameClient::OnConsoleInit()
 					      &m_Particles.m_RenderTrailExtra,
 					      &m_Items,
 					      &m_Trails, // TClient
-					      &m_Translate, // BestClient
-					      &m_HookCombo, // BestClient
-					      &m_3DParticles, // BestClient
-					      &m_QuickBinds, // BestClient
+					      &m_Translate, // 667 Client
+					      &m_HookCombo, // 667 Client
+					      &m_3DParticles, // 667 Client
+					      &m_QuickBinds, // 667 Client
 					      &m_Ghost,
 					      &m_TClient, // TClient (Must be before chat and players)
 					      &m_Players,
 						  &m_MovingTilesBackground, // TClient
-						  &m_FastPractice, // BestClient
-						  &m_CloudInput, // BestClient
-						  &m_BcAutoMargin, // BestClient
+						  &m_FastPractice, // 667 Client
+						  &m_CloudInput, // 667 Client
+						  &m_BcAutoMargin, // 667 Client
 						  &m_MapLayersForeground,
 						  &m_MovingTilesForeground, // TClient
-					      &m_SelfTimeCp, // BestClient
-					      &m_ShowPoints, // BestClient
+					      &m_SelfTimeCp, // 667 Client
+					      &m_ShowPoints, // 667 Client
 					      &m_EgoFinishedMaps, // BestClient
 					      &m_Outlines,  // TClient
 					      &m_Mumble, // TClient
 					      &m_Pet, // TClient
-					      &m_ClientIndicator, // BestClient
+					      &m_ClientIndicator, // 667 Client
 					      &m_Particles.m_RenderExplosions,
 					      &m_NamePlates,
-					      &m_GifBubbles, // BestClient
-					      &m_ChatBubbles, // BestClient
-					      &m_PhysicBalls, // BestClient (from Entity-Client)
-					      &m_ProcessPriority, // BestClient (from Entity-Client)
+					      &m_GifBubbles, // 667 Client
+					      &m_ChatBubbles, // 667 Client
+					      &m_PhysicBalls, // 667 Client (from Entity-Client)
+					      &m_ProcessPriority, // 667 Client (from Entity-Client)
 					      &m_Particles.m_RenderExtra,
 					      &m_Particles.m_RenderGeneral,
 					      &m_FreezeBars,
@@ -289,14 +289,14 @@ void CGameClient::OnConsoleInit()
 					      &m_PlayerIndicator, // TClient
 					      &m_Mod, // TClient
 					      &m_CustomCommunities, // TClient
-					      &m_MusicPlayer, // BestClient
+					      &m_MusicPlayer, // 667 Client
 					      &m_Hud,
 					      &m_Spectator,
 					      &m_Emoticon,
-					      &m_SpecPauseRadio, // BestClient (from Entity-Client)
+					      &m_SpecPauseRadio, // 667 Client (from Entity-Client)
 					      &m_BindChat, // TClient
 					      &m_BindWheel, // TClient
-					      &m_FastActions, // BestClient
+					      &m_FastActions, // 667 Client
 					      &m_WarList, // TClient
 					      &m_StatusBar, // TClient
 					      &m_InfoMessages,
@@ -309,17 +309,17 @@ void CGameClient::OnConsoleInit()
 					      &m_Scoreboard,
 					      &m_Statboard,
 					      &m_Motd,
-					      &m_AdminPanel, // BestClient
+					      &m_AdminPanel, // 667 Client
 					      &m_Menus,
 					      &m_Tooltips,
 					      &m_Scripting, // TClient
 					      &m_KeyBinder,
 					      &m_GameConsole,
 					      &m_MenuBackground,
-					      &m_VoiceChat, // BestClient
-					      &m_TwitchChat, // BestClient
-					      &m_Clans, // BestClient
-					      &m_SwapTimer, // BestClient
+					      &m_VoiceChat, // 667 Client
+					      &m_TwitchChat, // 667 Client
+					      &m_Clans, // 667 Client
+					      &m_SwapTimer, // 667 Client
 					      &m_HudEditor});
 
 	// build the input stack
@@ -331,12 +331,12 @@ void CGameClient::OnConsoleInit()
 						  &m_Scoreboard,
 						  &m_Motd, // for pressing esc to remove it
 						  &m_Spectator,
-						  &m_SpecPauseRadio, // BestClient (from Entity-Client)
+						  &m_SpecPauseRadio, // 667 Client (from Entity-Client)
 						  &m_BindWheel, // TClient
-						  &m_FastActions, // BestClient
+						  &m_FastActions, // 667 Client
 						  &m_Emoticon,
 						  &m_ImportantAlert,
-						  &m_AdminPanel, // BestClient
+						  &m_AdminPanel, // 667 Client
 						  &m_Menus,
 						  &m_Controls,
 						  &m_TouchControls,
@@ -470,7 +470,7 @@ void CGameClient::InitializeLanguage()
 	str_format(aBuf, sizeof(aBuf), "tclient/%s", g_Config.m_ClLanguagefile);
 	g_Localization.Load(aBuf, Storage(), Console(), false);
 
-	// BestClient
+	// 667 Client
 	str_format(aBuf, sizeof(aBuf), "BestClient/%s", g_Config.m_ClLanguagefile);
 	g_Localization.Load(aBuf, Storage(), Console(), false);
 }
@@ -757,7 +757,7 @@ int CGameClient::OnSnapInput(int *pData, bool Dummy, bool Force)
 	}
 }
 
-// BestClient
+// 667 Client
 void CGameClient::PrepareInputForSend(int *pData, int Size, bool Dummy)
 {
 	m_FastPractice.PrepareInputForSend(pData, Size, Dummy);
@@ -765,7 +765,7 @@ void CGameClient::PrepareInputForSend(int *pData, int Size, bool Dummy)
 
 void CGameClient::OnConnected()
 {
-	m_FastPractice.InvalidateBufferedInputState(); // BestClient
+	m_FastPractice.InvalidateBufferedInputState(); // 667 Client
 	const char *pConnectCaption = DemoPlayer()->IsPlaying() ? Localize("Preparing demo playback") : Localize("Connected");
 	const char *pLoadMapContent = Localize("Initializing map logic");
 	// render loading before skip is calculated
@@ -886,7 +886,7 @@ void CGameClient::OnReset()
 	std::fill(std::begin(m_aLastUpdateTick), std::end(m_aLastUpdateTick), 0);
 
 	m_IsDummySwapping = false;
-	m_PredictedDummyId = -1; // BestClient
+	m_PredictedDummyId = -1; // 667 Client
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
 	{
 		m_aAutoTeamLockLastTeam[Dummy] = TEAM_FLOCK;
@@ -1069,7 +1069,7 @@ void CGameClient::OnRender()
 
 	if(UseGameNoHudAspect && HudAspectDisabled)
 		Graphics()->SetScreenAspectOverrideEnabled(true);
-	RenderOptimizerFpsFogRect(); // BestClient
+	RenderOptimizerFpsFogRect(); // 667 Client
 	if(UseGameNoHudAspect && HudAspectDisabled)
 		Graphics()->SetScreenAspectOverrideEnabled(false);
 
@@ -1165,8 +1165,8 @@ void CGameClient::OnDummyDisconnect()
 	m_aShowOthers[1] = SHOW_OTHERS_NOT_SET;
 	m_aEnableSpectatorCount[1] = -1;
 	m_aLastNewPredictedTick[1] = -1;
-	m_PredictedDummyId = -1; // BestClient
-	m_FastPractice.InvalidateBufferedInputState(); // BestClient
+	m_PredictedDummyId = -1; // 667 Client
+	m_FastPractice.InvalidateBufferedInputState(); // 667 Client
 }
 
 int CGameClient::LastRaceTick() const
@@ -1185,7 +1185,7 @@ int CGameClient::CurrentRaceTime() const
 
 bool CGameClient::Predict() const
 {
-	if(!g_Config.m_ClPredict && !m_FastPractice.Enabled()) // BestClient
+	if(!g_Config.m_ClPredict && !m_FastPractice.Enabled()) // 667 Client
 		return false;
 
 	if(m_Snap.m_pGameInfoObj)
@@ -1716,7 +1716,7 @@ void CGameClient::HandleLanguageChanged()
 	str_format(aBuf, sizeof(aBuf), "tclient/%s", g_Config.m_ClLanguagefile);
 	g_Localization.Load(aBuf, Storage(), Console(), false);
 
-	// BestClient
+	// 667 Client
 	str_format(aBuf, sizeof(aBuf), "BestClient/%s", g_Config.m_ClLanguagefile);
 	g_Localization.Load(aBuf, Storage(), Console(), false);
 
@@ -2555,7 +2555,7 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 
-	// BestClient
+	// 667 Client
 	if(m_FastPractice.Enabled())
 		m_PredictedDummyId = m_FastPractice.CurrentPracticeDummyId();
 	else if(Client()->DummyConnected() && m_aLocalIds[!g_Config.m_ClDummy] >= 0)
@@ -3070,7 +3070,7 @@ void CGameClient::OnPredict()
 	// we can't predict without our own id or own character
 	if(m_Snap.m_LocalClientId == -1 || !m_Snap.m_aCharacters[m_Snap.m_LocalClientId].m_Active)
 	{
-		if(m_FastPractice.Enabled()) // BestClient
+		if(m_FastPractice.Enabled()) // 667 Client
 			m_FastPractice.SyncFromPrediction();
 		return;
 	}
@@ -3088,7 +3088,7 @@ void CGameClient::OnPredict()
 			m_PredictedPrevChar.Read(m_Snap.m_pLocalPrevCharacter);
 			m_PredictedPrevChar.m_ActiveWeapon = m_Snap.m_pLocalPrevCharacter->m_Weapon;
 		}
-		if(m_FastPractice.Enabled()) // BestClient
+		if(m_FastPractice.Enabled()) // 667 Client
 			m_FastPractice.SyncFromPrediction();
 		return;
 	}
@@ -3106,7 +3106,7 @@ void CGameClient::OnPredict()
 			aBeforeRender[i] = GetSmoothPos(i);
 	}
 
-	const bool PracticeActive = m_FastPractice.Active(); // BestClient
+	const bool PracticeActive = m_FastPractice.Active(); // 667 Client
 	CNetObj_PlayerInput PracticeNeutralInput{};
 	CNetObj_PlayerInput PracticeNeutralDummyInput{};
 	if(PracticeActive)
@@ -3199,7 +3199,7 @@ void CGameClient::OnPredict()
 		CNetObj_PlayerInput DummyFastInput{};
 		bool DummyFirst = pInputData && pDummyInputData && pDummyChar->GetCid() < pLocalChar->GetCid();
 
-		// BestClient: keep regular prediction idle while practice world runs
+		// 667 Client: keep regular prediction idle while practice world runs
 		if(PracticeActive)
 		{
 			pInputData = &PracticeNeutralInput;
@@ -3275,7 +3275,7 @@ void CGameClient::OnPredict()
 		for(int i = 0; i < MAX_CLIENTS; i++)
 			if(CCharacter *pChar = m_PredictedWorld.GetCharacterById(i))
 			{
-				// BestClient: mixing neutral-input regular positions into a practice participant's
+				// 667 Client: mixing neutral-input regular positions into a practice participant's
 				// history makes GetFastInputPos interpolate between the practice and the real tee.
 				if(PracticeActive && m_FastPractice.IsPracticeParticipant(i))
 					continue;
@@ -3707,7 +3707,7 @@ void CGameClient::OnPredict()
 	if(m_NewPredictedTick)
 		m_Ghost.OnNewPredictedSnapshot();
 
-	// BestClient: tick the copied practice world after regular prediction
+	// 667 Client: tick the copied practice world after regular prediction
 	m_FastPractice.SyncFromPrediction();
 }
 
@@ -4130,7 +4130,7 @@ void CGameClient::SendDummyInfo(bool Start)
 
 void CGameClient::SendKill()
 {
-	// BestClient: in fast practice /kill resets the local practice world instead
+	// 667 Client: in fast practice /kill resets the local practice world instead
 	if(m_FastPractice.ConsumeKillCommand())
 		return;
 
@@ -4350,7 +4350,7 @@ void CGameClient::UpdatePrediction()
 	m_GameWorld.m_WorldConfig.m_IsFNG = m_GameInfo.m_PredictFNG;
 	m_GameWorld.m_WorldConfig.m_PredictDDRace = m_GameInfo.m_PredictDDRace;
 	m_GameWorld.m_WorldConfig.m_PredictTiles = m_GameInfo.m_PredictDDRace && m_GameInfo.m_PredictDDRaceTiles;
-	m_GameWorld.m_WorldConfig.m_PredictTeleports = false; // BestClient
+	m_GameWorld.m_WorldConfig.m_PredictTeleports = false; // 667 Client
 	m_GameWorld.m_WorldConfig.m_PredictFreeze = g_Config.m_ClPredictFreeze;
 	m_GameWorld.m_WorldConfig.m_PredictWeapons = AntiPingWeapons();
 	m_GameWorld.m_WorldConfig.m_BugDDRaceInput = m_GameInfo.m_BugDDRaceInput;
@@ -4432,7 +4432,7 @@ void CGameClient::UpdatePrediction()
 			for(int i = 0; i < MAX_CLIENTS; i++)
 				if(CCharacter *pChar = m_GameWorld.GetCharacterById(i))
 				{
-					// BestClient: practice participants own their prediction history, see CFastPractice::StorePredictionState
+					// 667 Client: practice participants own their prediction history, see CFastPractice::StorePredictionState
 					if(m_FastPractice.IsPracticeParticipant(i))
 						continue;
 					m_aClients[i].m_aPredPos[Tick % 200] = pChar->Core()->m_Pos;
@@ -4455,7 +4455,7 @@ void CGameClient::UpdatePrediction()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		if(CCharacter *pChar = m_GameWorld.GetCharacterById(i))
 		{
-			if(m_FastPractice.IsPracticeParticipant(i)) // BestClient
+			if(m_FastPractice.IsPracticeParticipant(i)) // 667 Client
 				continue;
 			m_aClients[i].m_aPredPos[Client()->GameTick(g_Config.m_ClDummy) % 200] = pChar->Core()->m_Pos;
 			m_aClients[i].m_aPredTick[Client()->GameTick(g_Config.m_ClDummy) % 200] = Client()->GameTick(g_Config.m_ClDummy);
@@ -4633,9 +4633,9 @@ void CGameClient::UpdateRenderedCharacters()
 	const int FastInputTicksOthers = CloudInputMode ? (FastInputOthers ? m_CloudInput.OthersTickOffset() : 0) : BcInputs::PredictionTicksOthers(FastInputOffsetTicks);
 	const bool HasFastInput = FastInputTicks > 0;
 	const bool HasFastInputOthers = FastInputTicksOthers > 0;
-	const bool PracticeActive = m_FastPractice.Active(); // BestClient
-	const int PracticeControlledId = PracticeActive ? m_FastPractice.ControlledPracticeId() : -1; // BestClient
-	const int PracticePartnerId = PracticeActive ? m_FastPractice.PartnerPracticeId() : -1; // BestClient
+	const bool PracticeActive = m_FastPractice.Active(); // 667 Client
+	const int PracticeControlledId = PracticeActive ? m_FastPractice.ControlledPracticeId() : -1; // 667 Client
+	const int PracticePartnerId = PracticeActive ? m_FastPractice.PartnerPracticeId() : -1; // 667 Client
 
 	// Drop leftover ClAntiPingSmooth / improved-smooth state so prior sessions on this tee
 	// cannot keep sampling near GameTime after cloud is enabled.
@@ -4663,10 +4663,10 @@ void CGameClient::UpdateRenderedCharacters()
 			vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
 			Client()->IntraGameTick(g_Config.m_ClDummy));
 		vec2 Pos = UnpredPos;
-		const bool IsPracticeParticipant = PracticeActive && m_FastPractice.IsPracticeParticipant(i); // BestClient
+		const bool IsPracticeParticipant = PracticeActive && m_FastPractice.IsPracticeParticipant(i); // 667 Client
 		CCharacter *pChar = IsPracticeParticipant ? m_FastPractice.PracticeWorld().GetCharacterById(i) : m_PredictedWorld.GetCharacterById(i);
 
-		// TClient / BestClient
+		// TClient / 667 Client
 		if(i == (PracticeActive ? PracticeControlledId : m_Snap.m_LocalClientId))
 			Client()->m_IsLocalFrozen = pChar && pChar->m_FreezeTime > 0;
 
@@ -4690,7 +4690,7 @@ void CGameClient::UpdateRenderedCharacters()
 			m_aClients[i].m_IsPredicted = true;
 			m_aClients[i].m_IsPredictedLocal = (i == PracticeControlledId || i == PracticePartnerId);
 
-			// BestClient: reuse the exact same positioning path as a vanilla local tee so that
+			// 667 Client: reuse the exact same positioning path as a vanilla local tee so that
 			// fractional input offsets behave identically inside practice.
 			Pos = mix(
 				vec2(m_aClients[i].m_RenderPrev.m_X, m_aClients[i].m_RenderPrev.m_Y),

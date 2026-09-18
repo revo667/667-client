@@ -172,8 +172,25 @@ option(FUSE_LD "Linker to use" OFF)
 option(SECURITY_COMPILER_FLAGS "Whether to set security-relevant compiler flags like -D_FORTIFY_SOURCE=2 and -fstack-protector-strong" ON)
 option(MACOS_CODESIGN "Whether to sign code when building the DMG on macOS" OFF)
 
-if(TARGET_OS STREQUAL "mac" AND DEFINED ENV{MACOS_APP_IDENTITY})
-  set(MACOS_APP_IDENTITY "$ENV{MACOS_APP_IDENTITY}")
+if(TARGET_OS STREQUAL "mac" AND NOT MACOS_CODESIGN STREQUAL OFF)
+  if(DEFINED ENV{MACOS_APP_IDENTITY})
+    message(STATUS "Using MACOS_APP_IDENTITY as codesign signature")
+    set(MACOS_APP_IDENTITY "$ENV{MACOS_APP_IDENTITY}")
+    # Only meaningful with a real Developer ID: the hardened runtime is what
+    # notarization requires, and a secure timestamp needs an identity too. With
+    # an ad-hoc signature the hardened runtime instead makes dyld refuse every
+    # bundled dylib, because library validation compares team IDs and ad-hoc
+    # signatures carry none.
+    set(MACOS_CODESIGN_FLAGS --options runtime --timestamp)
+  else()
+    # An ad-hoc signature is not accepted by Gatekeeper, but it does seal the
+    # bundle, which keeps the Apple Events and microphone grants attached to the
+    # app instead of to a bare binary. Without a fallback every codesign call
+    # here would take the path it should sign as its identity and fail.
+    message(WARNING "MACOS_APP_IDENTITY environment variable not defined. Using ad-hoc signature")
+    set(MACOS_APP_IDENTITY "-")
+    set(MACOS_CODESIGN_FLAGS "")
+  endif()
 endif()
 
 if(TARGET_OS STREQUAL "android")
@@ -702,6 +719,25 @@ if(TARGET_OS AND TARGET_OS STREQUAL "mac")
   find_program(CMAKE_OTOOL otool)
   find_program(DMGBUILD dmgbuild)
   set(DMGBUILD_FOUND ${DMGBUILD})
+endif()
+
+# find_path() resolves symlinks, so a dependency that ships inside the macOS SDK
+# (SQLite3, curl, zlib) reports .../SDKs/MacOSX26.sdk/usr/include while CMake
+# only knows the .../SDKs/MacOSX.sdk/usr/include spelling as implicit. The
+# unrecognised copy is then passed with -isystem, i.e. ahead of libc++, and
+# every <cstdlib>/<cmath> in the tree stops finding its C counterpart. That
+# directory is searched by default anyway, so drop it.
+if(TARGET_OS STREQUAL "mac")
+  foreach(dependency CURL SQLite3 ZLIB PNG FREETYPE OPUS OPUSFILE OGG)
+    set(SDK_FILTERED_INCLUDE_DIRS)
+    foreach(dir ${${dependency}_INCLUDE_DIRS})
+      get_filename_component(resolved_dir "${dir}" REALPATH)
+      if(NOT resolved_dir MATCHES "/SDKs/MacOSX[0-9.]*\\.sdk/usr/include$")
+        list(APPEND SDK_FILTERED_INCLUDE_DIRS "${dir}")
+      endif()
+    endforeach()
+    set(${dependency}_INCLUDE_DIRS ${SDK_FILTERED_INCLUDE_DIRS})
+  endforeach()
 endif()
 
 set(VULKAN_SHADER_FILE_LIST "" CACHE STRING "Vulkan shader file list")
@@ -4018,29 +4054,29 @@ if(CLIENT AND DMGBUILD_FOUND)
 
   if(NOT MACOS_CODESIGN STREQUAL OFF)
     set(CODESIGN_COMMANDS
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/SDL2.framework
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libsteam_api.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/discord_game_sdk.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libfreetype.6.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libpng16.16.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavcodec.61.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavformat.61.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavutil.59.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libswresample.5.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libswscale.8.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/SDL2.framework
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libsteam_api.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/discord_game_sdk.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libfreetype.6.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libpng16.16.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavcodec.61.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavformat.61.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavutil.59.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libswresample.5.dylib
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libswscale.8.dylib
     )
     foreach(target ${TARGET_TOOLS})
       list(APPEND CODESIGN_COMMANDS
-          COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${target}
+          COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${target}
       )
     endforeach()
     list(APPEND CODESIGN_COMMANDS
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
 
-        COMMAND codesign --force --options runtime --timestamp --deep --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app
-        COMMAND codesign --force --options runtime --timestamp --deep --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --deep --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app
+        COMMAND codesign --force ${MACOS_CODESIGN_FLAGS} --deep --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app
         # Verify signatures
         COMMAND codesign --verify --deep --strict --verbose=2 "${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app"
         COMMAND codesign --verify --deep --strict --verbose=2 "${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app"

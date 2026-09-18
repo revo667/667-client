@@ -629,7 +629,7 @@ void CVoiceChat::LoadMutedNamesFromFile()
 
 void CVoiceChat::SaveMutedNamesToFile()
 {
-	Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
+	Storage()->CreateFolder("BestClient", IStorage::TYPE_SAVE);
 	IOHANDLE File = Storage()->OpenFile(VOICE_MUTED_CFG_PATH, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 		return;

@@ -2919,7 +2919,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		char aBuf[256];
 		if(State == IUpdater::VERSION_AVAILABLE)
 		{
-			str_format(aBuf, sizeof(aBuf), Localize("BestClient %s is out!"), Updater()->GetLatestVersionString());
+			str_format(aBuf, sizeof(aBuf), Localize("667 Client %s is out!"), Updater()->GetLatestVersionString());
 			UpdaterRect.VSplitLeft(TextRender()->TextWidth(14.0f, aBuf, -1, -1.0f) + 10.0f, &UpdaterRect, &Button);
 			Button.VSplitLeft(100.0f, &Button, nullptr);
 			static CButtonContainer s_ButtonUpdate;
@@ -2932,7 +2932,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 			str_copy(aBuf, Localize("Updating…"));
 		else if(State == IUpdater::NEED_RESTART)
 		{
-			str_copy(aBuf, Localize("BestClient updated!"));
+			str_copy(aBuf, Localize("667 Client updated!"));
 			m_NeedRestartUpdate = true;
 		}
 		else

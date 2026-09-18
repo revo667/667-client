@@ -17,7 +17,7 @@
 		<key>CFBundleVersion</key>
 		<string>${PROJECT_VERSION}</string>
 		<key>CFBundleIdentifier</key>
-		<string>org.DDNetClient.app</string>
+		<string>fun.bestclient.client667</string>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
@@ -54,6 +54,8 @@
 		</array>
 		<key>NSAppleEventsUsageDescription</key>
 		<string>Allows the music player HUD to show the track currently playing in Spotify or Music, and to skip or pause it.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Allows in-game voice chat to transmit your microphone to the other players on the server.</string>
 		<key>NSHighResolutionCapable</key>
 		<true/>
 		<key>NSPrefersDisplaySafeAreaCompatibilityMode</key>

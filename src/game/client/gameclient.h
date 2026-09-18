@@ -187,7 +187,7 @@ class CGameClient : public IGameClient
 {
 public:
 	friend class CTClient;
-	friend class CFastPractice; // BestClient
+	friend class CFastPractice; // 667 Client
 
 	// all components
 	CInfoMessages m_InfoMessages;
@@ -245,14 +245,14 @@ public:
 	CStatusBar m_StatusBar;
 	CBindChat m_BindChat;
 	CBindWheel m_BindWheel;
-	CFastActions m_FastActions; // BestClient
-	CGifBubbles m_GifBubbles; // BestClient
-	CChatBubbles m_ChatBubbles; // BestClient
-	CPhysicBalls m_PhysicBalls; // BestClient (from Entity-Client)
-	CProcessPriority m_ProcessPriority; // BestClient (from Entity-Client)
-	CSpecPauseRadio m_SpecPauseRadio; // BestClient (from Entity-Client)
-	CFastPractice m_FastPractice; // BestClient
-	CCloudInput m_CloudInput; // BestClient
+	CFastActions m_FastActions; // 667 Client
+	CGifBubbles m_GifBubbles; // 667 Client
+	CChatBubbles m_ChatBubbles; // 667 Client
+	CPhysicBalls m_PhysicBalls; // 667 Client (from Entity-Client)
+	CProcessPriority m_ProcessPriority; // 667 Client (from Entity-Client)
+	CSpecPauseRadio m_SpecPauseRadio; // 667 Client (from Entity-Client)
+	CFastPractice m_FastPractice; // 667 Client
+	CCloudInput m_CloudInput; // 667 Client
 	CEdgeHelper m_EdgeHelper; // BestClient (from RushieClient)
 	CBgDraw m_BgDraw;
 	CTClient m_TClient;
@@ -261,19 +261,19 @@ public:
 	CHookCombo m_HookCombo;
 	CBcGradient m_BcGradient;
 	C3DParticles m_3DParticles;
-	CQuickBinds m_QuickBinds; // BestClient
-	CSelfTimeCp m_SelfTimeCp; // BestClient
-	CShowPoints m_ShowPoints; // BestClient
+	CQuickBinds m_QuickBinds; // 667 Client
+	CSelfTimeCp m_SelfTimeCp; // 667 Client
+	CShowPoints m_ShowPoints; // 667 Client
 	CEgoFinishedMaps m_EgoFinishedMaps; // BestClient
-	CClientIndicator m_ClientIndicator; // BestClient
-	CMusicPlayer m_MusicPlayer; // BestClient
-	CAdminPanel m_AdminPanel; // BestClient
-	CBcAutoMargin m_BcAutoMargin; // BestClient
-	CVoiceChat m_VoiceChat; // BestClient
-	CTwitchChat m_TwitchChat; // BestClient
-	CClans m_Clans; // BestClient
-	CHudEditor m_HudEditor; // BestClient
-	CSwapTimer m_SwapTimer; // BestClient
+	CClientIndicator m_ClientIndicator; // 667 Client
+	CMusicPlayer m_MusicPlayer; // 667 Client
+	CAdminPanel m_AdminPanel; // 667 Client
+	CBcAutoMargin m_BcAutoMargin; // 667 Client
+	CVoiceChat m_VoiceChat; // 667 Client
+	CTwitchChat m_TwitchChat; // 667 Client
+	CClans m_Clans; // 667 Client
+	CHudEditor m_HudEditor; // 667 Client
+	CSwapTimer m_SwapTimer; // 667 Client
 	CPet m_Pet;
 	CPlayerIndicator m_PlayerIndicator;
 	COutlines m_Outlines;
@@ -413,7 +413,7 @@ public:
 	bool m_SuppressEvents;
 	bool m_NewTick;
 	bool m_NewPredictedTick;
-	bool m_aPredictedHammerHitEvent[NUM_DUMMIES]; // BestClient: hook combo (hammer mode)
+	bool m_aPredictedHammerHitEvent[NUM_DUMMIES]; // 667 Client: hook combo (hammer mode)
 	int m_aFlagDropTick[2];
 
 	enum
@@ -721,7 +721,7 @@ public:
 	void OnActivateEditor() override;
 	void OnDummySwap() override;
 	int OnSnapInput(int *pData, bool Dummy, bool Force) override;
-	void PrepareInputForSend(int *pData, int Size, bool Dummy) override; // BestClient
+	void PrepareInputForSend(int *pData, int Size, bool Dummy) override; // 667 Client
 	void OnShutdown() override;
 	void OnEnterGame() override;
 	void OnRconType(bool UsernameReq) override;
@@ -757,7 +757,7 @@ public:
 	const char *DDNetVersionStr() const override;
 	int ClientVersion7() const override;
 
-	// BestClient: optimizer
+	// 667 Client: optimizer
 	bool OptimizerEnabled() const;
 	bool OptimizerDisableParticles() const;
 	bool OptimizerFpsFogEnabled() const;
@@ -1071,7 +1071,7 @@ private:
 	void HandlePredictedEvents(int Tick);
 
 
-	// BestClient: optimizer
+	// 667 Client: optimizer
 	void RenderOptimizerFpsFogRect();
 	int m_WasWindowActive = 1;
 
@@ -1079,7 +1079,7 @@ private:
 	void DetectStrongHook();
 
 	int m_IsDummySwapping;
-	int m_PredictedDummyId = -1; // BestClient
+	int m_PredictedDummyId = -1; // 667 Client
 	int m_aAutoTeamLockLastTeam[NUM_DUMMIES];
 	int64_t m_aAutoTeamLockDeadlineTick[NUM_DUMMIES];
 	bool m_aAutoTeamLockPending[NUM_DUMMIES];

@@ -3193,7 +3193,7 @@ void CMenus::RenderSettingsBestClientOthers(CUIRect MainView)
 		Ui()->DoEditBox(&s_SpecMovedNotifyTextInput, &TextField, 14.0f);
 	}
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowPointsInTab, Localize("Show points in tab"), &g_Config.m_BcShowPointsInTab, &MiscBlock, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcMastersrv, Localize("Use BestClient MasterServer"), &g_Config.m_BcMastersrv, &MiscBlock, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcMastersrv, Localize("Use 667 Client MasterServer"), &g_Config.m_BcMastersrv, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowhudDummyCoordIndicator, Localize("Show player below indicator"), &g_Config.m_BcShowhudDummyCoordIndicator, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowCorrectCheckpoint, Localize("Show current checkpoint in hud"), &g_Config.m_BcShowCorrectCheckpoint, &MiscBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcShowRealHitbox, Localize("Show real hitbox"), &g_Config.m_BcShowRealHitbox, &MiscBlock, LineSize);
@@ -3774,9 +3774,9 @@ void CMenus::RenderSettingsBestClientInfo(CUIRect MainView)
 		s_CurBestClientTab = BESTCLIENT_TAB_FUN;
 	LeftView.HSplitTop(MarginBetweenViews, nullptr, &LeftView);
 
-	// ── BestClient Links ───────────────────────────────────────────────────
+	// ── 667 Client Links ───────────────────────────────────────────────────
 	LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
-	Ui()->DoLabel(&Label, Localize("BestClient Links"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, Localize("667 Client Links"), HeadlineFontSize, TEXTALIGN_ML);
 	LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 
 	static CButtonContainer s_DiscordButton, s_WebsiteButton, s_TelegramButton, s_CheckUpdateButton;
@@ -3816,9 +3816,9 @@ void CMenus::RenderSettingsBestClientInfo(CUIRect MainView)
 		Client()->ViewFile(aBuf);
 	}
 
-	// ── BestClient Developers ─────────────────────────────────────────────
+	// ── 667 Client Developers ─────────────────────────────────────────────
 	RightView.HSplitTop(HeadlineHeight, &Label, &RightView);
-	Ui()->DoLabel(&Label, Localize("BestClient Developers"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, Localize("667 Client Developers"), HeadlineFontSize, TEXTALIGN_ML);
 	RightView.HSplitTop(MarginSmall, nullptr, &RightView);
 	RightView.HSplitTop(MarginSmall, nullptr, &RightView);
 

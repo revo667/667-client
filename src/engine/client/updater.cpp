@@ -149,7 +149,10 @@ static int ScoreArchiveAsset(const char *pAssetName)
 		return -1;
 
 	const std::string Lower = ToLowerAscii(pAssetName);
-	if(Lower.find("bestclient") == std::string::npos)
+	// Releases are named after CLIENT_NAME in .github/workflows/release.yml
+	// ("667Client-windows.zip"); "bestclient" is still accepted so assets from
+	// releases made before the rebrand keep resolving.
+	if(Lower.find("667client") == std::string::npos && Lower.find("bestclient") == std::string::npos)
 		return -1;
 
 #if defined(CONF_FAMILY_WINDOWS)
@@ -167,6 +170,11 @@ static int ScoreArchiveAsset(const char *pAssetName)
 		return -1;
 	if(Lower.find("linux") == std::string::npos)
 		return -1;
+#elif defined(CONF_PLATFORM_MACOS)
+	if(!StrEndsWithNoCase(pAssetName, ".dmg"))
+		return -1;
+	if(Lower.find("macos") == std::string::npos && Lower.find("mac") == std::string::npos)
+		return -1;
 #else
 	return -1;
 #endif
@@ -177,15 +185,18 @@ static int ScoreArchiveAsset(const char *pAssetName)
 	int Score = 100;
 
 #if defined(CONF_FAMILY_WINDOWS)
-	if(Lower == "bestclient-windows.zip")
+	if(Lower == "667client-windows.zip" || Lower == "bestclient-windows.zip")
 		Score += 200;
 	if(Lower.find("x64") != std::string::npos || Lower.find("64") != std::string::npos || Lower.find("amd64") != std::string::npos)
 		Score += 20;
 #elif defined(CONF_PLATFORM_ANDROID)
-	if(Lower == "bestclient-android.apk")
+	if(Lower == "667client-android.apk" || Lower == "bestclient-android.apk")
 		Score += 200;
 #elif defined(CONF_PLATFORM_LINUX)
-	if(Lower == "bestclient-linux.tar.xz")
+	if(Lower == "667client-linux.tar.xz" || Lower == "bestclient-linux.tar.xz")
+		Score += 200;
+#elif defined(CONF_PLATFORM_MACOS)
+	if(Lower == "667client-macos.dmg" || Lower == "bestclient-macos.dmg")
 		Score += 200;
 #endif
 
@@ -315,7 +326,7 @@ void CUpdater::Init(CHttp *pHttp)
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pHttp = pHttp;
 
-#if !defined(CONF_HEADLESS_CLIENT) && (defined(CONF_FAMILY_WINDOWS) || defined(CONF_PLATFORM_LINUX) || defined(CONF_PLATFORM_ANDROID))
+#if !defined(CONF_HEADLESS_CLIENT) && (defined(CONF_FAMILY_WINDOWS) || defined(CONF_PLATFORM_LINUX) || defined(CONF_PLATFORM_ANDROID) || defined(CONF_PLATFORM_MACOS))
 	m_bAutoCheckPending = true;
 #endif
 }
@@ -540,7 +551,7 @@ void CUpdater::CheckForUpdate()
 	if(State == IUpdater::GETTING_MANIFEST || State == IUpdater::DOWNLOADING)
 		return;
 
-#if !defined(CONF_FAMILY_WINDOWS) && !defined(CONF_PLATFORM_LINUX) && !defined(CONF_PLATFORM_ANDROID)
+#if !defined(CONF_FAMILY_WINDOWS) && !defined(CONF_PLATFORM_LINUX) && !defined(CONF_PLATFORM_ANDROID) && !defined(CONF_PLATFORM_MACOS)
 	if(m_pClient)
 		m_pClient->ViewLink(GITHUB_LATEST_RELEASE_URL);
 	return;
@@ -560,7 +571,15 @@ void CUpdater::InitiateUpdate()
 
 	if((State == IUpdater::VERSION_AVAILABLE || State == IUpdater::FAIL) && m_aArchiveUrl[0] != '\0')
 	{
+#if defined(CONF_PLATFORM_MACOS)
+		// The dmg cannot be applied in place (there is no bestclient-updater
+		// for mac and the app runs from a read-only mounted image), so the
+		// client only reports the new version and hands the download over.
+		if(m_pClient)
+			m_pClient->ViewLink(m_aArchiveUrl);
+#else
 		StartArchiveDownload();
+#endif
 		return;
 	}
 
@@ -578,6 +597,7 @@ void CUpdater::ApplyUpdateAndRestart()
 
 void CUpdater::Update()
 {
+#if !defined(CONF_PLATFORM_MACOS)
 	if(g_Config.m_BcAutoUpdate != 0)
 	{
 		const EUpdaterState State = GetCurrentState();
@@ -586,6 +606,7 @@ void CUpdater::Update()
 		else if(State == IUpdater::NEED_RESTART)
 			ApplyUpdateAndRestart();
 	}
+#endif
 
 	if(m_bAutoCheckPending && m_pHttp && GetCurrentState() == CLEAN)
 	{
