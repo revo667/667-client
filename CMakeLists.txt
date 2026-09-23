@@ -2740,6 +2740,8 @@ if(CLIENT)
     components/chat.h
     components/community_icons.cpp
     components/community_icons.h
+    components/map_previews.cpp
+    components/map_previews.h
     components/console.cpp
     components/console.h
     components/controls.cpp
