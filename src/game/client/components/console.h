@@ -166,7 +166,8 @@ class CGameConsole : public CComponent
 	int m_ConsoleState;
 	float m_StateChangeEnd;
 	float m_StateChangeDuration;
-	float m_IgnoreAndroidEscapeUntil = 0.0f;
+	// Only read inside CONF_PLATFORM_ANDROID blocks.
+	[[maybe_unused]] float m_IgnoreAndroidEscapeUntil = 0.0f;
 
 	bool m_WantsSelectionCopy = false;
 	CUi::CTouchState m_TouchState;

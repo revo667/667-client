@@ -2458,7 +2458,7 @@ namespace
 		return DefaultPreviewAccentForColorMode(g_Config.m_BcMusicPlayerColorMode);
 	}
 
-	static SMusicPlayerPalette DefaultMusicPlayerThemePalette()
+	[[maybe_unused]] static SMusicPlayerPalette DefaultMusicPlayerThemePalette()
 	{
 		return BuildPaletteFromAccent(DefaultMusicPlayerAccent());
 	}

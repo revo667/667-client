@@ -2047,7 +2047,7 @@ void CHud::RenderCursor()
 		for(SCursorTrailPoint &Point : m_vCursorTrail)
 			Point.m_Age += Client()->RenderFrameTime();
 		constexpr float Lifetime = 0.2f;
-		m_vCursorTrail.erase(std::remove_if(m_vCursorTrail.begin(), m_vCursorTrail.end(), [Lifetime](const SCursorTrailPoint &Point) { return Point.m_Age >= Lifetime; }), m_vCursorTrail.end());
+		m_vCursorTrail.erase(std::remove_if(m_vCursorTrail.begin(), m_vCursorTrail.end(), [](const SCursorTrailPoint &Point) { return Point.m_Age >= Lifetime; }), m_vCursorTrail.end());
 		m_CursorTrailSampleTime += Client()->RenderFrameTime();
 		const float SampleInterval = 1.0f / g_Config.m_BcCursorTrailSamplingFps;
 		if(m_CursorTrailSampleTime >= SampleInterval && (m_vCursorTrail.empty() || m_vCursorTrail.front().m_Pos != TrailTargetPos))

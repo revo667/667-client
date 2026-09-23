@@ -81,7 +81,7 @@ private:
 	// OnRender()); an empty array just means nothing is mid-reset right now.
 	SResetAnim m_aResetAnims[MAX_MODULE_VISUALS];
 	int m_ResetAnimCount = 0;
-	CButtonContainer m_ResetAllButton;
+	[[maybe_unused]] CButtonContainer m_ResetAllButton;
 	CButtonContainer m_ToggleModuleButton;
 	CButtonContainer m_ResetPositionButton;
 	CButtonContainer m_ResetScaleButton;

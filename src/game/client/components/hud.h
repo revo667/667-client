@@ -76,8 +76,8 @@ class CHud : public CComponent
 	vec2 m_CursorTrailPreviousPlayerPos;
 	bool m_CursorTrailAnchorValid = false;
 	SScoreInfo m_aScoreInfo[2];
-	float m_LastScoreHudLayoutX = 0.0f;
-	float m_LastScoreHudLayoutY = 0.0f;
+	[[maybe_unused]] float m_LastScoreHudLayoutX = 0.0f;
+	[[maybe_unused]] float m_LastScoreHudLayoutY = 0.0f;
 	STextContainerIndex m_FPSTextContainerIndex;
 	STextContainerIndex m_DDRaceEffectsTextContainerIndex;
 	STextContainerIndex m_PlayerAngleTextContainerIndex;
@@ -170,7 +170,7 @@ class CHud : public CComponent
 
 	CUIRect GetScoreHudRect(bool ForcePreview = false) const;
 	void RenderScoreHud(bool ForcePreview = false);
-	int m_LastLocalClientId = -1;
+	[[maybe_unused]] int m_LastLocalClientId = -1;
 
 	void RenderSpectatorHud();
 	void RenderWarmupTimer();

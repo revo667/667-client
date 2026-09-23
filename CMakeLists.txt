@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.12...3.27.4)
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15 CACHE INTERNAL "Minimum macOS deployment version")
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.15)
-  message(WARNING "Building for macOS < 10.15 is not supported")
+# 11.0, not 10.15: the libc++ shipped in current macOS SDKs emits
+# "The selected platform is no longer supported by libc++." below 11.0, which
+# fails the -Werror CI build. Nothing is lost by raising it — the macOS release
+# is arm64 only, and Apple Silicon has never run anything older than 11.0.
+set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0 CACHE INTERNAL "Minimum macOS deployment version")
+if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 11.0)
+  message(WARNING "Building for macOS < 11.0 is not supported")
 endif()
 
 file(STRINGS src/game/version.h VERSION_LINE

@@ -23,7 +23,7 @@ namespace
 	constexpr int MEDIA_MIN_FRAME_MS = (1000 + MEDIA_FPS_CAP - 1) / MEDIA_FPS_CAP; // ceil(1000 / fps)
 	constexpr int MEDIA_DEFAULT_FRAME_MS = 50;
 	constexpr int MEDIA_MAX_FRAME_MS = 10000;
-	constexpr int MEDIA_MAX_FRAMES = 120;
+	[[maybe_unused]] constexpr int MEDIA_MAX_FRAMES = 120;
 	constexpr int MEDIA_MAX_DIMENSION = 4096;
 	constexpr size_t MEDIA_MAX_ANIMATED_MEMORY_BYTES = 64ull * 1024ull * 1024ull;
 

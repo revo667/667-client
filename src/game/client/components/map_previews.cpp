@@ -47,7 +47,9 @@ struct SPreviewColor
 	unsigned char a;
 };
 
-static EPreviewCategory TileCategory(int Index)
+// Upstream shipped these three helpers unused. Kept (rather than deleted) so
+// the next upstream merge of this file stays conflict-free.
+[[maybe_unused]] static EPreviewCategory TileCategory(int Index)
 {
 	if(Index == TILE_AIR)
 		return PREVIEW_EMPTY;
@@ -78,7 +80,7 @@ static EPreviewCategory TileCategory(int Index)
 	return PREVIEW_OTHER;
 }
 
-static SPreviewColor CategoryColor(EPreviewCategory Category)
+[[maybe_unused]] static SPreviewColor CategoryColor(EPreviewCategory Category)
 {
 	switch(Category)
 	{
@@ -99,7 +101,7 @@ static SPreviewColor CategoryColor(EPreviewCategory Category)
 	}
 }
 
-static void SetCategory(std::vector<unsigned char> &vCategories, int Width, int Height, int x, int y, EPreviewCategory Category)
+[[maybe_unused]] static void SetCategory(std::vector<unsigned char> &vCategories, int Width, int Height, int x, int y, EPreviewCategory Category)
 {
 	if(Category == PREVIEW_EMPTY || x < 0 || y < 0 || x >= Width || y >= Height)
 		return;

@@ -32,7 +32,7 @@ namespace
 constexpr float FontSize = 14.0f;
 constexpr float EditBoxFontSize = 12.0f;
 constexpr float LineSize = 20.0f;
-constexpr float HeadlineFontSize = 20.0f;
+[[maybe_unused]] constexpr float HeadlineFontSize = 20.0f;
 constexpr float MarginSmall = 5.0f;
 constexpr float MarginExtraSmall = 2.5f;
 

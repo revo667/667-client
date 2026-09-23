@@ -289,6 +289,7 @@ static bool ParseLatestRelease(json_value *pJson, char *pVersion, int VersionSiz
 	return false;
 }
 
+#if defined(CONF_FAMILY_WINDOWS) || defined(CONF_PLATFORM_LINUX)
 static void StripFilename(char *pPath)
 {
 	if(!pPath)
@@ -304,6 +305,7 @@ static void StripFilename(char *pPath)
 	}
 	pPath[0] = '\0';
 }
+#endif
 
 CUpdater::CUpdater()
 {
@@ -539,6 +541,16 @@ bool CUpdater::LaunchApplyScriptAndQuit()
 
 	m_pClient->Quit();
 	return true;
+#elif defined(CONF_PLATFORM_MACOS)
+	// There is no bestclient-updater binary on macOS (that target is
+	// Windows/Linux only) and swapping a running .app bundle from inside
+	// itself is not safe, so hand the user the release page and let them
+	// drag the new dmg over. Without this macOS reached the #else below and
+	// simply reported that updating is impossible.
+	if(m_pClient)
+		m_pClient->ViewLink(GITHUB_LATEST_RELEASE_URL);
+	SetStatus("Download the new version from the release page");
+	return false;
 #else
 	SetStatus("Archive updater is only available on Windows and Linux");
 	return false;

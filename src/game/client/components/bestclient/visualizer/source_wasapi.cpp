@@ -38,7 +38,7 @@ namespace BestClientVisualizer
 
 namespace
 {
-	constexpr int WASAPI_ANALYZE_FRAMES = 1024;
+	[[maybe_unused]] constexpr int WASAPI_ANALYZE_FRAMES = 1024;
 
 #if BC_VISUALIZER_HAS_WASAPI
 class CWasapiVisualizerSource final : public IVisualizerSource

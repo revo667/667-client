@@ -1,6 +1,8 @@
 /* Copyright © 2026 BestProject Team */
 #include "twitch_chat.h"
 
+#include <base/lock.h>
+
 #include <base/net.h>
 #include <base/system.h>
 
@@ -59,13 +61,13 @@ bool CTwitchChat::IsActive() const
 	return m_WorkerRunning.load(std::memory_order_relaxed);
 }
 
-CTwitchChat::EState CTwitchChat::State() const
+CTwitchChat::EState CTwitchChat::State() const NO_THREAD_SAFETY_ANALYSIS
 {
 	std::lock_guard<std::mutex> Lock(m_Mutex);
 	return m_State;
 }
 
-void CTwitchChat::GetStatusText(char *pBuf, int BufSize) const
+void CTwitchChat::GetStatusText(char *pBuf, int BufSize) const NO_THREAD_SAFETY_ANALYSIS
 {
 	if(!pBuf || BufSize <= 0)
 		return;
@@ -78,7 +80,7 @@ void CTwitchChat::GetStatusText(char *pBuf, int BufSize) const
 		str_copy(pBuf, m_aStatusText, BufSize);
 }
 
-void CTwitchChat::SetStatus(const char *pMessage)
+void CTwitchChat::SetStatus(const char *pMessage) NO_THREAD_SAFETY_ANALYSIS
 {
 	if(!pMessage)
 		return;
@@ -87,13 +89,13 @@ void CTwitchChat::SetStatus(const char *pMessage)
 	str_copy(m_aStatusText, pMessage, sizeof(m_aStatusText));
 }
 
-void CTwitchChat::SetState(EState State)
+void CTwitchChat::SetState(EState State) NO_THREAD_SAFETY_ANALYSIS
 {
 	std::lock_guard<std::mutex> Lock(m_Mutex);
 	m_State = State;
 }
 
-void CTwitchChat::QueueChatMessage(const char *pName, const char *pText)
+void CTwitchChat::QueueChatMessage(const char *pName, const char *pText) NO_THREAD_SAFETY_ANALYSIS
 {
 	if(!pName || !pText || pName[0] == '\0' || pText[0] == '\0')
 		return;
@@ -105,7 +107,7 @@ void CTwitchChat::QueueChatMessage(const char *pName, const char *pText)
 	++m_ReceivedMessages;
 }
 
-void CTwitchChat::FlushChatMessages()
+void CTwitchChat::FlushChatMessages() NO_THREAD_SAFETY_ANALYSIS
 {
 	std::deque<SQueuedMessage> Messages;
 	{
@@ -210,7 +212,7 @@ bool CTwitchChat::ExtractTagValue(const char *pTags, const char *pKey, char *pOu
 	return false;
 }
 
-void CTwitchChat::Start()
+void CTwitchChat::Start() NO_THREAD_SAFETY_ANALYSIS
 {
 	char aChannel[MAX_CHANNEL_LENGTH];
 	if(!ParseChannel(g_Config.m_BcTwitchChatNick, aChannel, sizeof(aChannel)))
@@ -239,7 +241,7 @@ void CTwitchChat::Start()
 	});
 }
 
-void CTwitchChat::Stop()
+void CTwitchChat::Stop() NO_THREAD_SAFETY_ANALYSIS
 {
 	m_StopRequested.store(true, std::memory_order_relaxed);
 	if(m_Worker.joinable())
