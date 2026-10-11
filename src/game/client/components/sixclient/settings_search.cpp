@@ -73,6 +73,7 @@ static const char *LeafLabel(int Leaf)
 	case SETTINGS_NAV_LEAF_SC_VISUALS: return ScLocalize("Visuals");
 	case SETTINGS_NAV_LEAF_SC_GAMEPLAY: return ScLocalize("Gameplay");
 	case SETTINGS_NAV_LEAF_SC_OTHERS: return ScLocalize("Others");
+	case SETTINGS_NAV_LEAF_SC_FRIENDS: return ScLocalize("Friends");
 	case SETTINGS_NAV_LEAF_SC_INFO: return ScLocalize("Info");
 	default: return Localize("Settings");
 	}

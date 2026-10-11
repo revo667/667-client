@@ -181,6 +181,7 @@ void CGameClient::OnConsoleInit()
 					      &m_CustomCommunities, // TClient
 					      &m_MusicPlayer, // 667client
 					      &m_MusicDock, // 667client
+					      &m_KogPoints, // 667client
 					      &m_BrowserUtils, // 667client
 					      &m_EgoFinishedMaps, // 667client
 					      &m_ShowPoints, // 667client

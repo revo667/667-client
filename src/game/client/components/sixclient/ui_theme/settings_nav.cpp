@@ -28,7 +28,8 @@ static constexpr int TC_TAB_INFO = 5;
 static constexpr int SC_TAB_VISUALS = 0;
 static constexpr int SC_TAB_GAMEPLAY = 1;
 static constexpr int SC_TAB_OTHERS = 2;
-static constexpr int SC_TAB_INFO = 3;
+static constexpr int SC_TAB_FRIENDS = 3;
+static constexpr int SC_TAB_INFO = 4;
 
 static const int s_aDdnetLeaves[] = {
 	SETTINGS_NAV_LEAF_GENERAL,
@@ -55,6 +56,7 @@ static const int s_aSixclientLeaves[] = {
 	SETTINGS_NAV_LEAF_SC_VISUALS,
 	SETTINGS_NAV_LEAF_SC_GAMEPLAY,
 	SETTINGS_NAV_LEAF_SC_OTHERS,
+	SETTINGS_NAV_LEAF_SC_FRIENDS,
 	SETTINGS_NAV_LEAF_SC_INFO,
 };
 
@@ -157,6 +159,10 @@ SSettingsLeafTarget LeafTarget(int Leaf)
 		Target.m_SettingsPage = CMenus::SETTINGS_SIXCLIENT;
 		Target.m_SixClientTab = SC_TAB_OTHERS;
 		break;
+	case SETTINGS_NAV_LEAF_SC_FRIENDS:
+		Target.m_SettingsPage = CMenus::SETTINGS_SIXCLIENT;
+		Target.m_SixClientTab = SC_TAB_FRIENDS;
+		break;
 	case SETTINGS_NAV_LEAF_SC_INFO:
 		Target.m_SettingsPage = CMenus::SETTINGS_SIXCLIENT;
 		Target.m_SixClientTab = SC_TAB_INFO;
@@ -184,7 +190,7 @@ bool IsLeafVisible(int Leaf, int TcTabFlags, int ScTabFlags)
 		const int Tab = Leaf - SETTINGS_NAV_LEAF_TC_SETTINGS;
 		return !IsFlagSet(TcTabFlags, Tab);
 	}
-	if(Leaf >= SETTINGS_NAV_LEAF_SC_VISUALS && Leaf <= SETTINGS_NAV_LEAF_SC_OTHERS)
+	if(Leaf >= SETTINGS_NAV_LEAF_SC_VISUALS && Leaf <= SETTINGS_NAV_LEAF_SC_FRIENDS)
 	{
 		const int Tab = Leaf - SETTINGS_NAV_LEAF_SC_VISUALS;
 		return !IsFlagSet(ScTabFlags, Tab);
@@ -222,6 +228,7 @@ int LeafFromState(int SettingsPage, int TClientTab, int SixClientTab)
 		{
 		case SC_TAB_GAMEPLAY: return SETTINGS_NAV_LEAF_SC_GAMEPLAY;
 		case SC_TAB_OTHERS: return SETTINGS_NAV_LEAF_SC_OTHERS;
+		case SC_TAB_FRIENDS: return SETTINGS_NAV_LEAF_SC_FRIENDS;
 		case SC_TAB_INFO: return SETTINGS_NAV_LEAF_SC_INFO;
 		default: return SETTINGS_NAV_LEAF_SC_VISUALS;
 		}
@@ -393,6 +400,7 @@ void CMenus::RenderSettingsNavNewStyle(CUIRect &TabBar)
 		case SETTINGS_NAV_LEAF_SC_VISUALS: return ScLocalize("Visuals");
 		case SETTINGS_NAV_LEAF_SC_GAMEPLAY: return ScLocalize("Gameplay");
 		case SETTINGS_NAV_LEAF_SC_OTHERS: return ScLocalize("Others");
+		case SETTINGS_NAV_LEAF_SC_FRIENDS: return ScLocalize("Friends");
 		case SETTINGS_NAV_LEAF_SC_INFO: return ScLocalize("Info");
 		default: return "";
 		}

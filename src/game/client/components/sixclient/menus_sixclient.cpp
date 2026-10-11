@@ -43,6 +43,7 @@ enum
 	SIXCLIENT_TAB_VISUALS = 0,
 	SIXCLIENT_TAB_GAMEPLAY,
 	SIXCLIENT_TAB_OTHERS,
+	SIXCLIENT_TAB_FRIENDS,
 	SIXCLIENT_TAB_INFO,
 	NUM_SIXCLIENT_TABS,
 };
@@ -466,12 +467,14 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		ScLocalize("Visuals"),
 		ScLocalize("Gameplay"),
 		ScLocalize("Others"),
+		ScLocalize("Friends"),
 		ScLocalize("Info"),
 	};
 	const int aTabOrder[NUM_SIXCLIENT_TABS] = {
 		SIXCLIENT_TAB_VISUALS,
 		SIXCLIENT_TAB_GAMEPLAY,
 		SIXCLIENT_TAB_OTHERS,
+		SIXCLIENT_TAB_FRIENDS,
 		SIXCLIENT_TAB_INFO,
 	};
 
@@ -549,6 +552,8 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 			RenderSettingsSixClientGameplay(Content);
 		else if(Tab == SIXCLIENT_TAB_OTHERS)
 			RenderSettingsSixClientOthers(Content);
+		else if(Tab == SIXCLIENT_TAB_FRIENDS)
+			RenderSettingsSixClientFriends(Content);
 		else if(Tab == SIXCLIENT_TAB_INFO)
 			RenderSettingsSixClientInfo(Content);
 	};
@@ -3780,12 +3785,14 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 		ScLocalize("Visuals"),
 		ScLocalize("Gameplay"),
 		ScLocalize("Others"),
+		ScLocalize("Friends"),
 		ScLocalize("Info"),
 	};
 	const int aTabOrder[NUM_SIXCLIENT_TABS] = {
 		SIXCLIENT_TAB_VISUALS,
 		SIXCLIENT_TAB_GAMEPLAY,
 		SIXCLIENT_TAB_OTHERS,
+		SIXCLIENT_TAB_FRIENDS,
 		SIXCLIENT_TAB_INFO,
 	};
 

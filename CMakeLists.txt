@@ -2953,6 +2953,9 @@ if(CLIENT)
     components/sixclient/rocket_glow.cpp
     components/sixclient/nuke_vfx.cpp
     components/sixclient/menus_discord.cpp
+    components/sixclient/kog_points.cpp
+    components/sixclient/kog_points.h
+    components/sixclient/menus_friends.cpp
     components/sixclient/music_dock.cpp
     components/sixclient/music_dock.h
     components/sixclient/menus_fx.cpp

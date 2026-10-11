@@ -38,6 +38,7 @@
 #include "components/sixclient/snap_tap.h" // sixclient
 #include "components/sixclient/optimizer.h" // sixclient
 #include "components/sixclient/system_tuning.h" // sixclient
+#include "components/sixclient/kog_points.h" // sixclient
 #include "components/sixclient/music_dock.h" // sixclient
 #include "components/sixclient/music_player.h" // sixclient
 #include "components/sixclient/browser_utils.h" // sixclient
@@ -240,6 +241,7 @@ public:
 	CSystemTuning m_SystemTuning; // 667client
 	CMusicPlayer m_MusicPlayer; // 667client
 	CMusicDock m_MusicDock; // 667client
+	CKogPoints m_KogPoints; // 667client
 	CBrowserUtils m_BrowserUtils; // 667client
 	CEgoFinishedMaps m_EgoFinishedMaps; // 667client
 	CFinishPrediction m_FinishPrediction; // 667client

@@ -970,11 +970,6 @@ void CScoreboard::OnRender()
 	}
 
 	// 667client
-	if(GameClient()->m_MusicDock.IsOpen())
-		return;
-	// 667client
-
-	// 667client
 	if(g_Config.m_ClFocusMode && g_Config.m_ClFocusModeHideScoreboard)
 	{
 		if(m_MouseUnlocked)
@@ -988,6 +983,15 @@ void CScoreboard::OnRender()
 		Ui()->StartCheck();
 		Ui()->Update();
 	}
+
+	// 667client
+	if(GameClient()->m_MusicDock.IsOpen())
+	{
+		if(!GameClient()->m_Menus.IsActive() && !GameClient()->m_Chat.IsActive())
+			Ui()->FinishCheck();
+		return;
+	}
+	// 667client
 
 	// if the score board is active, then we should clear the motd message as well
 	if(GameClient()->m_Motd.IsActive())
@@ -1461,6 +1465,8 @@ CUi::EPopupMenuFunctionResult CScoreboard::CScoreboardPopupContext::Render(void 
 			pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
 			return CUi::POPUP_CLOSE_CURRENT;
 		case QUICK_POINTS:
+			if(pGameClient->m_KogPoints.OnKogServer())
+				pGameClient->m_KogPoints.NoteManualQuery(Client.m_aName);
 			EscapeConsoleString(aCommand, sizeof(aCommand), "say \"/points ", Client.m_aName, "\"");
 			pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
 			return CUi::POPUP_CLOSE_CURRENT;

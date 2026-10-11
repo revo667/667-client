@@ -1040,6 +1040,10 @@ void CChat::StoreSave(const char *pText)
 
 void CChat::AddLine(int ClientId, int Team, const char *pLine)
 {
+	// 667client
+	if(ClientId == SERVER_MSG && GameClient()->m_KogPoints.ConsumeServerLine(pLine))
+		return;
+	// 667client
 	if(*pLine == 0 ||
 		(ClientId == SERVER_MSG && !g_Config.m_ClShowChatSystem) ||
 		(ClientId >= 0 && (GameClient()->m_aClients[ClientId].m_aName[0] == '\0' || // unknown client
