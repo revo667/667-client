@@ -26,8 +26,35 @@ env:
   CLIENT_NAME: 667client
 
 jobs:
+  version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release_info.outputs.tag }}
+      title: ${{ steps.release_info.outputs.title }}
+      version: ${{ steps.release_info.outputs.version }}
+    steps:
+    - name: Determine tag and release title
+      id: release_info
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.tag_name }}" ]]; then
+          TAG="${{ github.event.inputs.tag_name }}"
+          TITLE="${{ github.event.inputs.release_name }}"
+          [ -z "$TITLE" ] && TITLE="667 Client $TAG"
+        elif [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
+          TAG="${{ github.ref_name }}"
+          TITLE="667 Client $TAG"
+        else
+          TAG="v1.0.${{ github.run_number }}"
+          TITLE="667 Client $TAG"
+        fi
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "title=$TITLE" >> $GITHUB_OUTPUT
+        echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+
   build-cmake:
     name: Build Release (${{ matrix.name }})
+    needs: version
     runs-on: ${{ matrix.os }}
     env:
       CARGO_HTTP_MULTIPLEXING: false
@@ -62,6 +89,13 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+
+    - name: Stamp client version
+      shell: bash
+      run: |
+        VERSION="${{ needs.version.outputs.version }}"
+        perl -pi -e "s/^#define SIXCLIENT_VERSION \".*\"/#define SIXCLIENT_VERSION \"$VERSION\"/" src/game/client/components/sixclient/version.h
+        grep SIXCLIENT_VERSION src/game/client/components/sixclient/version.h
 
     - name: Prepare Linux
       if: contains(matrix.os, 'ubuntu')
@@ -164,6 +198,7 @@ jobs:
   publish:
     name: Publish Release Assets
     needs:
+      - version
       - build-cmake
     runs-on: ubuntu-latest
     steps:
@@ -177,28 +212,11 @@ jobs:
     - name: List downloaded release packages
       run: ls -la artifacts
 
-    - name: Determine tag and release title
-      id: release_info
-      run: |
-        if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.tag_name }}" ]]; then
-          TAG="${{ github.event.inputs.tag_name }}"
-          TITLE="${{ github.event.inputs.release_name }}"
-          [ -z "$TITLE" ] && TITLE="667 Client $TAG"
-        elif [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
-          TAG="${{ github.ref_name }}"
-          TITLE="667 Client $TAG"
-        else
-          TAG="v1.0.${{ github.run_number }}"
-          TITLE="667 Client $TAG"
-        fi
-        echo "tag=$TAG" >> $GITHUB_OUTPUT
-        echo "title=$TITLE" >> $GITHUB_OUTPUT
-
     - name: Publish GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ steps.release_info.outputs.tag }}
-        name: ${{ steps.release_info.outputs.title }}
+        tag_name: ${{ needs.version.outputs.tag }}
+        name: ${{ needs.version.outputs.title }}
         body: ${{ github.event.inputs.body || '' }}
         draft: false
         prerelease: false

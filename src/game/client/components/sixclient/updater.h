@@ -32,6 +32,7 @@ class CUpdater : public IUpdater
 	std::shared_ptr<IHttpRequest> m_pCurrentTask;
 	ETaskKind m_TaskKind = ETaskKind::NONE;
 	bool m_AutoCheckPending = false;
+	bool m_ApplyStarted = false;
 
 	char m_aLatestVersion[64];
 	char m_aArchiveName[128];
@@ -43,6 +44,7 @@ class CUpdater : public IUpdater
 	void ParseReleaseTask() REQUIRES(!m_Lock);
 	void StartArchiveDownload() REQUIRES(!m_Lock);
 	bool LaunchApplyScriptAndQuit() REQUIRES(!m_Lock);
+	bool LaunchApply(bool Relaunch) REQUIRES(!m_Lock);
 
 	void SetCurrentState(EUpdaterState NewState) REQUIRES(!m_Lock);
 	void SetStatus(const char *pStatus) REQUIRES(!m_Lock);
@@ -61,6 +63,7 @@ public:
 	const char *GetLatestVersionString() override REQUIRES(!m_Lock);
 	void Init();
 	void Update() REQUIRES(!m_Lock) override;
+	void OnQuit() REQUIRES(!m_Lock);
 };
 
 #endif

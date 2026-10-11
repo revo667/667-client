@@ -36,7 +36,7 @@ MACRO_CONFIG_INT(ScCasinoBalance, sc_casino_balance, 500, 0, 9999999, CFGFLAG_CL
 MACRO_CONFIG_INT(ScCasinoLastClaim, sc_casino_last_claim, 0, 0, 2147483647, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Unix timestamp of last casino free claim")
 
 // Auto update
-MACRO_CONFIG_INT(ScAutoUpdate, sc_auto_update, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically download and apply updates on startup")
+MACRO_CONFIG_INT(ScAutoUpdate, sc_auto_update, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically download and apply updates on startup")
 
 // Aspect ratio
 MACRO_CONFIG_INT(ScCustomAspectRatioMode, sc_custom_aspect_ratio_mode, -1, -1, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Aspect ratio mode (-1=legacy auto, 0=off, 1=preset, 2=custom)")

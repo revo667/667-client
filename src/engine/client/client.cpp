@@ -3670,6 +3670,10 @@ void CClient::Run()
 		m_vQuittingWarnings.emplace_back(Localize("Error saving settings"));
 	}
 
+#if defined(CONF_AUTOUPDATE)
+	m_Updater.OnQuit();
+#endif
+
 	m_ServerBrowser.Shutdown();
 	m_Fifo.Shutdown();
 	m_pHttp->Shutdown();

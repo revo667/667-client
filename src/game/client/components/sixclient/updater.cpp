@@ -1,5 +1,7 @@
 #include "updater.h"
 
+#include <base/fs.h>
+#include <base/io.h>
 #include <base/process.h>
 #include <base/str.h>
 #include <base/time.h>
@@ -18,6 +20,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <iterator>
 #include <string>
 #include <vector>
@@ -37,6 +40,8 @@ static constexpr const char *GITHUB_RELEASES_URL = "https://api.github.com/repos
 static constexpr const char *GITHUB_LATEST_RELEASE_URL = "https://github.com/revo667/667-client/releases/latest";
 #if defined(CONF_PLATFORM_LINUX)
 static constexpr const char *UPDATE_ARCHIVE_PATH = "update/667client-release.tar.xz";
+#elif defined(CONF_PLATFORM_MACOS)
+static constexpr const char *UPDATE_ARCHIVE_PATH = "667client-update.dmg";
 #else
 static constexpr const char *UPDATE_ARCHIVE_PATH = "update/667client-release.zip";
 #endif
@@ -158,6 +163,11 @@ static int ScoreArchiveAsset(const char *pAssetName)
 		return -1;
 	if(Lower.find("linux") == std::string::npos)
 		return -1;
+#elif defined(CONF_PLATFORM_MACOS)
+	if(!StrEndsWithNoCase(pAssetName, ".dmg"))
+		return -1;
+	if(Lower.find("mac") == std::string::npos)
+		return -1;
 #else
 	return -1;
 #endif
@@ -174,6 +184,9 @@ static int ScoreArchiveAsset(const char *pAssetName)
 		Score += 20;
 #elif defined(CONF_PLATFORM_LINUX)
 	if(Lower == "667client-linux.tar.xz")
+		Score += 200;
+#elif defined(CONF_PLATFORM_MACOS)
+	if(Lower == "667client-macos.dmg")
 		Score += 200;
 #endif
 
@@ -282,6 +295,52 @@ static void StripFilename(char *pPath)
 	pPath[0] = '\0';
 }
 
+#if defined(CONF_PLATFORM_MACOS)
+static void MacTempPath(const char *pName, char *pBuf, int BufSize)
+{
+	const char *pTmp = getenv("TMPDIR");
+	if(!pTmp || pTmp[0] == '\0')
+		pTmp = "/tmp/";
+	str_format(pBuf, BufSize, "%s%s%s", pTmp, str_endswith(pTmp, "/") ? "" : "/", pName);
+}
+
+static bool MacAppBundlePath(IStorage *pStorage, char *pBuf, int BufSize)
+{
+	char aExePath[IO_MAX_PATH_LENGTH];
+	pStorage->GetBinaryPathAbsolute(PLAT_CLIENT_EXEC, aExePath, sizeof(aExePath));
+	for(int i = 0; i < 3; i++)
+		StripFilename(aExePath);
+	if(!str_endswith(aExePath, ".app"))
+		return false;
+	str_copy(pBuf, aExePath, BufSize);
+	return true;
+}
+
+static constexpr const char *MAC_APPLY_SCRIPT =
+	"#!/bin/sh\n"
+	"trap '' HUP\n"
+	"PID=\"$1\"; DMG=\"$2\"; APP=\"$3\"; RELAUNCH=\"$4\"\n"
+	"while kill -0 \"$PID\" 2>/dev/null; do sleep 0.2; done\n"
+	"MNT=$(mktemp -d /tmp/667client-update.XXXXXX) || exit 1\n"
+	"hdiutil attach -nobrowse -readonly -noautoopen -quiet -mountpoint \"$MNT\" \"$DMG\" || exit 1\n"
+	"SRC=$(find \"$MNT\" -maxdepth 1 -name '*.app' | head -n 1)\n"
+	"if [ -n \"$SRC\" ] && ditto \"$SRC\" \"$APP.new\"; then\n"
+	"  rm -rf \"$APP.old\"\n"
+	"  if mv \"$APP\" \"$APP.old\" && mv \"$APP.new\" \"$APP\"; then\n"
+	"    rm -rf \"$APP.old\"\n"
+	"  else\n"
+	"    [ -d \"$APP\" ] || mv \"$APP.old\" \"$APP\"\n"
+	"    rm -rf \"$APP.new\"\n"
+	"  fi\n"
+	"fi\n"
+	"hdiutil detach \"$MNT\" -quiet\n"
+	"rmdir \"$MNT\" 2>/dev/null\n"
+	"rm -f \"$DMG\" \"$0\"\n"
+	"xattr -dr com.apple.quarantine \"$APP\" 2>/dev/null\n"
+	"[ \"$RELAUNCH\" = \"1\" ] && open \"$APP\"\n"
+	"exit 0\n";
+#endif
+
 CUpdater::CUpdater()
 {
 	m_pClient = nullptr;
@@ -305,6 +364,10 @@ void CUpdater::Init()
 
 #if !defined(CONF_HEADLESS_CLIENT) && (defined(CONF_FAMILY_WINDOWS) || defined(CONF_PLATFORM_LINUX))
 	m_AutoCheckPending = true;
+#elif !defined(CONF_HEADLESS_CLIENT) && defined(CONF_PLATFORM_MACOS)
+	char aAppPath[IO_MAX_PATH_LENGTH];
+	m_AutoCheckPending = MacAppBundlePath(m_pStorage, aAppPath, sizeof(aAppPath));
+	MacTempPath(UPDATE_ARCHIVE_PATH, m_aArchivePath, sizeof(m_aArchivePath));
 #endif
 }
 
@@ -417,8 +480,13 @@ void CUpdater::ParseReleaseTask()
 void CUpdater::StartArchiveDownload()
 {
 	ResetTask();
+#if defined(CONF_PLATFORM_MACOS)
+	MacTempPath(UPDATE_ARCHIVE_PATH, m_aArchivePath, sizeof(m_aArchivePath));
+	(void)fs_remove(m_aArchivePath);
+#else
 	str_copy(m_aArchivePath, UPDATE_ARCHIVE_PATH, sizeof(m_aArchivePath));
 	m_pStorage->RemoveBinaryFile(m_aArchivePath);
+#endif
 
 	SetStatus(m_aArchiveName);
 	SetPercent(0);
@@ -434,7 +502,47 @@ void CUpdater::StartArchiveDownload()
 
 bool CUpdater::LaunchApplyScriptAndQuit()
 {
-#if defined(CONF_FAMILY_WINDOWS) || defined(CONF_PLATFORM_LINUX)
+	if(!LaunchApply(true))
+		return false;
+	m_pClient->Quit();
+	return true;
+}
+
+bool CUpdater::LaunchApply(bool Relaunch)
+{
+#if defined(CONF_PLATFORM_MACOS)
+	char aAppPath[IO_MAX_PATH_LENGTH];
+	if(!MacAppBundlePath(m_pStorage, aAppPath, sizeof(aAppPath)))
+	{
+		SetStatus("Auto update needs the installed 667 Client app");
+		return false;
+	}
+	if(!fs_is_file(m_aArchivePath))
+	{
+		SetStatus("Downloaded archive missing");
+		return false;
+	}
+	char aScriptPath[IO_MAX_PATH_LENGTH];
+	MacTempPath("667client-update.sh", aScriptPath, sizeof(aScriptPath));
+	IOHANDLE Script = io_open(aScriptPath, IOFLAG_WRITE);
+	if(!Script)
+	{
+		SetStatus("Failed to write the update script");
+		return false;
+	}
+	io_write(Script, MAC_APPLY_SCRIPT, str_length(MAC_APPLY_SCRIPT));
+	io_close(Script);
+
+	char aPid[32];
+	str_format(aPid, sizeof(aPid), "%d", process_id());
+	const char *apArguments[] = {aScriptPath, aPid, m_aArchivePath, aAppPath, Relaunch ? "1" : "0"};
+	if(process_execute("/bin/sh", EShellExecuteWindowState::BACKGROUND, apArguments, std::size(apArguments)) == INVALID_PROCESS)
+	{
+		SetStatus("Failed to launch updater");
+		return false;
+	}
+	return true;
+#elif defined(CONF_FAMILY_WINDOWS) || defined(CONF_PLATFORM_LINUX)
 	char aArchivePath[IO_MAX_PATH_LENGTH];
 	char aUpdaterPath[IO_MAX_PATH_LENGTH];
 	char aInstallDir[IO_MAX_PATH_LENGTH];
@@ -465,8 +573,6 @@ bool CUpdater::LaunchApplyScriptAndQuit()
 		SetStatus("Failed to launch updater");
 		return false;
 	}
-
-	m_pClient->Quit();
 	return true;
 #else
 	SetStatus("Archive updater is only available on Windows and Linux");
@@ -480,7 +586,15 @@ void CUpdater::CheckForUpdate()
 	if(State == IUpdater::GETTING_MANIFEST || State == IUpdater::DOWNLOADING)
 		return;
 
-#if !defined(CONF_FAMILY_WINDOWS) && !defined(CONF_PLATFORM_LINUX)
+#if defined(CONF_PLATFORM_MACOS)
+	char aAppPath[IO_MAX_PATH_LENGTH];
+	if(!MacAppBundlePath(m_pStorage, aAppPath, sizeof(aAppPath)))
+	{
+		if(m_pClient)
+			m_pClient->ViewLink(GITHUB_LATEST_RELEASE_URL);
+		return;
+	}
+#elif !defined(CONF_FAMILY_WINDOWS) && !defined(CONF_PLATFORM_LINUX)
 	if(m_pClient)
 		m_pClient->ViewLink(GITHUB_LATEST_RELEASE_URL);
 	return;
@@ -523,8 +637,11 @@ void CUpdater::Update()
 		const EUpdaterState State = GetCurrentState();
 		if(State == IUpdater::VERSION_AVAILABLE)
 			InitiateUpdate();
-		else if(State == IUpdater::NEED_RESTART)
+		else if(State == IUpdater::NEED_RESTART && !m_ApplyStarted && m_pClient->State() == IClient::STATE_OFFLINE)
+		{
+			m_ApplyStarted = true;
 			ApplyUpdateAndRestart();
+		}
 	}
 
 	if(m_AutoCheckPending && m_pHttp && GetCurrentState() == CLEAN)
@@ -565,4 +682,12 @@ void CUpdater::Update()
 		SetStatus(m_aArchiveName[0] != '\0' ? m_aArchiveName : "update");
 		SetCurrentState(IUpdater::NEED_RESTART);
 	}
+}
+
+void CUpdater::OnQuit()
+{
+	if(m_ApplyStarted || GetCurrentState() != IUpdater::NEED_RESTART)
+		return;
+	m_ApplyStarted = true;
+	LaunchApply(false);
 }

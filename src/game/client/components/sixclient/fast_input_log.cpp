@@ -763,7 +763,7 @@ void CFastInputLog::Stop()
 		m_Calibrating = false;
 		char aMsg[256];
 		if(m_Result.m_EnoughData)
-			str_format(aMsg, sizeof(aMsg), "Your best 667 input: offset %.2f, smoothing %d ms, adaptive %s. Open Settings > 667 Client > Gameplay to apply it.", m_Result.m_Amount / 100.0f, m_Result.m_Smoothing, m_Result.m_Adaptive ? "on" : "off");
+			str_format(aMsg, sizeof(aMsg), "Your best 667 input: offset %.2f, smoothing %d ms, adaptive %s. Open Settings / 667 Client / Gameplay to apply it.", m_Result.m_Amount / 100.0f, m_Result.m_Smoothing, m_Result.m_Adaptive ? "on" : "off");
 		else
 			str_format(aMsg, sizeof(aMsg), "Calibration stopped after %.0f s of movement, the result is only a rough guess. Run it again for a better one.", m_Result.m_MovingSeconds);
 		Message(aMsg);
