@@ -284,7 +284,7 @@ namespace
 
 void CHudEditor::OnConsoleInit()
 {
-	Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
+	Storage()->CreateFolder("667Client", IStorage::TYPE_SAVE);
 	HudLayout::OnConsoleInit(Console(), ConfigManager());
 }
 

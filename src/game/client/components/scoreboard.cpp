@@ -11,6 +11,8 @@
 #include <engine/demo.h>
 #include <engine/font_icons.h>
 #include <engine/graphics.h>
+#include <engine/http.h>
+#include <engine/input.h>
 #include <engine/shared/config.h>
 #include <engine/textrender.h>
 
@@ -448,7 +450,7 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 				m_ScoreboardPopupContext.m_IsSpectating = true;
 
 				Ui()->DoPopupMenu(&m_ScoreboardPopupContext, Ui()->MouseX(), Ui()->MouseY(), 150.0f,
-					(m_ScoreboardPopupContext.m_IsLocal ? 30.0f : 60.0f), &m_ScoreboardPopupContext, CScoreboardPopupContext::Render);
+					CScoreboardPopupContext::Height(m_ScoreboardPopupContext.m_IsLocal), &m_ScoreboardPopupContext, CScoreboardPopupContext::Render);
 			}
 
 			if(Ui()->HotItem() == &m_aPlayers[pInfo->m_ClientId].m_PlayerButtonId ||
@@ -728,7 +730,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 					m_ScoreboardPopupContext.m_IsSpectating = false;
 
 					Ui()->DoPopupMenu(&m_ScoreboardPopupContext, Ui()->MouseX(), Ui()->MouseY(), 150.0f,
-						(m_ScoreboardPopupContext.m_IsLocal ? 58.5f : 87.5f), &m_ScoreboardPopupContext, CScoreboardPopupContext::Render);
+						CScoreboardPopupContext::Height(m_ScoreboardPopupContext.m_IsLocal), &m_ScoreboardPopupContext, CScoreboardPopupContext::Render);
 				}
 
 				if(Ui()->HotItem() == &Player.m_PlayerButtonId ||
@@ -966,6 +968,11 @@ void CScoreboard::OnRender()
 		}
 		return;
 	}
+
+	// 667client
+	if(GameClient()->m_MusicDock.IsOpen())
+		return;
+	// 667client
 
 	// 667client
 	if(g_Config.m_ClFocusMode && g_Config.m_ClFocusModeHideScoreboard)
@@ -1246,109 +1253,217 @@ const char *CScoreboard::GetTeamName(int Team) const
 		return nullptr;
 }
 
+static constexpr float POPUP_MARGIN = 5.0f;
+static constexpr float POPUP_ITEM_SPACING = 2.0f;
+static constexpr float POPUP_HEADER_SIZE = 12.0f;
+static constexpr float POPUP_ACTION_SIZE = 22.0f;
+static constexpr float POPUP_BUTTON_SIZE = 15.5f;
+static constexpr float POPUP_BUTTON_FONT = 10.0f;
+static constexpr int POPUP_LOCAL_BUTTONS = 4;
+static constexpr int POPUP_REMOTE_BUTTONS = 9;
+
+float CScoreboard::CScoreboardPopupContext::Height(bool IsLocal)
+{
+	const int Buttons = IsLocal ? POPUP_LOCAL_BUTTONS : POPUP_REMOTE_BUTTONS;
+	float Height = 2.0f * POPUP_MARGIN + POPUP_HEADER_SIZE + POPUP_ITEM_SPACING * 2.0f;
+	if(!IsLocal)
+		Height += 2.0f * (POPUP_ITEM_SPACING * 2.0f + POPUP_ACTION_SIZE);
+	Height += Buttons * (POPUP_BUTTON_SIZE + POPUP_ITEM_SPACING);
+	return Height;
+}
+
+static void EscapeConsoleString(char *pBuf, int BufSize, const char *pPrefix, const char *pText, const char *pSuffix)
+{
+	str_copy(pBuf, pPrefix, BufSize);
+	char *pDst = pBuf + str_length(pBuf);
+	str_escape(&pDst, pText, pBuf + BufSize);
+	str_append(pBuf, pSuffix, BufSize);
+}
+
 CUi::EPopupMenuFunctionResult CScoreboard::CScoreboardPopupContext::Render(void *pContext, CUIRect View, bool Active)
 {
 	CScoreboardPopupContext *pPopupContext = static_cast<CScoreboardPopupContext *>(pContext);
 	CScoreboard *pScoreboard = pPopupContext->m_pScoreboard;
 	CUi *pUi = pPopupContext->m_pScoreboard->Ui();
+	CGameClient *pGameClient = pScoreboard->GameClient();
+	IConsole *pConsole = pScoreboard->Console();
 
-	CGameClient::CClientData &Client = pScoreboard->GameClient()->m_aClients[pPopupContext->m_ClientId];
+	CGameClient::CClientData &Client = pGameClient->m_aClients[pPopupContext->m_ClientId];
 
 	if(!Client.m_Active)
 		return CUi::POPUP_CLOSE_CURRENT;
 
-	const float Margin = 5.0f;
-	View.Margin(Margin, &View);
+	View.Margin(POPUP_MARGIN, &View);
 
 	CUIRect Label, Container, Action;
-	const float ItemSpacing = 2.0f;
-	const float FontSize = 12.0f;
-
-	View.HSplitTop(FontSize, &Label, &View);
-	pUi->DoLabel(&Label, Client.m_aName, FontSize, TEXTALIGN_ML);
+	View.HSplitTop(POPUP_HEADER_SIZE, &Label, &View);
+	pUi->DoLabel(&Label, Client.m_aName, POPUP_HEADER_SIZE, TEXTALIGN_ML);
 
 	if(!pPopupContext->m_IsLocal)
 	{
-		const int ActionsNum = 3;
-		const float ActionSize = 25.0f;
-		const float ActionSpacing = (View.w - (ActionsNum * ActionSize)) / 2;
-		int ActionCorners = IGraphics::CORNER_ALL;
+		const float ActionSpacing = (View.w - (3 * POPUP_ACTION_SIZE)) / 2;
+		const int ActionCorners = IGraphics::CORNER_ALL;
 
-		View.HSplitTop(ItemSpacing * 2, nullptr, &View);
-		View.HSplitTop(ActionSize, &Container, &View);
+		View.HSplitTop(POPUP_ITEM_SPACING * 2, nullptr, &View);
+		View.HSplitTop(POPUP_ACTION_SIZE, &Container, &View);
 
-		Container.VSplitLeft(ActionSize, &Action, &Container);
-
+		Container.VSplitLeft(POPUP_ACTION_SIZE, &Action, &Container);
 		ColorRGBA FriendActionColor = Client.m_Friend ? ColorRGBA(0.95f, 0.3f, 0.3f, 0.85f * pUi->ButtonColorMul(&pPopupContext->m_FriendAction)) :
 								ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * pUi->ButtonColorMul(&pPopupContext->m_FriendAction));
 		const char *pFriendActionIcon = pUi->HotItem() == &pPopupContext->m_FriendAction && Client.m_Friend ? FontIcon::HEART_CRACK : FontIcon::HEART;
 		if(pUi->DoButton_FontIcon(&pPopupContext->m_FriendAction, pFriendActionIcon, Client.m_Friend, &Action, BUTTONFLAG_LEFT, ActionCorners, true, FriendActionColor))
 		{
 			if(Client.m_Friend)
-			{
-				pScoreboard->GameClient()->Friends()->RemoveFriend(Client.m_aName, Client.m_aClan);
-			}
+				pGameClient->Friends()->RemoveFriend(Client.m_aName, Client.m_aClan);
 			else
-			{
-				pScoreboard->GameClient()->Friends()->AddFriend(Client.m_aName, Client.m_aClan);
-			}
+				pGameClient->Friends()->AddFriend(Client.m_aName, Client.m_aClan);
 		}
-
-		pScoreboard->GameClient()->m_Tooltips.DoToolTip(&pPopupContext->m_FriendAction, &Action, Client.m_Friend ? Localize("Remove friend") : Localize("Add friend"));
+		pGameClient->m_Tooltips.DoToolTip(&pPopupContext->m_FriendAction, &Action, Client.m_Friend ? Localize("Remove friend") : Localize("Add friend"));
 
 		Container.VSplitLeft(ActionSpacing, nullptr, &Container);
-		Container.VSplitLeft(ActionSize, &Action, &Container);
-
+		Container.VSplitLeft(POPUP_ACTION_SIZE, &Action, &Container);
 		if(pUi->DoButton_FontIcon(&pPopupContext->m_MuteAction, FontIcon::BAN, Client.m_ChatIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
-		{
 			Client.m_ChatIgnore ^= 1;
-		}
-		pScoreboard->GameClient()->m_Tooltips.DoToolTip(&pPopupContext->m_MuteAction, &Action, Client.m_ChatIgnore ? Localize("Unmute") : Localize("Mute"));
+		pGameClient->m_Tooltips.DoToolTip(&pPopupContext->m_MuteAction, &Action, Client.m_ChatIgnore ? Localize("Unmute") : Localize("Mute"));
 
 		Container.VSplitLeft(ActionSpacing, nullptr, &Container);
-		Container.VSplitLeft(ActionSize, &Action, &Container);
-
-		const char *EmoticonActionIcon = Client.m_EmoticonIgnore ? FontIcon::COMMENT_SLASH : FontIcon::COMMENT;
-		if(pUi->DoButton_FontIcon(&pPopupContext->m_EmoticonAction, EmoticonActionIcon, Client.m_EmoticonIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
-		{
+		Container.VSplitLeft(POPUP_ACTION_SIZE, &Action, &Container);
+		const char *pEmoticonActionIcon = Client.m_EmoticonIgnore ? FontIcon::COMMENT_SLASH : FontIcon::COMMENT;
+		if(pUi->DoButton_FontIcon(&pPopupContext->m_EmoticonAction, pEmoticonActionIcon, Client.m_EmoticonIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
 			Client.m_EmoticonIgnore ^= 1;
-		}
-		pScoreboard->GameClient()->m_Tooltips.DoToolTip(&pPopupContext->m_EmoticonAction, &Action, Client.m_EmoticonIgnore ? Localize("Unmute emoticons") : Localize("Mute emoticons"));
-	}
+		pGameClient->m_Tooltips.DoToolTip(&pPopupContext->m_EmoticonAction, &Action, Client.m_EmoticonIgnore ? Localize("Unmute emoticons") : Localize("Mute emoticons"));
 
-	const float ButtonSize = 17.5f;
-	View.HSplitTop(ItemSpacing * 2, nullptr, &View);
-	View.HSplitTop(ButtonSize, &Container, &View);
+		View.HSplitTop(POPUP_ITEM_SPACING * 2, nullptr, &View);
+		View.HSplitTop(POPUP_ACTION_SIZE, &Container, &View);
 
-	bool IsSpectating = pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_Active && pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == pPopupContext->m_ClientId;
-	ColorRGBA SpectateButtonColor = ColorRGBA(1.0f, 1.0f, 1.0f, (IsSpectating ? 0.25f : 0.5f) * pUi->ButtonColorMul(&pPopupContext->m_SpectateButton));
-	if(!pPopupContext->m_IsSpectating)
-	{
-		if(pUi->DoButton_PopupMenu(&pPopupContext->m_SpectateButton, Localize("Spectate"), &Container, FontSize, TEXTALIGN_MC, 0.0f, false, true, SpectateButtonColor))
+		const bool IsSpectating = pGameClient->m_Snap.m_SpecInfo.m_Active && pGameClient->m_Snap.m_SpecInfo.m_SpectatorId == pPopupContext->m_ClientId;
+		Container.VSplitLeft(POPUP_ACTION_SIZE, &Action, &Container);
+		if(pUi->DoButton_FontIcon(&pPopupContext->m_SpectateButton, IsSpectating ? FontIcon::EYE_SLASH : FontIcon::EYE, IsSpectating, &Action, BUTTONFLAG_LEFT, ActionCorners))
 		{
 			if(IsSpectating)
 			{
-				pScoreboard->GameClient()->m_Spectator.Spectate(SPEC_FREEVIEW);
-				pScoreboard->Console()->ExecuteLine("say /spec", IConsole::CLIENT_ID_UNSPECIFIED);
+				pGameClient->m_Spectator.Spectate(SPEC_FREEVIEW);
+				pConsole->ExecuteLine("say /spec", IConsole::CLIENT_ID_UNSPECIFIED);
+			}
+			else if(pGameClient->m_Snap.m_SpecInfo.m_Active)
+			{
+				pGameClient->m_Spectator.Spectate(pPopupContext->m_ClientId);
 			}
 			else
 			{
-				if(pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_Active)
-				{
-					pScoreboard->GameClient()->m_Spectator.Spectate(pPopupContext->m_ClientId);
-				}
-				else
-				{
-					// escape the name
-					char aEscapedCommand[2 * MAX_NAME_LENGTH + 32];
-					str_copy(aEscapedCommand, "say /spec \"");
-					char *pDst = aEscapedCommand + str_length(aEscapedCommand);
-					str_escape(&pDst, Client.m_aName, aEscapedCommand + sizeof(aEscapedCommand));
-					str_append(aEscapedCommand, "\"");
-
-					pScoreboard->Console()->ExecuteLine(aEscapedCommand, IConsole::CLIENT_ID_UNSPECIFIED);
-				}
+				char aCommand[2 * MAX_NAME_LENGTH + 32];
+				EscapeConsoleString(aCommand, sizeof(aCommand), "say /spec \"", Client.m_aName, "\"");
+				pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
 			}
+		}
+		pGameClient->m_Tooltips.DoToolTip(&pPopupContext->m_SpectateButton, &Action, IsSpectating ? Localize("Stop spectating") : Localize("Spectate"));
+
+		Container.VSplitLeft(ActionSpacing, nullptr, &Container);
+		Container.VSplitLeft(POPUP_ACTION_SIZE, &Action, &Container);
+		const bool IsWar = pGameClient->m_WarList.GetWarData(pPopupContext->m_ClientId).m_WarGroupMatches[1];
+		const ColorRGBA WarColor = IsWar ? ColorRGBA(0.95f, 0.3f, 0.3f, 0.85f * pUi->ButtonColorMul(&pPopupContext->m_WarAction)) :
+						   ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * pUi->ButtonColorMul(&pPopupContext->m_WarAction));
+		if(pUi->DoButton_FontIcon(&pPopupContext->m_WarAction, FontIcon::SKULL, IsWar, &Action, BUTTONFLAG_LEFT, ActionCorners, true, WarColor))
+		{
+			char aCommand[2 * MAX_NAME_LENGTH + 48];
+			EscapeConsoleString(aCommand, sizeof(aCommand), IsWar ? "remove_war_name_index 1 \"" : "war_name_index 1 \"", Client.m_aName, "\"");
+			pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+		}
+		pGameClient->m_Tooltips.DoToolTip(&pPopupContext->m_WarAction, &Action, IsWar ? Localize("Remove from war list") : Localize("Add to war list"));
+	}
+
+	enum
+	{
+		QUICK_PROFILE = 0,
+		QUICK_WHISPER,
+		QUICK_COPY_NAME,
+		QUICK_COPY_SKIN,
+		QUICK_COPY_PLAYER,
+		QUICK_VOTE_KICK,
+		QUICK_FIND_HOURS,
+		QUICK_CLIP_NAME,
+		QUICK_POINTS,
+	};
+	const char *apQuickLabels[] = {
+		Localize("Profile"),
+		Localize("Whisper"),
+		Localize("Copy Name"),
+		Localize("Copy Skin"),
+		Localize("Copy Player"),
+		Localize("Vote Kick"),
+		Localize("Find hours"),
+		Localize("Clip Name"),
+		Localize("Points"),
+	};
+	static const int s_aLocalActions[POPUP_LOCAL_BUTTONS] = {QUICK_PROFILE, QUICK_COPY_NAME, QUICK_FIND_HOURS, QUICK_CLIP_NAME};
+	static const int s_aRemoteActions[POPUP_REMOTE_BUTTONS] = {QUICK_PROFILE, QUICK_WHISPER, QUICK_COPY_NAME, QUICK_COPY_SKIN, QUICK_COPY_PLAYER, QUICK_VOTE_KICK, QUICK_FIND_HOURS, QUICK_CLIP_NAME, QUICK_POINTS};
+	const int *pActions = pPopupContext->m_IsLocal ? s_aLocalActions : s_aRemoteActions;
+	const int NumActions = pPopupContext->m_IsLocal ? POPUP_LOCAL_BUTTONS : POPUP_REMOTE_BUTTONS;
+
+	View.HSplitTop(POPUP_ITEM_SPACING * 2, nullptr, &View);
+	for(int i = 0; i < NumActions; i++)
+	{
+		const int QuickAction = pActions[i];
+		View.HSplitTop(POPUP_BUTTON_SIZE, &Container, &View);
+		View.HSplitTop(POPUP_ITEM_SPACING, nullptr, &View);
+		if(!pUi->DoButton_PopupMenu(&pPopupContext->m_aQuickActions[QuickAction], apQuickLabels[QuickAction], &Container, POPUP_BUTTON_FONT, TEXTALIGN_MC))
+			continue;
+
+		char aEscaped[3 * MAX_NAME_LENGTH];
+		char aUrl[256];
+		char aCommand[256];
+		switch(QuickAction)
+		{
+		case QUICK_PROFILE:
+			EscapeUrl(aEscaped, Client.m_aName);
+			str_format(aUrl, sizeof(aUrl), "https://ddnet.org/players/?player=%s", aEscaped);
+			pScoreboard->Client()->ViewLink(aUrl);
+			break;
+		case QUICK_WHISPER:
+			EscapeConsoleString(aCommand, sizeof(aCommand), "chat all \"/w ", Client.m_aName, " \"");
+			pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+			return CUi::POPUP_CLOSE_CURRENT;
+		case QUICK_COPY_NAME:
+			pScoreboard->Input()->SetClipboardText(Client.m_aName);
+			break;
+		case QUICK_COPY_SKIN:
+		case QUICK_COPY_PLAYER:
+		{
+			const bool Dummy = g_Config.m_ClDummy != 0;
+			EscapeConsoleString(aCommand, sizeof(aCommand), Dummy ? "dummy_skin \"" : "player_skin \"", Client.m_aSkinName, "\"");
+			pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+			str_format(aCommand, sizeof(aCommand), "%s %d; %s %d; %s %d",
+				Dummy ? "dummy_use_custom_color" : "player_use_custom_color", Client.m_UseCustomColor,
+				Dummy ? "dummy_color_body" : "player_color_body", Client.m_ColorBody,
+				Dummy ? "dummy_color_feet" : "player_color_feet", Client.m_ColorFeet);
+			pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+			if(QuickAction == QUICK_COPY_PLAYER)
+			{
+				EscapeConsoleString(aCommand, sizeof(aCommand), Dummy ? "dummy_name \"" : "player_name \"", Client.m_aName, "\"");
+				pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+				EscapeConsoleString(aCommand, sizeof(aCommand), Dummy ? "dummy_clan \"" : "player_clan \"", Client.m_aClan, "\"");
+				pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+				str_format(aCommand, sizeof(aCommand), "%s %d", Dummy ? "dummy_country" : "player_country", Client.m_Country);
+				pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+			}
+			break;
+		}
+		case QUICK_VOTE_KICK:
+			pGameClient->m_Voting.CallvoteKick(pPopupContext->m_ClientId, "");
+			return CUi::POPUP_CLOSE_CURRENT;
+		case QUICK_FIND_HOURS:
+			EscapeUrl(aEscaped, Client.m_aName);
+			str_format(aUrl, sizeof(aUrl), "https://ddstats.tw/player/%s", aEscaped);
+			pScoreboard->Client()->ViewLink(aUrl);
+			break;
+		case QUICK_CLIP_NAME:
+			EscapeConsoleString(aCommand, sizeof(aCommand), "chat all \"", Client.m_aName, " \"");
+			pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+			return CUi::POPUP_CLOSE_CURRENT;
+		case QUICK_POINTS:
+			EscapeConsoleString(aCommand, sizeof(aCommand), "say \"/points ", Client.m_aName, "\"");
+			pConsole->ExecuteLine(aCommand, IConsole::CLIENT_ID_UNSPECIFIED);
+			return CUi::POPUP_CLOSE_CURRENT;
 		}
 	}
 

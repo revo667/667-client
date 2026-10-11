@@ -54,11 +54,14 @@ class CScoreboard : public CComponent
 		CButtonContainer m_EmoticonAction;
 
 		CButtonContainer m_SpectateButton;
+		CButtonContainer m_WarAction;
+		CButtonContainer m_aQuickActions[9];
 
 		int m_ClientId;
 		bool m_IsLocal;
 		bool m_IsSpectating;
 
+		static float Height(bool IsLocal);
 		static CUi::EPopupMenuFunctionResult Render(void *pContext, CUIRect View, bool Active);
 	} m_ScoreboardPopupContext;
 

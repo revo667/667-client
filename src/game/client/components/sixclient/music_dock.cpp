@@ -479,4 +479,10 @@ void CMusicDock::OnRender()
 	const float Alpha = std::clamp(m_Open * 1.6f, 0.0f, 1.0f);
 	const bool Clicked = Allowed && m_Open > 0.7f && (Ui()->MouseButtonClicked(0) || Input()->KeyPress(KEY_MOUSE_1));
 	RenderPanel(Panel, Scale, Alpha, Mouse, Clicked);
+
+	if(GameClient()->m_Scoreboard.IsMouseUnlocked() && !GameClient()->m_Chat.IsActive())
+	{
+		Ui()->MapScreen();
+		RenderTools()->RenderCursor(Ui()->MousePos(), 24.0f);
+	}
 }

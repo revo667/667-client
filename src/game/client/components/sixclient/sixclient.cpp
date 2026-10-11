@@ -146,6 +146,7 @@ void SixClientRefreshMenuFont(CGameClient *pGameClient)
 
 void CSixClient::OnInit()
 {
+	Storage()->CreateFolder("667Client", IStorage::TYPE_SAVE);
 	m_MenuMediaBackground.Init(Graphics(), Storage());
 	SixClientApplyMenuFont(TextRender());
 }

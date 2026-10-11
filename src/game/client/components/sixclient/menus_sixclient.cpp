@@ -1114,7 +1114,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		return 0;
 	};
 
-	Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
+	Storage()->CreateFolder("667Client", IStorage::TYPE_SAVE);
 	Storage()->CreateFolder("667Client/backgrounds", IStorage::TYPE_SAVE);
 
 	static std::vector<std::string> s_vMenuMediaFileLabels;
@@ -1186,7 +1186,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	static CButtonContainer s_MenuMediaFolderButton;
 	if(Ui()->DoButton_FontIcon(&s_MenuMediaFolderButton, FontIcon::FOLDER, 0, &MediaFolderButton, BUTTONFLAG_LEFT))
 	{
-		Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
+		Storage()->CreateFolder("667Client", IStorage::TYPE_SAVE);
 		Storage()->CreateFolder("667Client/backgrounds", IStorage::TYPE_SAVE);
 		char aBuf[IO_MAX_PATH_LENGTH];
 		Storage()->GetCompletePath(IStorage::TYPE_SAVE, "667Client/backgrounds", aBuf, sizeof(aBuf));
@@ -1311,7 +1311,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 				pContext->m_pPaths->emplace_back(std::string("667Client/CTrails/") + pName);
 				return 0;
 			};
-			Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
+			Storage()->CreateFolder("667Client", IStorage::TYPE_SAVE);
 			Storage()->CreateFolder("667Client/CTrails", IStorage::TYPE_SAVE);
 			static std::vector<std::string> s_vCursorTrailFileLabels, s_vCursorTrailFilePaths;
 			s_vCursorTrailFileLabels.clear();
@@ -1371,7 +1371,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 				GameClient()->m_CursorTrail.Reload();
 			if(Ui()->DoButton_FontIcon(&s_CursorTrailFolderButton, FontIcon::FOLDER, 0, &CursorTrailFolderButton, BUTTONFLAG_LEFT))
 			{
-				Storage()->CreateFolder("667 Client", IStorage::TYPE_SAVE);
+				Storage()->CreateFolder("667Client", IStorage::TYPE_SAVE);
 				Storage()->CreateFolder("667Client/CTrails", IStorage::TYPE_SAVE);
 				char aBuf[IO_MAX_PATH_LENGTH];
 				Storage()->GetCompletePath(IStorage::TYPE_SAVE, "667Client/CTrails", aBuf, sizeof(aBuf));
