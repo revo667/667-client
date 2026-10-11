@@ -1,4 +1,4 @@
-if(NOT CMAKE_CROSSCOMPILING)
+if(NOT CMAKE_CROSSCOMPILING AND NOT TARGET_OS STREQUAL "mac")
   find_package(PkgConfig QUIET)
   pkg_check_modules(PC_VULKAN vulkan)
   if(PC_VULKAN_FOUND)
@@ -20,12 +20,17 @@ if(NOT VULKAN_FOUND)
     )
   elseif(TARGET_OS STREQUAL "mac")
     find_library(VULKAN_LIBRARIES
-      NAMES MoltenVK
+      NAMES libMoltenVK.a
+      HINTS
+        "$ENV{VULKAN_SDK}/lib"
+        "$ENV{VULKAN_SDK}/../MoltenVK/MoltenVK.xcframework/macos-arm64_x86_64"
+        "$ENV{VULKAN_SDK}/MoltenVK/MoltenVK.xcframework/macos-arm64_x86_64"
     )
 
     find_path(
       VULKAN_INCLUDE_DIRS
       NAMES vulkan/vulkan.h
+      HINTS "$ENV{VULKAN_SDK}/include"
     )
   else()
     set_extra_dirs_lib(VULKAN vulkan)
