@@ -55,6 +55,8 @@
 #include "components/sixclient/chat_bubbles.h" // sixclient
 #include "components/sixclient/automargin.h" // sixclient
 #include "components/sixclient/cloud_input.h" // sixclient
+#include "components/sixclient/fast_input_log.h"
+#include "components/sixclient/six_input.h"
 #include "components/sixclient/chat_media.h" // sixclient
 #include "components/sixclient/cursor_trail.h" // sixclient
 #include "components/sixclient/ui_animations.h" // sixclient
@@ -235,6 +237,10 @@ public:
 	CFastActions m_FastActions; // 667client
 	CSnapTap m_SnapTap; // 667client
 	CCloudInput m_CloudInput; // 667client
+	CSixInput m_SixInput;
+	CFastInputLog m_FastInputLog;
+	bool m_SixInputChanged = false;
+	bool m_SixJumpPressed = false;
 	CFastPractice m_FastPractice; // 667client
 	CBcAutoMargin m_ScAutoMargin; // 667client
 	COptimizer m_Optimizer; // 667client

@@ -117,7 +117,7 @@ MACRO_CONFIG_INT(ScToggleSmallSens, sc_toggle_small_sens, 0, 0, 1, CFGFLAG_CLIEN
 
 // Inputs
 MACRO_CONFIG_INT(ScInputDebounce, sc_input_debounce, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Preserve button presses shorter than one simulation tick")
-MACRO_CONFIG_INT(ScInputs, sc_inputs, 0, 0, 6, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input prediction mode (0 = off, 1 = fast, 2 = best, 3 = saiko, 4 = delta, 5 = f, 6 = cloud)")
+MACRO_CONFIG_INT(ScInputs, sc_inputs, 0, 0, 7, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input prediction mode (0 = off, 1 = fast, 2 = best, 3 = saiko, 4 = delta, 5 = f, 6 = cloud, 7 = 667)")
 MACRO_CONFIG_INT(ScBestInputAmount, sc_best_input_amount, 0, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input prediction amount in 0.01 ticks")
 MACRO_CONFIG_INT(ScBestInputSmoothing, sc_best_input_smoothing, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input smoothing amount (0-100%)")
 MACRO_CONFIG_INT(ScBestInputLatencyComp, sc_best_input_latency_comp, 0, 0, 50, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input latency compensation (0-50%)")
@@ -130,6 +130,12 @@ MACRO_CONFIG_INT(ScDeltaInputOthers, sc_delta_input_others, 0, 0, 1, CFGFLAG_CLI
 MACRO_CONFIG_INT(ScFInputAmount, sc_f_input_amount, 0, 0, 5000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "F input amount in 0.001-tick units (0=off, 1000=1.000 ticks, max 5000=5.000 ticks)")
 MACRO_CONFIG_INT(ScFInputOthers, sc_f_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply F input to other tees")
 MACRO_CONFIG_INT(ScCloudInputAmount, sc_cloud_input_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cloud input amount in 0.01 ticks")
+MACRO_CONFIG_INT(ScSixInputAmount, sc_667_input_amount, 140, 0, 150, CFGFLAG_CLIENT | CFGFLAG_SAVE, "667 input maximum prediction offset in 0.01 ticks")
+MACRO_CONFIG_INT(ScSixInputAdaptive, sc_667_input_adaptive, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Lower the 667 input offset automatically while the server keeps correcting predictions")
+MACRO_CONFIG_INT(ScSixInputSmoothing, sc_667_input_smoothing, 15, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Blend 667 input corrections out over this many milliseconds (0 = snap)")
+MACRO_CONFIG_INT(ScSixInputSubTick, sc_667_input_subtick, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Start input responses from the moment the key was pressed inside the tick")
+MACRO_CONFIG_INT(ScSixInputJumpEase, sc_667_input_jump_ease, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Ease the position jump caused by pressing jump over one tick instead of snapping")
+MACRO_CONFIG_INT(ScSixInputOthers, sc_667_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply 667 input to other tees")
 MACRO_CONFIG_INT(ScCloudInputOthers, sc_cloud_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply cloud input to other tees")
 MACRO_CONFIG_INT(ScAutoMargin, sc_auto_margin, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto margin")
 

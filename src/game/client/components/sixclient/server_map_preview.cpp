@@ -280,15 +280,21 @@ CServerMapPreview::~CServerMapPreview()
 {
 	if(m_pMapInfoRequest)
 		m_pMapInfoRequest->Abort();
-	if(GameClient() != nullptr)
+	m_pSlot.reset();
+	m_pCache.reset();
+}
+
+void CServerMapPreview::Shutdown()
+{
+	Clear();
+	if(m_pMapInfoRequest)
+		m_pMapInfoRequest->Abort();
+	if(m_pSlot)
+		m_pSlot->m_Images.Unload();
+	if(m_pCache)
 	{
-		if(m_pSlot)
-			m_pSlot->m_Images.Unload();
-		if(m_pCache)
-		{
-			for(auto &pSlot : m_pCache->m_vpSlots)
-				pSlot->m_Images.Unload();
-		}
+		for(auto &pSlot : m_pCache->m_vpSlots)
+			pSlot->m_Images.Unload();
 	}
 	m_pSlot.reset();
 	m_pCache.reset();

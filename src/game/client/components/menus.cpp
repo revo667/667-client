@@ -2514,7 +2514,7 @@ void CMenus::OnShutdown()
 {
 	m_CommunityIcons.Shutdown();
 	// 667client
-	m_ServerMapPreview.Clear();
+	m_ServerMapPreview.Shutdown();
 	// 667client
 }
 

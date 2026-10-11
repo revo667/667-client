@@ -85,6 +85,12 @@ void CControls::ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
 	if(!Value && *pVariable && g_Config.m_ScInputDebounce && pState->m_Input >= 0)
 		pState->m_pControls->InputDebounce(g_Config.m_ClDummy, pState->m_Input);
 	*pVariable = Value;
+	if(pState->m_Input >= 0)
+	{
+		CGameClient *pGameClient = pState->m_pControls->GameClient();
+		static constexpr int s_aLogKeys[] = {CFastInputLog::KEY_LEFT, CFastInputLog::KEY_RIGHT, CFastInputLog::KEY_JUMP, CFastInputLog::KEY_HOOK};
+		pGameClient->m_FastInputLog.OnKey(s_aLogKeys[pState->m_Input], Value != 0, pState->m_pControls->m_aMousePos[g_Config.m_ClDummy], pGameClient->Client()->PredIntraGameTick(g_Config.m_ClDummy));
+	}
 }
 
 void CControls::InputDebounce(int Dummy, int Input)
@@ -111,7 +117,10 @@ void CControls::ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
 		(*pVariable)++;
 	*pVariable &= INPUT_STATE_MASK;
 	if(pVariable == &pState->m_pControls->m_aInputData[g_Config.m_ClDummy].m_Fire)
+	{
 		pState->m_pControls->GameClient()->m_SixClient.OnGoresFireInput(pResult->GetInteger(0));
+		pState->m_pControls->GameClient()->m_FastInputLog.OnKey(CFastInputLog::KEY_FIRE, Pressed, pState->m_pControls->m_aMousePos[g_Config.m_ClDummy], pState->m_pControls->GameClient()->Client()->PredIntraGameTick(g_Config.m_ClDummy));
+	}
 	// 667client
 }
 
@@ -417,6 +426,7 @@ int CControls::SnapInput(int *pData)
 
 	m_LastSendTime = time_get();
 	mem_copy(pData, &m_aInputData[g_Config.m_ClDummy], sizeof(m_aInputData[0]));
+	GameClient()->m_FastInputLog.OnSend(m_aInputData[g_Config.m_ClDummy]);
 	if(m_aInputDebounce[g_Config.m_ClDummy].m_Jump)
 		m_aInputData[g_Config.m_ClDummy].m_Jump = UnlatchedJump;
 	if(m_aInputDebounce[g_Config.m_ClDummy].m_Hook)

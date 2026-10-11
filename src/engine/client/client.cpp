@@ -3064,8 +3064,9 @@ void CClient::Update()
 					(g_Config.m_ScInputs == SC_INPUTS_SAIKO && g_Config.m_ScSaikoInputAmount > 0) ||
 					(g_Config.m_ScInputs == SC_INPUTS_DELTA && g_Config.m_ScDeltaInputAmount > 0) ||
 					(g_Config.m_ScInputs == SC_INPUTS_F && g_Config.m_ScFInputAmount > 0) ||
-					(g_Config.m_ScInputs == SC_INPUTS_CLOUD && g_Config.m_ScCloudInputAmount > 0);
-				if(HasFastInput && (g_Config.m_ScInputs == SC_INPUTS_SAIKO || g_Config.m_ScInputs == SC_INPUTS_CLOUD))
+					(g_Config.m_ScInputs == SC_INPUTS_CLOUD && g_Config.m_ScCloudInputAmount > 0) ||
+					(g_Config.m_ScInputs == SC_INPUTS_SIX && g_Config.m_ScSixInputAmount > 0);
+				if(HasFastInput && (g_Config.m_ScInputs == SC_INPUTS_SAIKO || g_Config.m_ScInputs == SC_INPUTS_CLOUD || g_Config.m_ScInputs == SC_INPUTS_SIX))
 				{
 					GameClient()->CheckNewInput();
 					Repredict = true;

@@ -8,6 +8,8 @@
 
 namespace
 {
+	float gs_SixOffsetTicks = 0.0f;
+
 	float FastModeOffsetTicks()
 	{
 		if(g_Config.m_ScInputs != SC_INPUTS_FAST || g_Config.m_TcFastInputAmount <= 0)
@@ -62,8 +64,14 @@ float ScInputs::EffectiveOffsetTicks()
 	case SC_INPUTS_SAIKO: return SaikoModeOffsetTicks();
 	case SC_INPUTS_DELTA: return DeltaModeOffsetTicks();
 	case SC_INPUTS_F: return FModeOffsetTicks();
+	case SC_INPUTS_SIX: return gs_SixOffsetTicks;
 	default: return 0.0f;
 	}
+}
+
+void ScInputs::SetSixOffsetTicks(float OffsetTicks)
+{
+	gs_SixOffsetTicks = OffsetTicks;
 }
 
 int ScInputs::PredictionTicks(float OffsetTicks)
@@ -152,9 +160,14 @@ bool ScInputs::CloudOthers()
 	return g_Config.m_ScInputs == SC_INPUTS_CLOUD && g_Config.m_ScCloudInputOthers != 0;
 }
 
+bool ScInputs::SixOthers()
+{
+	return g_Config.m_ScInputs == SC_INPUTS_SIX && g_Config.m_ScSixInputOthers != 0;
+}
+
 bool ScInputs::AnyOthers()
 {
-	return FastOthers() || BestOthers() || SaikoOthers() || DeltaOthers() || FOthers() || CloudOthers();
+	return FastOthers() || BestOthers() || SaikoOthers() || DeltaOthers() || FOthers() || CloudOthers() || SixOthers();
 }
 
 bool ScInputs::ImmediateOthers()

@@ -152,6 +152,7 @@ void CGameClient::OnConsoleInit()
 					      &m_Players,
 					      &m_MovingTilesBackground, // TClient
 					      &m_CloudInput, // 667client
+					      &m_FastInputLog,
 					      &m_FastPractice, // 667client
 					      &m_ScAutoMargin, // 667client
 					      &m_MapLayersForeground,
@@ -710,6 +711,7 @@ void CGameClient::OnConnected()
 
 void CGameClient::OnReset()
 {
+	m_SixInput.Reset();
 	InvalidateSnapshot();
 
 	m_EditorMovementDelay = 5;
@@ -2783,6 +2785,9 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 		m_LastRaceTick = RaceFlag ? -m_Snap.m_pGameInfoObj->m_WarmupTimer : -1;
 	}
 
+	if(m_FastInputLog.Active() && m_Snap.m_pLocalCharacter && !DummySwapped)
+		m_FastInputLog.OnServerState(Client()->GameTick(g_Config.m_ClDummy), *m_Snap.m_pLocalCharacter);
+
 	SnapCollectEntities(); // creates a collection that associates EntityEx snap items with the entities they belong to
 
 	UpdateLocalTuning();
@@ -3047,6 +3052,7 @@ void CGameClient::OnPredict()
 	// predict
 
 	// 667client
+	ScInputs::SetSixOffsetTicks(m_SixInput.OffsetTicks());
 	const float FastInputOffsetTicks = CloudInputMode ? 0.0f : ScInputs::EffectiveOffsetTicks();
 	const int FastInputTicks = CloudInputMode ? m_CloudInput.SelfTickOffset() : ScInputs::PredictionTicks(FastInputOffsetTicks);
 	const bool FastInputOthers = CloudInputMode ? (g_Config.m_ScCloudInputOthers != 0 && m_ReceivedPreInput) : ScInputs::AnyOthers();
@@ -3060,6 +3066,10 @@ void CGameClient::OnPredict()
 
 	int LocalTee = g_Config.m_ClDummy ^ m_IsDummySwapping;
 	int DummyTee = LocalTee ^ 1;
+
+	const bool SixMode = m_SixInput.Active() && !PracticeActive;
+	const bool LogInput = m_FastInputLog.Active() && !PracticeActive;
+	const vec2 SixBefore = (SixMode || LogInput) && FastInputTicks > 0 ? GetFastInputPos(m_Snap.m_LocalClientId) : vec2(0.0f, 0.0f);
 
 	for(int Tick = Client()->GameTick(g_Config.m_ClDummy) + 1; Tick <= FinalTickSelf; Tick++)
 	{
@@ -3250,6 +3260,27 @@ void CGameClient::OnPredict()
 		m_PredictedWorld.CopyWorld(&m_RegularPredictedWorld);
 		// m_PrevPredictedWorld.CopyWorld(&m_PrevRegularPredictedWorld); // not sure if this is worth performance cost, it seems to not matter
 	}
+
+	if(SixMode || LogInput)
+	{
+		const CClientData &Local = m_aClients[m_Snap.m_LocalClientId];
+		const vec2 SixAfter = FastInputTicks > 0 ? GetFastInputPos(m_Snap.m_LocalClientId) : vec2(0.0f, 0.0f);
+		if(LogInput)
+		{
+			const CNetObj_PlayerInput *pRegularInput = (const CNetObj_PlayerInput *)Client()->GetInput(FinalTickRegular, m_IsDummySwapping);
+			if(FastInputTicks > 0)
+				m_FastInputLog.OnCorrection(SixBefore, SixAfter, m_SixInputChanged, m_SixJumpPressed);
+			m_FastInputLog.OnPredicted(FinalTickRegular, FinalTickSelf, Local.m_aPredPos, Local.m_aPredTick, Local.m_RegularPredicted, pRegularInput, FastInputOffsetTicks, Client()->GetPredictionTime());
+		}
+		if(SixMode)
+		{
+			m_SixInput.OnCorrection(SixBefore, SixAfter, m_SixInputChanged, m_SixJumpPressed, Client()->PredIntraGameTick(g_Config.m_ClDummy), FastInputOffsetTicks);
+			m_SixInput.OnPredicted(Local.m_aPredPos, Local.m_aPredTick, FinalTickRegular, FinalTickSelf);
+			ScInputs::SetSixOffsetTicks(m_SixInput.OffsetTicks());
+		}
+	}
+	m_SixInputChanged = false;
+	m_SixJumpPressed = false;
 
 	if(g_Config.m_TcRemoveAnti)
 	{
@@ -4780,6 +4811,19 @@ void CGameClient::UpdateRenderedCharacters()
 
 				if(g_Config.m_TcUnpredOthersInFreeze && Client()->m_IsLocalFrozen)
 					Pos = UnpredPos;
+			}
+		}
+		if(i == m_Snap.m_LocalClientId && m_aClients[i].m_IsPredicted)
+		{
+			const vec2 RawPos = Pos;
+			if(m_SixInput.Active())
+				Pos = m_SixInput.Smooth(Pos, time_get(), Client()->GameTickSpeed());
+			if(m_FastInputLog.Active())
+			{
+				const int RegularTick = Client()->PredGameTick(g_Config.m_ClDummy);
+				const bool HasRegular = RegularTick > 0 && m_aClients[i].m_aPredTick[RegularTick % 200] == RegularTick && m_aClients[i].m_aPredTick[(RegularTick - 1) % 200] == RegularTick - 1;
+				const vec2 RegularPos = HasRegular ? mix(m_aClients[i].m_aPredPos[(RegularTick - 1) % 200], m_aClients[i].m_aPredPos[RegularTick % 200], Client()->PredIntraGameTick(g_Config.m_ClDummy)) : RawPos;
+				m_FastInputLog.OnFrame(RawPos, Pos, RegularPos, HasRegular);
 			}
 		}
 		m_aClients[i].m_RenderPos = Pos;
@@ -6351,7 +6395,13 @@ bool CGameClient::CheckNewInput()
 		const bool NewInput = m_CloudInput.CheckNewInput(m_Controls);
 		return NewInput;
 	}
-	return m_Controls.CheckNewInput();
+	const bool WasJumping = m_Controls.m_aFastInput[g_Config.m_ClDummy].m_Jump != 0;
+	const bool NewInput = m_Controls.CheckNewInput();
+	m_SixInputChanged |= NewInput;
+	m_SixJumpPressed |= NewInput && !WasJumping && m_Controls.m_aFastInput[g_Config.m_ClDummy].m_Jump != 0;
+	if(NewInput)
+		m_FastInputLog.OnInputEvent(Client()->PredIntraGameTick(g_Config.m_ClDummy));
+	return NewInput;
 }
 
 void CGameClient::SetConnectInfo(const NETADDR *pAddress)

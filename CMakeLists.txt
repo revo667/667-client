@@ -1487,8 +1487,11 @@ set(EXPECTED_DATA
   audio/wp_switch-03.wv
   autoexec_server.cfg
   background_noise.png
-  667Client/icon.png
+  667Client/ActayWide-Bold.otf
   667Client/gui_logo.png
+  667Client/icon.png
+  667Client/keystrokes/mouse.png
+  667Client/keystrokes/wasd.png
   667Client/languages/russian.txt
   667Client/languages/simplified_chinese.txt
   blob.png
@@ -2956,6 +2959,7 @@ if(CLIENT)
     components/sixclient/kog_points.cpp
     components/sixclient/kog_points.h
     components/sixclient/menus_friends.cpp
+    components/sixclient/menus_gameskin_editor.cpp
     components/sixclient/music_dock.cpp
     components/sixclient/music_dock.h
     components/sixclient/menus_fx.cpp
@@ -2971,6 +2975,8 @@ if(CLIENT)
     components/sixclient/fx/fgf_weather.h
     components/sixclient/show_points.cpp
     components/sixclient/show_points.h
+    components/sixclient/six_input.cpp
+    components/sixclient/six_input.h
     components/sixclient/spec_pause_radio.cpp
     components/sixclient/spec_pause_radio.h
     components/sixclient/chat_bubbles.cpp
@@ -2990,6 +2996,8 @@ if(CLIENT)
     components/sixclient/ego_finished_maps.h
     components/sixclient/ego_tiles_prediction.cpp
     components/sixclient/ego_tiles_prediction.h
+    components/sixclient/fast_input_log.cpp
+    components/sixclient/fast_input_log.h
     components/sixclient/fast_practice.cpp
     components/sixclient/fast_practice.h
     components/sixclient/finish_prediction.cpp

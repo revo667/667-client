@@ -996,6 +996,8 @@ private:
 	void RenderSettingsSixClientFun(CUIRect MainView);
 	// 667client
 	void RenderSettingsSixClientFriends(CUIRect MainView); // 667client
+	void RenderSettingsSixClientAssetsEditor(CUIRect MainView);
+	void RenderSixClientGameSkinEditor(CUIRect MainView);
 	void RenderSettingsSixClientInfo(CUIRect MainView); // 667client
 	void RenderSettingsSixClientChatMediaBlock(CUIRect &Column); // 667client
 	void RenderPopupStylePicker(CUIRect Box); // 667client

@@ -70,6 +70,7 @@ enum
 	SC_INPUTS_DELTA,
 	SC_INPUTS_F,
 	SC_INPUTS_CLOUD,
+	SC_INPUTS_SIX,
 };
 // 667client
 

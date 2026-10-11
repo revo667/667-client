@@ -44,6 +44,7 @@ enum
 	SIXCLIENT_TAB_GAMEPLAY,
 	SIXCLIENT_TAB_OTHERS,
 	SIXCLIENT_TAB_FRIENDS,
+	SIXCLIENT_TAB_ASSETS,
 	SIXCLIENT_TAB_INFO,
 	NUM_SIXCLIENT_TABS,
 };
@@ -468,6 +469,7 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		ScLocalize("Gameplay"),
 		ScLocalize("Others"),
 		ScLocalize("Friends"),
+		ScLocalize("Assets Editor"),
 		ScLocalize("Info"),
 	};
 	const int aTabOrder[NUM_SIXCLIENT_TABS] = {
@@ -475,6 +477,7 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		SIXCLIENT_TAB_GAMEPLAY,
 		SIXCLIENT_TAB_OTHERS,
 		SIXCLIENT_TAB_FRIENDS,
+		SIXCLIENT_TAB_ASSETS,
 		SIXCLIENT_TAB_INFO,
 	};
 
@@ -554,6 +557,8 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 			RenderSettingsSixClientOthers(Content);
 		else if(Tab == SIXCLIENT_TAB_FRIENDS)
 			RenderSettingsSixClientFriends(Content);
+		else if(Tab == SIXCLIENT_TAB_ASSETS)
+			RenderSettingsSixClientAssetsEditor(Content);
 		else if(Tab == SIXCLIENT_TAB_INFO)
 			RenderSettingsSixClientInfo(Content);
 	};
@@ -2601,7 +2606,8 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const int InputsMode = g_Config.m_ScInputs;
 	const bool InputsEnabled = InputsMode != SC_INPUTS_OFF;
 	const bool InputsBestMode = InputsMode == SC_INPUTS_BEST;
-	const float InputsModeFieldsHeight = (InputsBestMode ? 6.0f : 2.0f) * (MarginSmall + LineSize);
+	const float SixInputLines = 8.0f + (GameClient()->m_FastInputLog.Result().m_Valid ? 4.0f : 0.0f);
+	const float InputsModeFieldsHeight = (InputsBestMode ? 6.0f : (InputsMode == SC_INPUTS_SIX ? SixInputLines : 2.0f)) * (MarginSmall + LineSize);
 	const float InputsExpandedTargetHeight = (MarginSmall + LineSize) + InputsModeFieldsHeight;
 	const float InputsExpandedHeight = SC_MODULE_REVEAL(InputsEnabled, InputsExpandedTargetHeight, Client()->RenderFrameTime());
 	const float InputsHeaderHeight = LineSize + MarginSmall + LineSize;
@@ -2626,7 +2632,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
 	{
 		static CButtonContainer s_InputsEnabledButton;
-		static int s_LastNonOffMode = SC_INPUTS_FAST;
+		static int s_LastNonOffMode = SC_INPUTS_SIX;
 		if(InputsEnabled)
 			s_LastNonOffMode = InputsMode;
 		if(DoButton_CheckBox(&s_InputsEnabledButton, ScLocalize("Enable Inputs"), InputsEnabled, &Content))
@@ -2642,12 +2648,14 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 		InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 		{
-			static CButtonContainer s_InputsFast, s_InputsBest, s_InputsSaiko, s_InputsDelta, s_InputsF, s_InputsCloud;
+			static CButtonContainer s_InputsSix, s_InputsFast, s_InputsBest, s_InputsSaiko, s_InputsDelta, s_InputsF, s_InputsCloud;
 			CUIRect ButtonsRect = Button;
 			const float Spacing = 2.0f;
-			const float InputButtonWidth = (ButtonsRect.w - Spacing * 5.0f) / 6.0f;
+			const float InputButtonWidth = (ButtonsRect.w - Spacing * 6.0f) / 7.0f;
 
-			CUIRect FastButton, BestButton, SaikoButton, DeltaButton, FButton, CloudButton;
+			CUIRect SixButton, FastButton, BestButton, SaikoButton, DeltaButton, FButton, CloudButton;
+			ButtonsRect.VSplitLeft(InputButtonWidth, &SixButton, &ButtonsRect);
+			ButtonsRect.VSplitLeft(Spacing, nullptr, &ButtonsRect);
 			ButtonsRect.VSplitLeft(InputButtonWidth, &FastButton, &ButtonsRect);
 			ButtonsRect.VSplitLeft(Spacing, nullptr, &ButtonsRect);
 			ButtonsRect.VSplitLeft(InputButtonWidth, &BestButton, &ButtonsRect);
@@ -2660,6 +2668,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			ButtonsRect.VSplitLeft(Spacing, nullptr, &ButtonsRect);
 			CloudButton = ButtonsRect;
 
+			SixButton.HMargin(2.0f, &SixButton);
 			FastButton.HMargin(2.0f, &FastButton);
 			BestButton.HMargin(2.0f, &BestButton);
 			SaikoButton.HMargin(2.0f, &SaikoButton);
@@ -2667,7 +2676,9 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			FButton.HMargin(2.0f, &FButton);
 			CloudButton.HMargin(2.0f, &CloudButton);
 
-			if(DoButton_Menu(&s_InputsFast, ScLocalize("Fast"), InputsMode == SC_INPUTS_FAST, &FastButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
+			if(DoButton_Menu(&s_InputsSix, "667", InputsMode == SC_INPUTS_SIX, &SixButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
+				g_Config.m_ScInputs = SC_INPUTS_SIX;
+			if(DoButton_Menu(&s_InputsFast, ScLocalize("Fast"), InputsMode == SC_INPUTS_FAST, &FastButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_NONE))
 				g_Config.m_ScInputs = SC_INPUTS_FAST;
 			if(DoButton_Menu(&s_InputsBest, ScLocalize("Best"), InputsMode == SC_INPUTS_BEST, &BestButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_NONE))
 				g_Config.m_ScInputs = SC_INPUTS_BEST;
@@ -2681,7 +2692,99 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 				g_Config.m_ScInputs = SC_INPUTS_CLOUD;
 		}
 
-		if(InputsMode == SC_INPUTS_FAST)
+		if(InputsMode == SC_INPUTS_SIX)
+		{
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+			DoTickAmountSlider(&g_Config.m_ScSixInputAmount, &Button, ScLocalize("Max prediction offset"), 0, 150);
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+			Ui()->DoScrollbarOption(&g_Config.m_ScSixInputSmoothing, &g_Config.m_ScSixInputSmoothing, &Button, ScLocalize("Correction smoothing"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "ms");
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSixInputAdaptive, ScLocalize("Adaptive offset"), &g_Config.m_ScSixInputAdaptive, &Content, LineSize);
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSixInputSubTick, ScLocalize("Sub-tick input timing"), &g_Config.m_ScSixInputSubTick, &Content, LineSize);
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSixInputJumpEase, ScLocalize("Smooth jump start"), &g_Config.m_ScSixInputJumpEase, &Content, LineSize);
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSixInputOthers, ScLocalize("667 input others"), &g_Config.m_ScSixInputOthers, &Content, LineSize);
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Label, &InputsBlock);
+			char aSixStatus[128];
+			str_format(aSixStatus, sizeof(aSixStatus), ScLocalize("Active offset: %.2f ticks · avg correction: %.1f"), GameClient()->m_SixInput.OffsetTicks(), GameClient()->m_SixInput.AverageError());
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.55f);
+			Ui()->DoLabel(&Label, aSixStatus, 11.0f, TEXTALIGN_ML);
+			TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+			CFastInputLog &InputLog = GameClient()->m_FastInputLog;
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+			static CButtonContainer s_CalibrateButton;
+			if(InputLog.Calibrating())
+			{
+				char aCalibrating[128];
+				str_format(aCalibrating, sizeof(aCalibrating), ScLocalize("Finding your best input… %d%% (click to cancel)"), (int)(InputLog.CalibrationProgress() * 100.0f));
+				if(DoButton_Menu(&s_CalibrateButton, aCalibrating, 1, &Button))
+					InputLog.CancelCalibration();
+			}
+			else if(DoButton_Menu(&s_CalibrateButton, ScLocalize("Find your best input"), 0, &Button))
+			{
+				InputLog.StartCalibration();
+				if(InputLog.Calibrating() && Client()->State() == IClient::STATE_ONLINE)
+					SetActive(false);
+			}
+			GameClient()->m_Tooltips.DoToolTip(&s_CalibrateButton, &Button, ScLocalize("Play normally for two minutes of movement. 667 Client measures your inputs and connection and suggests the most stable 667 input settings for you."));
+
+			const CFastInputLog::SResult &Result = InputLog.Result();
+			if(Result.m_Valid)
+			{
+				char aLine[256];
+				InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+				InputsBlock.HSplitTop(LineSize, &Label, &InputsBlock);
+				str_format(aLine, sizeof(aLine), ScLocalize("Best for you: offset %.2f · smoothing %d ms · adaptive %s · smooth jump %s"), Result.m_Amount / 100.0f, Result.m_Smoothing, Result.m_Adaptive ? ScLocalize("on") : ScLocalize("off"), Result.m_JumpEase ? ScLocalize("on") : ScLocalize("off"));
+				TextRender()->TextColor(0.45f, 0.8f, 1.0f, 1.0f);
+				Ui()->DoLabel(&Label, aLine, 12.0f, TEXTALIGN_ML);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+				InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+				InputsBlock.HSplitTop(LineSize, &Label, &InputsBlock);
+				str_format(aLine, sizeof(aLine), ScLocalize("Ping %.0f ms, jitter %.1f ms · worst input jump %.1f units · %.2f corrections/s"), Result.m_PingMs, Result.m_JitterMs, Result.m_ShiftWorst, Result.m_CorrectionsPerSec);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.6f);
+				Ui()->DoLabel(&Label, aLine, 11.0f, TEXTALIGN_ML);
+
+				InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+				InputsBlock.HSplitTop(LineSize, &Label, &InputsBlock);
+				if(!Result.m_EnoughData)
+					str_format(aLine, sizeof(aLine), ScLocalize("Only %.0f s of movement was recorded, this is a rough guess."), Result.m_MovingSeconds);
+				else if(Result.m_Lost > 0 || Result.m_AimDrift > 2.0f || Result.m_SnapTap)
+					str_format(aLine, sizeof(aLine), ScLocalize("Apply also fixes: %d lost presses, %.1f° aim drift%s"), Result.m_Lost, Result.m_AimDrift, Result.m_SnapTap ? ScLocalize(", A+D overlap (Snap Tap)") : "");
+				else
+					str_format(aLine, sizeof(aLine), ScLocalize("No lost presses, no aim drift, %d server mismatches."), Result.m_ServerMismatches);
+				Ui()->DoLabel(&Label, aLine, 11.0f, TEXTALIGN_ML);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+				InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+				InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+				CUIRect ApplyButton, DismissButton;
+				Button.VSplitMid(&ApplyButton, &DismissButton, MarginSmall);
+				static CButtonContainer s_ApplyResultButton, s_DismissResultButton;
+				if(DoButton_Menu(&s_ApplyResultButton, ScLocalize("Apply"), 0, &ApplyButton))
+					InputLog.ApplyResult();
+				if(DoButton_Menu(&s_DismissResultButton, ScLocalize("Dismiss"), 0, &DismissButton))
+					InputLog.ClearResult();
+			}
+		}
+		else if(InputsMode == SC_INPUTS_FAST)
 		{
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
@@ -3786,6 +3889,7 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 		ScLocalize("Gameplay"),
 		ScLocalize("Others"),
 		ScLocalize("Friends"),
+		ScLocalize("Assets Editor"),
 		ScLocalize("Info"),
 	};
 	const int aTabOrder[NUM_SIXCLIENT_TABS] = {
@@ -3793,6 +3897,7 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 		SIXCLIENT_TAB_GAMEPLAY,
 		SIXCLIENT_TAB_OTHERS,
 		SIXCLIENT_TAB_FRIENDS,
+		SIXCLIENT_TAB_ASSETS,
 		SIXCLIENT_TAB_INFO,
 	};
 

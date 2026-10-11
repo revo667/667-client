@@ -6,6 +6,7 @@
 namespace ScInputs
 {
 	float EffectiveOffsetTicks();
+	void SetSixOffsetTicks(float OffsetTicks);
 
 	int PredictionTicks(float OffsetTicks);
 	int PredictionTicksOthers(float OffsetTicks);
@@ -22,6 +23,7 @@ namespace ScInputs
 	bool DeltaOthers();
 	bool FOthers();
 	bool CloudOthers();
+	bool SixOthers();
 	bool AnyOthers();
 	bool ImmediateOthers();
 } // namespace ScInputs
