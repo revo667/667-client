@@ -71,6 +71,8 @@ void SixClientRenderRealHitbox(class IGraphics *pGraphics, class CGameClient *pG
 void SixClientRenderVotePercentages(class CUi *pUi, class ITextRender *pTextRender, const class CUIRect &Bars, int Yes, int No, int Total);
 
 constexpr const char *SIXCLIENT_BETTER_FONT_FACE = "ActayWide Bold";
+inline constexpr const char *SIXCLIENT_JETBRAINS_WEIGHTS[] = {"Thin", "ExtraLight", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold"};
+void SixClientBetterFontFace(char *pBuf, int BufSize);
 void SixClientApplyMenuFont(class ITextRender *pTextRender);
 void SixClientRefreshMenuFont(class CGameClient *pGameClient);
 

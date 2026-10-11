@@ -217,6 +217,9 @@ MACRO_CONFIG_INT(ScMenuUiNewTabOption, sc_menu_ui_new_tab_option, 1, 0, 1, CFGFL
 MACRO_CONFIG_INT(ScMenuUiTabSide, sc_menu_ui_tab_side, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings tabs side when Better tab option is on (0 = left, 1 = right)")
 MACRO_CONFIG_INT(ScMenuUiNewColorPicker, sc_menu_ui_new_color_picker, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use better color picker style when Better UI is enabled")
 MACRO_CONFIG_INT(ScMenuUiBetterFont, sc_menu_ui_better_font, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Better font (Actay Wide Bold) instead of default/TClient font")
+MACRO_CONFIG_INT(ScMenuUiFontFamily, sc_menu_ui_font_family, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Better font family (0 = Actay Wide, 1 = JetBrains Mono)")
+MACRO_CONFIG_INT(ScMenuUiFontWeight, sc_menu_ui_font_weight, 3, 0, 7, CFGFLAG_CLIENT | CFGFLAG_SAVE, "JetBrains Mono weight (0 = Thin, 1 = ExtraLight, 2 = Light, 3 = Regular, 4 = Medium, 5 = SemiBold, 6 = Bold, 7 = ExtraBold)")
+MACRO_CONFIG_INT(ScMenuUiFontItalic, sc_menu_ui_font_italic, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use the italic style of JetBrains Mono")
 MACRO_CONFIG_INT(ScShowStylePicker, sc_show_style_picker, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show one-time menu UI style picker on first launch")
 MACRO_CONFIG_INT(ScSettingsNavExpanded, sc_settings_nav_expanded, 0, 0, 7, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Better settings nav expanded groups (bit 0 = DDNet, 1 = TClient, 2 = 667 Client)")
 

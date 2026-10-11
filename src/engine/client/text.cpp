@@ -1297,6 +1297,25 @@ public:
 			{
 				log_error("textrender", "Failed to open/read font file '%s'", pScFontPath);
 			}
+
+			std::vector<std::string> vScFonts;
+			Storage()->ListDirectory(IStorage::TYPE_ALL, "667Client/fonts", LaziestFileCallback, &vScFonts);
+			std::sort(vScFonts.begin(), vScFonts.end());
+			for(const std::string &FileName : vScFonts)
+			{
+				if(!str_endswith(FileName.c_str(), ".ttf") && !str_endswith(FileName.c_str(), ".otf"))
+					continue;
+				char aFontPath[IO_MAX_PATH_LENGTH];
+				str_format(aFontPath, sizeof(aFontPath), "667Client/fonts/%s", FileName.c_str());
+				void *pFontData;
+				unsigned FontDataSize;
+				if(!Storage()->ReadFile(aFontPath, IStorage::TYPE_ALL, &pFontData, &FontDataSize))
+					continue;
+				if(LoadFontCollection(aFontPath, static_cast<FT_Byte *>(pFontData), (FT_Long)FontDataSize))
+					m_vpFontData.push_back(pFontData);
+				else
+					free(pFontData);
+			}
 		}
 		// 667client
 		UpdateCustomFontList();

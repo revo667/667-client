@@ -126,7 +126,11 @@ void CMenus::RenderPopupStylePicker(CUIRect Box)
 		g_Config.m_ScMenuUiTabSide = 1;
 		g_Config.m_ScMenuUiBetterFont = BetterSide ? 1 : 0;
 		if(BetterSide)
-			TextRender()->SetCustomFace(SIXCLIENT_BETTER_FONT_FACE);
+		{
+			char aFace[64];
+			SixClientBetterFontFace(aFace, sizeof(aFace));
+			TextRender()->SetCustomFace(aFace);
+		}
 		else
 			TextRender()->SetCustomFace("DejaVu Sans");
 	};
@@ -1401,7 +1405,8 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const float ColorPickerLineSize = 25.0f;
 	const float ColorPickerSpacing = 5.0f;
 	const float NewUiHeaderHeight = LineSize + MarginSmall + LineSize;
-	const float NewUiExpandedTargetHeight = 5.0f * (MarginSmall + LineSize) + (TabOptionExpanded ? (MarginSmall + LineSize) : 0.0f);
+	const float FontOptionLines = !g_Config.m_ScMenuUiBetterFont ? 0.0f : (g_Config.m_ScMenuUiFontFamily == 1 ? 3.0f : 1.0f);
+	const float NewUiExpandedTargetHeight = (5.0f + FontOptionLines) * (MarginSmall + LineSize) + (TabOptionExpanded ? (MarginSmall + LineSize) : 0.0f);
 	const float NewUiExpandedHeight = SC_MODULE_REVEAL(NewUiExpanded, NewUiExpandedTargetHeight, Client()->RenderFrameTime());
 	const float NewUiBlockHeight = NewUiHeaderHeight + NewUiExpandedHeight;
 	CUIRect NewUiBlock;
@@ -1487,7 +1492,57 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		MainView.HSplitTop(LineSize, &Content, &MainView);
 		const int BetterFontOld = g_Config.m_ScMenuUiBetterFont;
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMenuUiBetterFont, ScLocalize("Better font"), &g_Config.m_ScMenuUiBetterFont, &Content, LineSize);
-		if(BetterFontOld != g_Config.m_ScMenuUiBetterFont)
+		bool FontChanged = BetterFontOld != g_Config.m_ScMenuUiBetterFont;
+
+		if(g_Config.m_ScMenuUiBetterFont)
+		{
+			MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+			MainView.HSplitTop(LineSize, &Button, &MainView);
+			static CButtonContainer s_FontActay, s_FontJetBrains;
+			CUIRect ActayButton, JetBrainsButton;
+			Button.VSplitMid(&ActayButton, &JetBrainsButton, 2.0f);
+			ActayButton.HMargin(2.0f, &ActayButton);
+			JetBrainsButton.HMargin(2.0f, &JetBrainsButton);
+			if(DoButton_Menu(&s_FontActay, "Actay Wide", g_Config.m_ScMenuUiFontFamily == 0, &ActayButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L) && g_Config.m_ScMenuUiFontFamily != 0)
+			{
+				g_Config.m_ScMenuUiFontFamily = 0;
+				FontChanged = true;
+			}
+			if(DoButton_Menu(&s_FontJetBrains, "JetBrains Mono", g_Config.m_ScMenuUiFontFamily == 1, &JetBrainsButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R) && g_Config.m_ScMenuUiFontFamily != 1)
+			{
+				g_Config.m_ScMenuUiFontFamily = 1;
+				FontChanged = true;
+			}
+
+			if(g_Config.m_ScMenuUiFontFamily == 1)
+			{
+				MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+				MainView.HSplitTop(LineSize, &Button, &MainView);
+				CUIRect WeightLabel, WeightDropDown;
+				Button.VSplitMid(&WeightLabel, &WeightDropDown, 2.0f);
+				Ui()->DoLabel(&WeightLabel, ScLocalize("Weight"), LineSize * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML);
+				static CUi::SDropDownState s_WeightDropDownState;
+				static CScrollRegion s_WeightDropDownScrollRegion;
+				s_WeightDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeightDropDownScrollRegion;
+				static const char *s_apWeightNames[std::size(SIXCLIENT_JETBRAINS_WEIGHTS)];
+				for(size_t i = 0; i < std::size(SIXCLIENT_JETBRAINS_WEIGHTS); i++)
+					s_apWeightNames[i] = SIXCLIENT_JETBRAINS_WEIGHTS[i];
+				const int NewWeight = Ui()->DoDropDown(&WeightDropDown, g_Config.m_ScMenuUiFontWeight, s_apWeightNames, (int)std::size(s_apWeightNames), s_WeightDropDownState);
+				if(NewWeight != g_Config.m_ScMenuUiFontWeight)
+				{
+					g_Config.m_ScMenuUiFontWeight = NewWeight;
+					FontChanged = true;
+				}
+
+				MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+				MainView.HSplitTop(LineSize, &Content, &MainView);
+				const int ItalicOld = g_Config.m_ScMenuUiFontItalic;
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMenuUiFontItalic, ScLocalize("Italic"), &g_Config.m_ScMenuUiFontItalic, &Content, LineSize);
+				if(ItalicOld != g_Config.m_ScMenuUiFontItalic)
+					FontChanged = true;
+			}
+		}
+		if(FontChanged)
 			SixClientRefreshMenuFont(GameClient());
 
 		Ui()->ClipDisable();

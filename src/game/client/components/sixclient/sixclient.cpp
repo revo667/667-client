@@ -28,6 +28,7 @@
 #include <game/localization.h>
 
 #include <algorithm>
+#include <iterator>
 
 static const int FROZEN_SKIN_MAX_DARKEN = 70;
 
@@ -120,12 +121,31 @@ bool SixClientIsLocalHammerHitEvent(vec2 HitPos, bool LocalJustFired, vec2 Local
 	return distance(HitPos, LocalPos) <= Radius;
 }
 
+void SixClientBetterFontFace(char *pBuf, int BufSize)
+{
+	if(g_Config.m_ScMenuUiFontFamily != 1)
+	{
+		str_copy(pBuf, SIXCLIENT_BETTER_FONT_FACE, BufSize);
+		return;
+	}
+	const int Weight = std::clamp(g_Config.m_ScMenuUiFontWeight, 0, (int)std::size(SIXCLIENT_JETBRAINS_WEIGHTS) - 1);
+	const bool Italic = g_Config.m_ScMenuUiFontItalic != 0;
+	if(Weight == 3)
+		str_format(pBuf, BufSize, "JetBrainsMono %s", Italic ? "Italic" : "Regular");
+	else
+		str_format(pBuf, BufSize, "JetBrainsMono %s%s", SIXCLIENT_JETBRAINS_WEIGHTS[Weight], Italic ? "Italic" : "");
+}
+
 void SixClientApplyMenuFont(ITextRender *pTextRender)
 {
 	if(!pTextRender)
 		return;
 	if(g_Config.m_ScMenuUiStyle && g_Config.m_ScMenuUiBetterFont)
-		pTextRender->SetCustomFace(SIXCLIENT_BETTER_FONT_FACE);
+	{
+		char aFace[64];
+		SixClientBetterFontFace(aFace, sizeof(aFace));
+		pTextRender->SetCustomFace(aFace);
+	}
 	else
 		pTextRender->SetCustomFace(g_Config.m_TcCustomFont);
 }

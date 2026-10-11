@@ -1512,6 +1512,23 @@ set(EXPECTED_DATA
   autoexec_server.cfg
   background_noise.png
   667Client/ActayWide-Bold.otf
+  667Client/fonts/JetBrainsMono-Bold.ttf
+  667Client/fonts/JetBrainsMono-BoldItalic.ttf
+  667Client/fonts/JetBrainsMono-ExtraBold.ttf
+  667Client/fonts/JetBrainsMono-ExtraBoldItalic.ttf
+  667Client/fonts/JetBrainsMono-ExtraLight.ttf
+  667Client/fonts/JetBrainsMono-ExtraLightItalic.ttf
+  667Client/fonts/JetBrainsMono-Italic.ttf
+  667Client/fonts/JetBrainsMono-Light.ttf
+  667Client/fonts/JetBrainsMono-LightItalic.ttf
+  667Client/fonts/JetBrainsMono-Medium.ttf
+  667Client/fonts/JetBrainsMono-MediumItalic.ttf
+  667Client/fonts/JetBrainsMono-OFL.txt
+  667Client/fonts/JetBrainsMono-Regular.ttf
+  667Client/fonts/JetBrainsMono-SemiBold.ttf
+  667Client/fonts/JetBrainsMono-SemiBoldItalic.ttf
+  667Client/fonts/JetBrainsMono-Thin.ttf
+  667Client/fonts/JetBrainsMono-ThinItalic.ttf
   667Client/gui_logo.png
   667Client/icon.png
   667Client/keystrokes/mouse.png
