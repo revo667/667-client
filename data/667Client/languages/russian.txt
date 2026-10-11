@@ -1,0 +1,2207 @@
+[667Client]
+Checkbox
+== Чекбокс
+
+[667Client]
+Sample text Aa
+== Пример текста Aa
+
+[667Client]
+Legacy
+== Легаси
+
+[667Client]
+Better UI
+== Улучшенный UI
+
+[667Client]
+Choose Legacy
+== Выбрать легаси
+
+[667Client]
+Choose Better UI
+== Выбрать улучшенный UI
+
+[667Client]
+Chat Media
+== Чат-медиа
+
+[667Client]
+Render media previews from chat links
+== Рендерить превью медиа из ссылок в чате
+
+[667Client]
+Show photos in chat media
+== Показывать фото в чат-медиа
+
+[667Client]
+Show GIFs in chat media
+== Показывать GIF в чат-медиа
+
+[667Client]
+Content filtering
+== Фильтр контента
+
+[667Client]
+Allowed media domains
+== Разрешённые домены медиа
+
+[667Client]
+Media preview width
+== Ширина превью медиа
+
+[667Client]
+Hide media bind
+== Бинд скрытия медиа
+
+[667Client]
+Visuals
+== Визуал
+
+[667Client]
+Gameplay
+== Геймплей
+
+[667Client]
+Others
+== Другое
+
+[667Client]
+Info
+== Инфо
+
+[667Client]
+high fps intake
+== Высокий FPS
+
+[667Client]
+HUD editor
+== HUD-редактор
+
+[667Client]
+Open in HUD editor
+== Открыть в HUD-редакторе
+
+[667Client]
+Join a game first
+== Сначала зайди в игру
+
+[667Client]
+Visuals QoL
+== Удобства визуала
+
+[667Client]
+Map preview in server list
+== Превью карты в списке серверов
+
+[667Client]
+Show real hitbox
+== Показывать реальный хитбокс
+
+[667Client]
+Real hitbox dot color
+== Цвет точки реального хитбокса
+
+[667Client]
+Show player below indicator
+== Показывать индикатор игрока снизу
+
+[667Client]
+Show current checkpoint in hud
+== Показывать текущий чекпоинт в HUD
+
+[667Client]
+Show points in tab
+== Показывать поинты в табе
+
+[667Client]
+Show spectator nicknames
+== Показывать ники наблюдателей
+
+[667Client]
+Show vote percentage
+== Показывать процент голосов
+
+[667Client]
+667 Client discord rpc (restart requires)
+== Discord RPC бестклиента (нужен перезапуск)
+
+[667Client]
+Bind/Emote wheel scale
+== Масштаб колеса биндов/эмоций
+
+[667Client]
+Scoreboard scale
+== Масштаб скорборда
+
+[667Client]
+UI scale
+== Масштаб UI
+
+[667Client]
+Jelly Tee
+== Джелли ти
+
+[667Client]
+Enable Jelly Tee
+== Включить джелли ти
+
+[667Client]
+Jelly Others
+== Джелли других
+
+[667Client]
+Jelly strength
+== Сила джелли
+
+[667Client]
+Jelly duration
+== Длительность джелли
+
+[667Client]
+Corner indicator
+== Индикатор углов
+
+[667Client]
+Enable corner indicator
+== Включить индикатор углов
+
+[667Client]
+Only in team
+== Только в команде
+
+[667Client]
+Show alive teammates
+== Показывать живых тиммейтов
+
+[667Client]
+Show frozen teammates
+== Показывать зафриженных тиммейтов
+
+[667Client]
+Indicate last teammate
+== Указывать последнего тиммейта
+
+[667Client]
+Scale by distance
+== Масштаб от дистанции
+
+[667Client]
+Ninja skin when frozen
+== Ниндзя-скин во фризе
+
+[667Client]
+Alive size
+== Размер живого
+
+[667Client]
+Frozen size
+== Размер во фризе
+
+[667Client]
+Last teammate size
+== Размер последнего тиммейта
+
+[667Client]
+Use custom colors
+== Свои цвета
+
+[667Client]
+Alive color
+== Цвет живого
+
+[667Client]
+Frozen color
+== Цвет фриза
+
+[667Client]
+Last teammate color
+== Цвет последнего тиммейта
+
+[667Client]
+Chat Bubbles
+== Чат-баблы
+
+[667Client]
+Show chat bubbles above players
+== Показывать чат-баблы над игроками
+
+[667Client]
+Show chat bubbles above you
+== Показывать чат-баблы над тобой
+
+[667Client]
+Show chat bubbles in demo
+== Показывать чат-баблы в демо
+
+[667Client]
+Chat bubble size
+== Размер чат-бабла
+
+[667Client]
+Show for
+== Показывать
+
+[667Client]
+Fade in
+== Появление
+
+[667Client]
+Fade out
+== Исчезновение
+
+[667Client]
+Stack animation
+== Стек-анимация
+
+[667Client]
+Corner rounding
+== Скругление углов
+
+[667Client]
+Text
+== Текст
+
+[667Client]
+Outline
+== Обводка
+
+[667Client]
+Gradient
+== Градиент
+
+[667Client]
+Gradient nicknames
+== Градиент ников
+
+[667Client]
+Gradient clans
+== Градиент кланов
+
+[667Client]
+Gradient skin
+== Градиент скина
+
+[667Client]
+Gradient everything
+== Градиент всего
+
+[667Client]
+Animate speed
+== Скорость анимации
+
+[667Client]
+Mode
+== Режим
+
+[667Client]
+Skin
+== Скин
+
+[667Client]
+Custom
+== Свой
+
+[667Client]
+Color count
+== Число цветов
+
+[667Client]
+Color 1
+== Цвет 1
+
+[667Client]
+Color 2
+== Цвет 2
+
+[667Client]
+Color 3
+== Цвет 3
+
+[667Client]
+Color 4
+== Цвет 4
+
+[667Client]
+Flying Name Plates
+== Летающие неймплейты
+
+[667Client]
+Enable flying name plates
+== Включить летающие неймплейты
+
+[667Client]
+Hide line
+== Скрыть линию
+
+[667Client]
+Lift above player
+== Поднять над игроком
+
+[667Client]
+Movement drag
+== Драг движения
+
+[667Client]
+Follow speed
+== Скорость следования
+
+[667Client]
+3D Particles
+== 3D частицы
+
+[667Client]
+Enable 3D Particles
+== Включить 3D частицы
+
+[667Client]
+Density
+== Плотность
+
+[667Client]
+Particle type
+== Тип частиц
+
+[667Client]
+Cube
+== Куб
+
+[667Client]
+Heart
+== Сердце
+
+[667Client]
+Mixed
+== Микс
+
+[667Client]
+Size
+== Размер
+
+[667Client]
+Color mode
+== Режим цвета
+
+[667Client]
+Glow
+== Свечение
+
+[667Client]
+Media Background
+== Медиа-фон
+
+[667Client]
+Enable to main menu
+== Включить в главном меню
+
+[667Client]
+Enable to game background
+== Включить на фоне игры
+
+[667Client]
+No media files in backgrounds folder
+== Нет медиафайлов в папке backgrounds
+
+[667Client]
+Map offset
+== Смещение карты
+
+[667Client]
+0 keeps the image fixed to the screen. Higher values add camera parallax. Move the camera to see the effect.
+== 0 держит картинку на экране. Выше — параллакс камеры. Подвигай камеру, чтобы увидеть эффект.
+
+[667Client]
+Hidden: overlay entities is 0.
+== Скрыто: overlay entities = 0.
+
+[667Client]
+Cursor Trail
+== След курсора
+
+[667Client]
+Enable
+== Включить
+
+[667Client]
+Cursor
+== Курсор
+
+[667Client]
+Trail size
+== Размер следа
+
+[667Client]
+Number of frames
+== Число кадров
+
+[667Client]
+Opacity
+== Прозрачность
+
+[667Client]
+Sampling FPS
+== FPS сэмплинга
+
+[667Client]
+Disable movement
+== Отключить движение
+
+[667Client]
+Trail image
+== Картинка следа
+
+[667Client]
+No images in CTrails folder
+== Нет картинок в папке CTrails
+
+[667Client]
+Enable better UI
+== Включить улучшенный UI
+
+[667Client]
+Better checkbox
+== Улучшенный чекбокс
+
+[667Client]
+Better scrollbar
+== Улучшенный скроллбар
+
+[667Client]
+Better tab option
+== Улучшенные вкладки
+
+[667Client]
+Left
+== Слева
+
+[667Client]
+Right
+== Справа
+
+[667Client]
+Better color picker
+== Улучшенный выбор цвета
+
+[667Client]
+Better font
+== Улучшенный шрифт
+
+[667Client]
+UI Themes
+== Темы UI
+
+[667Client]
+Scrollbar
+== Скроллбар
+
+[667Client]
+Button
+== Кнопка
+
+[667Client]
+Droplist
+== Дроплист
+
+[667Client]
+Input field
+== Поле ввода
+
+[667Client]
+Function block
+== Блок функции
+
+[667Client]
+UI background
+== Фон UI
+
+[667Client]
+Settings tabs
+== Вкладки настроек
+
+[667Client]
+Badge
+== Бейдж
+
+[667Client]
+Binds
+== Бинды
+
+[667Client]
+Accent
+== Акцент
+
+[667Client]
+Enable colorable background
+== Включить цветной фон
+
+[667Client]
+Background color
+== Цвет фона
+
+[667Client]
+Exported!
+== Экспортировано!
+
+[667Client]
+Export
+== Экспорт
+
+[667Client]
+Imported!
+== Импортировано!
+
+[667Client]
+Import
+== Импорт
+
+[667Client]
+Copy theme to clipboard
+== Копировать тему в буфер
+
+[667Client]
+Paste theme from clipboard
+== Вставить тему из буфера
+
+[667Client]
+Enable motion blur
+== Включить Motion Blur
+
+[667Client]
+Blend strength
+== Сила смешивания
+
+[667Client]
+Animations
+== Анимации
+
+[667Client]
+Enable animations
+== Включить анимации
+
+[667Client]
+Settings animation
+== Анимация настроек
+
+[667Client]
+Settings (ms)
+== Настройки (мс)
+
+[667Client]
+Chat message animations
+== Анимации сообщений чата
+
+[667Client]
+Chat message (ms)
+== Сообщение чата (мс)
+
+[667Client]
+Chat open animation
+== Анимация открытия чата
+
+[667Client]
+Chat open (ms)
+== Открытие чата (мс)
+
+[667Client]
+Chat typing animation
+== Анимация печати в чате
+
+[667Client]
+Chat typing (ms)
+== Печать в чате (мс)
+
+[667Client]
+Killfeed animation
+== Анимация киллфида
+
+[667Client]
+Killfeed (ms)
+== Киллфид (мс)
+
+[667Client]
+Main menu animation
+== Анимация главного меню
+
+[667Client]
+Main menu speed
+== Скорость главного меню
+
+[667Client]
+Music Player
+== Музыкальный плеер
+
+[667Client]
+Enable music player
+== Включить музыкальный плеер
+
+[667Client]
+Static
+== Статик
+
+[667Client]
+Cover
+== Обложка
+
+[667Client]
+Static color
+== Статик-цвет
+
+[667Client]
+Visualizer mode
+== Режим визуалайзера
+
+[667Client]
+Bottom
+== Снизу
+
+[667Client]
+Center
+== Центр
+
+[667Client]
+Up
+== Вверх
+
+[667Client]
+Text scale
+== Масштаб текста
+
+[667Client]
+Columns
+== Колонки
+
+[667Client]
+Rounding
+== Скругление
+
+[667Client]
+Soft
+== Софт
+
+[667Client]
+Show song lyrics
+== Показывать текст песни
+
+[667Client]
+Show current time
+== Показывать текущее время
+
+[667Client]
+Keystrokes
+== Кейстроки
+
+[667Client]
+Classic
+== Классика
+
+[667Client]
+Minecraft
+== Майнкрафт
+
+[667Client]
+Enable keyboard
+== Включить клавиатуру
+
+[667Client]
+Full
+== Фулл
+
+[667Client]
+Minimal
+== Минимал
+
+[667Client]
+Micro
+== Микро
+
+[667Client]
+Only A/D
+== Только A/D
+
+[667Client]
+Pressed opacity
+== Прозрачность нажатия
+
+[667Client]
+Enable LMB
+== Включить ЛКМ
+
+[667Client]
+Enable RMB
+== Включить ПКМ
+
+[667Client]
+Enable Space
+== Включить Space
+
+[667Client]
+Enable mouse
+== Включить мышь
+
+[667Client]
+Arrow
+== Стрелка
+
+[667Client]
+Dot Dot
+== Дот дот
+
+[667Client]
+Nothing
+== Ничего
+
+[667Client]
+Aspect Ratio
+== Соотношение сторон
+
+[667Client]
+Off (default)
+== Выкл (по умолчанию)
+
+[667Client]
+Preset
+== Пресет
+
+[667Client]
+Game only
+== Только игра
+
+[667Client]
+Game no HUD
+== Игра без HUD
+
+[667Client]
+Custom size
+== Свой размер
+
+[667Client]
+Looks like you're on a server where this feature is forbidden
+== Похоже, на этом сервере эта фича запрещена
+
+[667Client]
+Physic Balls
+== Физик боллы
+
+[667Client]
+Ball amount: %d
+== Количество шаров: %d
+
+[667Client]
+Clear all balls
+== Убрать все шары
+
+[667Client]
+Ball skin
+== Скин шара
+
+[667Client]
+Spawn count
+== Число спавна
+
+[667Client]
+New Ball
+== Новый шар
+
+[667Client]
+New Ball Cursor
+== Новый шар на курсоре
+
+[667Client]
+ticks
+== тики
+
+[667Client]
+Inputs
+== Инпуты
+
+[667Client]
+Enable Inputs
+== Включить инпуты
+
+[667Client]
+Fast
+== Фаст
+
+[667Client]
+Best
+== Бест
+
+[667Client]
+Saiko
+== Сайко
+
+[667Client]
+Delta
+== Дельта
+
+[667Client]
+Cloud
+== Клауд
+
+[667Client]
+Prediction offset
+== Предикшен оффсет
+
+[667Client]
+Fast Input others
+== Фаст инпут других
+
+[667Client]
+Smoothing
+== Сглаживание
+
+[667Client]
+Latency compensation
+== Компенсация задержки
+
+[667Client]
+Interpolation
+== Интерполяция
+
+[667Client]
+Linear
+== Линейная
+
+[667Client]
+Cubic
+== Кубическая
+
+[667Client]
+Smooth
+== Плавная
+
+[667Client]
+Best input others
+== Бест инпут других
+
+[667Client]
+Saiko input others
+== Сайко инпут других
+
+[667Client]
+Delta input others
+== Дельта инпут других
+
+[667Client]
+F input others
+== F инпут других
+
+[667Client]
+Cloud input others
+== Клауд инпут других
+
+[667Client]
+Sub-Tick aiming
+== Сабтик аиминг
+
+[667Client]
+Repredict on mid-tick hook direction change (may lag)
+== Репредикт при смене направления хука в середине тика (может лагать)
+
+[667Client]
+Auto margin
+== Автомаргин
+
+[667Client]
+Input Debounce
+== Инпут дебаунс
+
+[667Client]
+Snap Tap
+== Снап тап
+
+[667Client]
+Off
+== Выкл
+
+[667Client]
+Delay
+== Задержка
+
+[667Client]
+Gores mode
+== Режим горес
+
+[667Client]
+Enable gores mode
+== Включить режим горес
+
+[667Client]
+Disable if you have shotgun, grenade or laser
+== Выключать, если есть дробовик, граната или лазер
+
+[667Client]
+Optimizer
+== Оптимизатор
+
+[667Client]
+Enable optimizer
+== Включить оптимизатор
+
+[667Client]
+Disable all particles render
+== Отключить рендер всех частиц
+
+[667Client]
+Disable map quads render
+== Отключить рендер квадов карты
+
+[667Client]
+Disable high detail
+== Отключить высокую детализацию
+
+[667Client]
+FPS fog (cull outside limit)
+== FPS-туман (отрезать за лимитом)
+
+[667Client]
+FPS fog
+== FPS-туман
+
+[667Client]
+Render FPS fog rectangle
+== Рендерить прямоугольник FPS-тумана
+
+[667Client]
+Cull map tiles outside FPS fog
+== Отсекать тайлы карты за FPS-туманом
+
+[667Client]
+Radius
+== Радиус
+
+[667Client]
+Zoom %
+== Зум %
+
+[667Client]
+Radius (tiles)
+== Радиус (тайлы)
+
+[667Client]
+Visible area (%)
+== Видимая область (%)
+
+[667Client]
+Performance
+== Производительность
+
+[667Client]
+High DDNet Process Priority
+== Высокий приоритет процесса DDNet
+
+[667Client]
+Lower Discords Process Priority
+== Понизить приоритет процесса Discord
+
+[667Client]
+Gameplay QoL
+== Удобства геймплея
+
+[667Client]
+Automatic update
+== Автообновление
+
+[667Client]
+Cinematic camera
+== Синематик камера
+
+[667Client]
+Strength
+== Сила
+
+[667Client]
+Extend zoom (0.5 steps)
+== Расширить зум (шаг 0.5)
+
+[667Client]
+Better spectate
+== Беттер спектейт
+
+[667Client]
+Replace your say /pause bind (default: Q) with +specpause (pause/spec radio)
+== Заменить бинд say /pause (по умолчанию: Q) на +specpause (пауза/спек радио)
+
+[667Client]
+Show delay
+== Показывать задержку
+
+[667Client]
+Notify when moved in spec
+== Уведомлять, когда тебя двигают в спеке
+
+[667Client]
+Notification text
+== Текст уведомления
+
+[667Client]
+Lock team automatically after joining
+== Автолок команды после входа
+
+[667Client]
+Auto lock delay
+== Задержка автолока
+
+[667Client]
+Confirm before quitting
+== Подтверждение перед выходом
+
+[667Client]
+Moving/ego tiles prediction
+== Предикшен мувинг/эго тайлов
+
+[667Client]
+Fast Actions
+== Фаст экшенс
+
+[667Client]
+Enable Fast Actions
+== Включить фаст экшенс
+
+[667Client]
+Selected slot
+== Выбранный слот
+
+[667Client]
+Name:
+== Имя:
+
+[667Client]
+Name (optional)
+== Имя (необязательно)
+
+[667Client]
+Clear command
+== Очистить команду
+
+[667Client]
+In game: hold bind key, press 1..6, release key to execute
+== В игре: зажми бинд, нажми 1..6, отпусти клавишу, чтобы выполнить
+
+[667Client]
+Fast Actions key
+== Клавиша фаст экшенс
+
+[667Client]
+Finish Prediction
+== Финиш предикшен
+
+[667Client]
+Enable finish prediction
+== Включить финиш предикшен
+
+[667Client]
+Show time
+== Показывать время
+
+[667Client]
+Time left
+== Оставшееся время
+
+[667Client]
+Finish time
+== Время финиша
+
+[667Client]
+Show milliseconds
+== Показывать миллисекунды
+
+[667Client]
+Show percentage
+== Показывать процент
+
+[667Client]
+Show always
+== Показывать всегда
+
+[667Client]
+Consider freeze walls
+== Учитывать фриз-стены
+
+[667Client]
+Edge Info
+== Эдж инфо
+
+[667Client]
+Show edge info
+== Показывать эдж инфо
+
+[667Client]
+Show edge info about freeze
+== Эдж инфо про фриз
+
+[667Client]
+Show edge info about jumps
+== Эдж инфо про прыжки
+
+[667Client]
+Color when over freeze
+== Цвет над фризом
+
+[667Client]
+Color when over kill
+== Цвет над киллом
+
+[667Client]
+Color when falling safely
+== Цвет безопасного падения
+
+[667Client]
+Chat QoL
+== Удобства чата
+
+[667Client]
+Save unsent messages
+== Сохранять неотправленные сообщения
+
+[667Client]
+Silent typing
+== Тихая печать
+
+[667Client]
+Commands in other layout
+== Команды в другой раскладке
+
+[667Client]
+Reply/copy message menu
+== Меню ответа/копирования сообщения
+
+[667Client]
+Notify about saves on map
+== Уведомлять о сейвах на карте
+
+[667Client]
+Twitch Chat
+== Твич-чат
+
+[667Client]
+Nick
+== Ник
+
+[667Client]
+Stop
+== Стоп
+
+[667Client]
+Start
+== Старт
+
+[667Client]
+Browser Utils
+== Браузер утилиты
+
+[667Client]
+Auto server list refresh
+== Автообновление списка серверов
+
+[667Client]
+Seconds
+== Секунды
+
+[667Client]
+Short EGO/KoG server name
+== Короткое имя сервера EGO/KoG
+
+[667Client]
+Show finished map on EGO
+== Показывать пройденную карту на EGO
+
+[667Client]
+Use 667 Client MasterServer
+== Использовать мастерсервер 667 Client
+
+[667Client]
+Rollback Demo
+== Роллбэк демо
+
+[667Client]
+Enable rollback demo recording
+== Включить запись роллбэк демо
+
+[667Client]
+Rollback length
+== Длина роллбэка
+
+[667Client]
+Rollback bind
+== Бинд роллбэка
+
+[667Client]
+Focus Mode
+== Фокус-режим
+
+[667Client]
+Enable Focus Mode
+== Включить фокус-режим
+
+[667Client]
+Hide Player Names
+== Скрыть имена игроков
+
+[667Client]
+Hide Visual Effects
+== Скрыть визуальные эффекты
+
+[667Client]
+Hide HUD
+== Скрыть HUD
+
+[667Client]
+Hide Song Player
+== Скрыть плеер
+
+[667Client]
+Hide Unnecessary UI
+== Скрыть лишний UI
+
+[667Client]
+Hide Chat
+== Скрыть чат
+
+[667Client]
+Hide Scoreboard
+== Скрыть скорборд
+
+[667Client]
+Auto reply when chat is hidden
+== Автоответ, когда чат скрыт
+
+[667Client]
+Focus mode bind
+== Бинд фокус-режима
+
+[667Client]
+Voice Moderation
+== Модерация войса
+
+[667Client]
+Voice Binds
+== Войс-бинды
+
+[667Client]
+Voice
+== Войс
+
+[667Client]
+Push-to-talk
+== Пуш-ту-толк
+
+[667Client]
+Mute microphone
+== Мут микрофона
+
+[667Client]
+Mute headphones
+== Мут наушников
+
+[667Client]
+System default
+== Системное по умолчанию
+
+[667Client]
+Device #%d
+== Устройство #%d
+
+[667Client]
+Enable voice chat
+== Включить войс-чат
+
+[667Client]
+In-Game Only
+== Только в игре
+
+[667Client]
+Use team0
+== Использовать team0
+
+[667Client]
+Enable your group
+== Включить свою группу
+
+[667Client]
+Radius filter
+== Фильтр по радиусу
+
+[667Client]
+Radius (tiles)
+== Радиус (тайлы)
+
+[667Client]
+Activation mode
+== Режим активации
+
+[667Client]
+Automatic
+== Автоматически
+
+[667Client]
+VAD threshold (%)
+== Порог VAD (%)
+
+[667Client]
+VAD release delay (ms)
+== Задержка отпускания VAD (мс)
+
+[667Client]
+Mic check (loopback)
+== Проверка микрофона (свой голос)
+
+[667Client]
+Mic level
+== Уровень микрофона
+
+[667Client]
+Mic gain
+== Усиление микрофона
+
+[667Client]
+Voice volume
+== Громкость войса
+
+[667Client]
+Microphone
+== Микрофон
+
+[667Client]
+Headphones
+== Наушники
+
+[667Client]
+Status
+== Статус
+
+[667Client]
+Connected
+== Подключено
+
+[667Client]
+Offline
+== Оффлайн
+
+[667Client]
+Reload servers
+== Обновить серверы
+
+[667Client]
+Available servers
+== Доступные серверы
+
+[667Client]
+Loading server list...
+== Загрузка списка серверов...
+
+[667Client]
+No servers loaded
+== Серверы не загружены
+
+[667Client]
+Voice commands
+== Команды войса
+
+[667Client]
+!vmute "name" / !vunmute "name"
+== !vmute "имя" / !vunmute "имя"
+
+[667Client]
+!volume "name" 0-100
+== !volume "имя" 0-100
+
+[667Client]
+!vradius on/off/<tiles>
+== !vradius on/off/<тайлы>
+
+[667Client]
+Client Indicator
+== Индикатор клиента
+
+[667Client]
+Show indicator in name plates
+== Показывать индикатор в неймплейтах
+
+[667Client]
+Show above yourself
+== Показывать над собой
+
+[667Client]
+Name plate indicator size
+== Размер индикатора в неймплейте
+
+[667Client]
+Show indicator in scoreboard
+== Показывать индикатор в скорборде
+
+[667Client]
+Scoreboard indicator size
+== Размер индикатора в скорборде
+
+[667Client]
+Not connected to voice server
+== Нет подключения к войс-серверу
+
+[667Client]
+Voice Moderator Login
+== Вход модератора войса
+
+[667Client]
+Mod key:
+== Мод-ключ:
+
+[667Client]
+Authenticating...
+== Проверка...
+
+[667Client]
+Wrong key
+== Неверный ключ
+
+[667Client]
+Login as Voice Mod
+== Войти как мод войса
+
+[667Client]
+Voice players on this server
+== Игроки войса на этом сервере
+
+[667Client]
+Refresh
+== Обновить
+
+[667Client]
+No players in current voice room
+== В текущей войс-комнате нет игроков
+
+[667Client]
+Action
+== Действие
+
+[667Client]
+slot %d
+== слот %d
+
+[667Client]
+Mini games
+== Мини-игры
+
+[667Client]
+667 Client Links
+== Ссылки 667 Client
+
+[667Client]
+Telegram
+== Telegram
+
+[667Client]
+Check update
+== Чек апдейт
+
+[667Client]
+Config Files
+== Файлы конфигов
+
+[667Client]
+667 Client Settings
+== Настройки 667 Client
+
+[667Client]
+667 Client Developers
+== Разработчики 667 Client
+
+[667Client]
+Hide Settings Tabs
+== Скрыть вкладки настроек
+
+[667Client]
+Laser Glow
+== Свечение лазера
+
+[667Client]
+Shotgun Glow
+== Свечение дробовика
+
+[667Client]
+Rocket Glow
+== Свечение рокеты
+
+[667Client]
+Rocket
+== Рокета
+
+[667Client]
+Prism
+== Призма
+
+[667Client]
+Pulse
+== Pulse
+
+[667Client]
+Crystal
+== Кристалл
+
+[667Client]
+Power
+== Мощность
+
+[667Client]
+Nuke effects
+== Эффекты ньюка
+
+[667Client]
+Enable Nuke effects
+== Включить эффекты ньюка
+
+[667Client]
+Screen shake
+== Тряска экрана
+
+[667Client]
+Nuke size
+== Размер ньюка
+
+[667Client]
+Custom hooks
+== Кастомные хуки
+
+[667Client]
+Hook
+== Хук
+
+[667Client]
+None
+== Нет
+
+[667Client]
+Whirlwind
+== Вихрь
+
+[667Client]
+Black hole
+== Чёрная дыра
+
+[667Client]
+Magic
+== Магия
+
+[667Client]
+Fire
+== Огонь
+
+[667Client]
+Troll
+== Тролль
+
+[667Client]
+Lightning
+== Молния
+
+[667Client]
+Tentacle
+== Щупальце
+
+[667Client]
+Style the hook
+== Стилизовать хук
+
+[667Client]
+Style the tip
+== Стилизовать кончик
+
+[667Client]
+Grow time
+== Время роста
+
+[667Client]
+Grab gust
+== Порыв захвата
+
+[667Client]
+Eye
+== Глаз
+
+[667Client]
+Wind lines
+== Линии ветра
+
+[667Client]
+Spin speed
+== Скорость вращения
+
+[667Client]
+Line thickness
+== Толщина линии
+
+[667Client]
+Wind opacity
+== Прозрачность ветра
+
+[667Client]
+Leaves
+== Листья
+
+[667Client]
+Dust
+== Пыль
+
+[667Client]
+Wind color
+== Цвет ветра
+
+[667Client]
+Disk
+== Диск
+
+[667Client]
+Matter
+== Материя
+
+[667Client]
+Spin
+== Вращение
+
+[667Client]
+Disk color
+== Цвет диска
+
+[667Client]
+Runes
+== Руны
+
+[667Client]
+Sparkles
+== Искры
+
+[667Client]
+Spell color
+== Цвет заклинания
+
+[667Client]
+Smoke
+== Дым
+
+[667Client]
+Flames
+== Пламя
+
+[667Client]
+Embers
+== Угли
+
+[667Client]
+Fire color
+== Цвет огня
+
+[667Client]
+Rays
+== Лучи
+
+[667Client]
+Flow
+== Поток
+
+[667Client]
+Glitter
+== Блёстки
+
+[667Client]
+Ribbon width
+== Ширина ленты
+
+[667Client]
+Wall arcs
+== Дуги у стены
+
+[667Client]
+Jitter
+== Дрожание
+
+[667Client]
+Forks
+== Развилки
+
+[667Client]
+Sparks
+== Искры
+
+[667Client]
+Lightning color
+== Цвет молнии
+
+[667Client]
+Suckers
+== Присоски
+
+[667Client]
+Writhing
+== Извивание
+
+[667Client]
+Thickness
+== Толщина
+
+[667Client]
+Slime
+== Слизь
+
+[667Client]
+Flesh color
+== Цвет плоти
+
+[667Client]
+Hook effects
+== Эффекты хука
+
+[667Client]
+Air jump ring
+== Кольцо прыжка в воздухе
+
+[667Client]
+Disable jump particles
+== Отключить частицы прыжка
+
+[667Client]
+Hammer slash
+== Взмах молота
+
+[667Client]
+Disable hammer particles
+== Отключить частицы молота
+
+[667Client]
+Hook lasso
+== Лассо хука
+
+[667Client]
+Hook box
+== Бокс хука
+
+[667Client]
+Hook hold
+== Удержание хука
+
+[667Client]
+Hold aura
+== Аура удержания
+
+[667Client]
+Hold burst
+== Вспышка удержания
+
+[667Client]
+Energy motes
+== Частицы энергии
+
+[667Client]
+Weather
+== Погода
+
+[667Client]
+Snow
+== Снег
+
+[667Client]
+Rain
+== Дождь
+
+[667Client]
+Fireflies
+== Светлячки
+
+[667Client]
+Amount
+== Количество
+
+[667Client]
+Dust color
+== Цвет пыли
+
+[667Client]
+Rain color
+== Цвет дождя
+
+[667Client]
+Firefly color
+== Цвет светлячков
+
+[667Client]
+Dots
+== Точки
+
+[667Client]
+Snowflakes
+== Снежинки
+
+[667Client]
+Snow color
+== Цвет снега
+
+[667Client]
+Freeze lifesteal
+== Фриз лайфстил
+
+[667Client]
+Shield
+== Щит
+
+[667Client]
+Reach
+== Дальность
+
+[667Client]
+Frost
+== Мороз
+
+[667Client]
+Custom hook color
+== Свой цвет хука
+
+[667Client]
+Cold color
+== Холодный цвет
+
+[667Client]
+Freeze lightning
+== Фриз-молния
+
+[667Client]
+Impact
+== Удар
+
+[667Client]
+Branches
+== Ветки
+
+[667Client]
+Shake
+== Тряска
+
+[667Client]
+Strike me
+== Ударить в меня
+
+[667Client]
+Join a server to preview the lightning
+== Зайди на сервер, чтобы увидеть превью молнии
+
+[667Client]
+Enabled
+== Включено
+
+[667Client]
+Scale
+== Масштаб
+
+[667Client]
+Reset scale
+== Сбросить масштаб
+
+[667Client]
+Reset position
+== Сбросить позицию
+
+[667Client]
+Reset all
+== Сбросить всё
+
+[667Client]
+disabled
+== выключено
+
+[667Client]
+preview
+== превью
+
+[667Client]
+Reset All
+== Сбросить всё
+
+[667Client]
+Disabled.
+== Выключено.
+
+[667Client]
+Failed to load PNG.
+== Не удалось загрузить PNG.
+
+[667Client]
+Failed to upload PNG.
+== Не удалось отправить PNG.
+
+[667Client]
+Loaded image.
+== Картинка загружена.
+
+[667Client]
+Failed to read file.
+== Не удалось прочитать файл.
+
+[667Client]
+Failed to upload image.
+== Не удалось отправить картинку.
+
+[667Client]
+Failed to decode image.
+== Не удалось декодировать картинку.
+
+[667Client]
+Loaded animated image.
+== Анимированная картинка загружена.
+
+[667Client]
+Video backgrounds are unavailable in this build.
+== Видеофоны недоступны в этой сборке.
+
+[667Client]
+Failed to open video.
+== Не удалось открыть видео.
+
+[667Client]
+Failed to read video info.
+== Не удалось прочитать инфо видео.
+
+[667Client]
+No video stream found.
+== Видеопоток не найден.
+
+[667Client]
+Unsupported video codec.
+== Неподдерживаемый видеокодек.
+
+[667Client]
+Failed to initialize video decoder.
+== Не удалось запустить видео декодер.
+
+[667Client]
+Invalid video dimensions.
+== Неверный размер видео.
+
+[667Client]
+Failed to allocate video frames.
+== Не удалось выделить кадры видео.
+
+[667Client]
+Failed to allocate RGBA frame.
+== Не удалось выделить RGBA-кадр.
+
+[667Client]
+Failed to initialize video scaler.
+== Не удалось запустить видеоскейлер.
+
+[667Client]
+Failed to decode first video frame.
+== Не удалось декодировать первый кадр видео.
+
+[667Client]
+Loaded video.
+== Видео загружено.
+
+[667Client]
+No media selected.
+== Медиа не выбрано.
+
+[667Client]
+Failed while decoding video.
+== Ошибка при декодировании видео.
+
+[667Client]
+Back to Info
+== Назад в инфо
+
+[667Client]
+Press any key to start
+== Нажми любую клавишу, чтобы начать
+
+[667Client]
+Game Over
+== Гейм овер
+
+[667Client]
+Victory
+== Победа
+
+[667Client]
+Draw - Stalemate
+== Ничья — пат
+
+[667Client]
+Draw - Fifty move rule
+== Ничья — правило 50 ходов
+
+[667Client]
+Draw - Threefold repetition
+== Ничья — троекратное повторение
+
+[667Client]
+Winner: White
+== Победитель: белые
+
+[667Client]
+Winner: Black
+== Победитель: чёрные
+
+[667Client]
+Turn: White
+== Ход: белые
+
+[667Client]
+Turn: Black
+== Ход: чёрные
+
+[667Client]
+White Wins
+== Победа белых
+
+[667Client]
+Black Wins
+== Победа чёрных
+
+[667Client]
+All pairs found
+== Все пары найдены
+
+[667Client]
+You Win
+== Ты выиграл
+
+[667Client]
+Bot Wins
+== Бот выиграл
+
+[667Client]
+All bricks cleared
+== Все кирпичи разбиты
+
+[667Client]
+Numbers
+== Цифры
+
+[667Client]
+Clear
+== Очистить
+
+[667Client]
+Sudoku Solved
+== Судоку решён
+
+[667Client]
+Get $200
+== Получить $200
+
+[667Client]
+Multiplier:
+== Множитель:
+
+[667Client]
+Locked
+== Лок
+
+[667Client]
+Not enough funds
+== Не хватает средств
+
+[667Client]
+Spinning...
+== Крутится...
+
+[667Client]
+SPIN
+== КРУТИТЬ
+
+[667Client]
+Type to search settings
+== Введи текст для поиска настроек
+
+[667Client]
+Element
+== Элемент
+
+[667Client]
+Casino
+== Казино
+
+[667Client]
+Snake
+== Снейк
+
+[667Client]
+Minesweeper
+== Майнсвипер
+
+[667Client]
+Chess
+== Шахматы
+
+[667Client]
+Memory
+== Мемори
+
+[667Client]
+Pong
+== Понг
+
+[667Client]
+Brick Breaker
+== Брик брейкер
+
+[667Client]
+Sudoku
+== Судоку
+
+[667Client]
+Spin the reels, bet & win
+== Крути барабаны, ставь и выигрывай
+
+[667Client]
+Arrows/WASD, Space restart
+== Стрелки/WASD, Space — рестарт
+
+[667Client]
+LMB open, RMB flag, hover hints
+== ЛКМ открыть, ПКМ флаг, наведение — подсказки
+
+[667Client]
+Font Awesome chess pieces
+== Фигуры Font Awesome
+
+[667Client]
+Find all matching pairs
+== Найди все пары
+
+[667Client]
+W/S or Up/Down to move paddle
+== W/S или вверх/вниз двигают ракетку
+
+[667Client]
+Break all bricks with the ball
+== Разбей все кирпичи мячом
+
+[667Client]
+Click cell, 1-9 place, 0/Del clear
+== Клик по клетке, 1-9 поставить, 0/Del стереть
+
+[667Client]
+Easy
+== Легко
+
+[667Client]
+Medium
+== Средне
+
+[667Client]
+Hard
+== Сложно
+
+[Gradient]
+Apply to
+== Применить к
+
+[Gradient]
+Own
+== Свои
+
+[Gradient]
+Others
+== Другие
+
+[Gradient]
+All
+== Все

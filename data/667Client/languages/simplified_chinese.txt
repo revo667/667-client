@@ -1,0 +1,2203 @@
+[667Client]
+Checkbox
+== 复选框
+
+[667Client]
+Sample text Aa
+== 示例文本 Aa
+
+[667Client]
+Legacy
+== 旧界面
+
+[667Client]
+Better UI
+== 改进界面
+
+[667Client]
+Choose Legacy
+== 选择旧界面
+
+[667Client]
+Choose Better UI
+== 选择改进界面
+
+[667Client]
+Chat Media
+== 聊天媒体
+
+[667Client]
+Render media previews from chat links
+== 显示聊天链接的媒体预览
+
+[667Client]
+Show photos in chat media
+== 在聊天媒体中显示图片
+
+[667Client]
+Show GIFs in chat media
+== 在聊天媒体中显示 GIF
+
+[667Client]
+Content filtering
+== 内容过滤
+
+[667Client]
+Allowed media domains
+== 允许的媒体域名
+
+[667Client]
+Media preview width
+== 媒体预览宽度
+
+[667Client]
+Hide media bind
+== 隐藏媒体按键
+
+[667Client]
+Visuals
+== 视觉
+
+[667Client]
+Gameplay
+== 玩法
+
+[667Client]
+Others
+== 其他
+
+[667Client]
+Info
+== 信息
+
+[667Client]
+high fps intake
+== 高 FPS
+
+[667Client]
+HUD editor
+== HUD 编辑器
+
+[667Client]
+Open in HUD editor
+== 在 HUD 编辑器中打开
+
+[667Client]
+Join a game first
+== 请先进入游戏
+
+[667Client]
+Visuals QoL
+== 视觉便利
+
+[667Client]
+Map preview in server list
+== 服务器列表中的地图预览
+
+[667Client]
+Show real hitbox
+== 显示真实碰撞箱
+
+[667Client]
+Real hitbox dot color
+== 真实碰撞箱点颜色
+
+[667Client]
+Show player below indicator
+== 显示下方玩家指示
+
+[667Client]
+Show current checkpoint in hud
+== 在 HUD 中显示当前检查点
+
+[667Client]
+Show points in tab
+== 在记分板中显示分数
+
+[667Client]
+Show spectator nicknames
+== 显示观战者昵称
+
+[667Client]
+Show vote percentage
+== 显示投票百分比
+
+[667Client]
+667 Client discord rpc (restart requires)
+== 667 Client Discord RPC（需要重启）
+
+[667Client]
+Bind/Emote wheel scale
+== 按键/表情轮盘缩放
+
+[667Client]
+Scoreboard scale
+== 记分板缩放
+
+[667Client]
+UI scale
+== 界面缩放
+
+[667Client]
+Jelly Tee
+== 果冻 Tee
+
+[667Client]
+Enable Jelly Tee
+== 启用果冻 Tee
+
+[667Client]
+Jelly Others
+== 其他玩家果冻
+
+[667Client]
+Jelly strength
+== 果冻强度
+
+[667Client]
+Jelly duration
+== 果冻时长
+
+[667Client]
+Corner indicator
+== 角落指示
+
+[667Client]
+Enable corner indicator
+== 启用角落指示
+
+[667Client]
+Only in team
+== 仅队伍中
+
+[667Client]
+Show alive teammates
+== 显示存活队友
+
+[667Client]
+Show frozen teammates
+== 显示冻结队友
+
+[667Client]
+Indicate last teammate
+== 标出最后一名队友
+
+[667Client]
+Scale by distance
+== 按距离缩放
+
+[667Client]
+Ninja skin when frozen
+== 冻结时使用忍者皮肤
+
+[667Client]
+Alive size
+== 存活大小
+
+[667Client]
+Frozen size
+== 冻结大小
+
+[667Client]
+Last teammate size
+== 最后队友大小
+
+[667Client]
+Use custom colors
+== 使用自定义颜色
+
+[667Client]
+Alive color
+== 存活颜色
+
+[667Client]
+Frozen color
+== 冻结颜色
+
+[667Client]
+Last teammate color
+== 最后队友颜色
+
+[667Client]
+Chat Bubbles
+== 聊天气泡
+
+[667Client]
+Show chat bubbles above players
+== 在玩家头顶显示聊天气泡
+
+[667Client]
+Show chat bubbles above you
+== 在自己头顶显示聊天气泡
+
+[667Client]
+Show chat bubbles in demo
+== 在演示中显示聊天气泡
+
+[667Client]
+Chat bubble size
+== 聊天气泡大小
+
+[667Client]
+Show for
+== 显示时长
+
+[667Client]
+Fade in
+== 淡入
+
+[667Client]
+Fade out
+== 淡出
+
+[667Client]
+Stack animation
+== 堆叠动画
+
+[667Client]
+Corner rounding
+== 圆角
+
+[667Client]
+Text
+== 文本
+
+[667Client]
+Outline
+== 描边
+
+[667Client]
+Gradient
+== 渐变
+
+[667Client]
+Gradient nicknames
+== 昵称渐变
+
+[667Client]
+Gradient clans
+== 战队渐变
+
+[667Client]
+Gradient skin
+== 皮肤渐变
+
+[667Client]
+Gradient everything
+== 全部渐变
+
+[667Client]
+Animate speed
+== 动画速度
+
+[667Client]
+Mode
+== 模式
+
+[667Client]
+Skin
+== 皮肤
+
+[667Client]
+Custom
+== 自定义
+
+[667Client]
+Color count
+== 颜色数量
+
+[667Client]
+Color 1
+== 颜色 1
+
+[667Client]
+Color 2
+== 颜色 2
+
+[667Client]
+Color 3
+== 颜色 3
+
+[667Client]
+Color 4
+== 颜色 4
+
+[667Client]
+Flying Name Plates
+== 飘动名牌
+
+[667Client]
+Enable flying name plates
+== 启用飘动名牌
+
+[667Client]
+Hide line
+== 隐藏连线
+
+[667Client]
+Lift above player
+== 抬到玩家上方
+
+[667Client]
+Movement drag
+== 移动拖尾
+
+[667Client]
+Follow speed
+== 跟随速度
+
+[667Client]
+3D Particles
+== 3D 粒子
+
+[667Client]
+Enable 3D Particles
+== 启用 3D 粒子
+
+[667Client]
+Density
+== 密度
+
+[667Client]
+Particle type
+== 粒子类型
+
+[667Client]
+Cube
+== 方块
+
+[667Client]
+Heart
+== 爱心
+
+[667Client]
+Mixed
+== 混合
+
+[667Client]
+Size
+== 大小
+
+[667Client]
+Color mode
+== 颜色模式
+
+[667Client]
+Glow
+== 发光
+
+[667Client]
+Media Background
+== 媒体背景
+
+[667Client]
+Enable to main menu
+== 用于主菜单
+
+[667Client]
+Enable to game background
+== 用于游戏背景
+
+[667Client]
+No media files in backgrounds folder
+== backgrounds 文件夹中没有媒体文件
+
+[667Client]
+Map offset
+== 地图偏移
+
+[667Client]
+0 keeps the image fixed to the screen. Higher values add camera parallax. Move the camera to see the effect.
+== 0 表示图片固定在屏幕上。数值越大，镜头视差越强。移动镜头即可看到效果。
+
+[667Client]
+Hidden: overlay entities is 0.
+== 已隐藏：overlay entities 为 0。
+
+[667Client]
+Cursor Trail
+== 光标拖尾
+
+[667Client]
+Enable
+== 启用
+
+[667Client]
+Cursor
+== 光标
+
+[667Client]
+Trail size
+== 拖尾大小
+
+[667Client]
+Number of frames
+== 帧数
+
+[667Client]
+Opacity
+== 不透明度
+
+[667Client]
+Sampling FPS
+== 采样 FPS
+
+[667Client]
+Disable movement
+== 禁用移动
+
+[667Client]
+Trail image
+== 拖尾图片
+
+[667Client]
+No images in CTrails folder
+== CTrails 文件夹中没有图片
+
+[667Client]
+Enable better UI
+== 启用改进界面
+
+[667Client]
+Better checkbox
+== 改进复选框
+
+[667Client]
+Better scrollbar
+== 改进滚动条
+
+[667Client]
+Better tab option
+== 改进标签页
+
+[667Client]
+Left
+== 左侧
+
+[667Client]
+Right
+== 右侧
+
+[667Client]
+Better color picker
+== 改进取色器
+
+[667Client]
+Better font
+== 改进字体
+
+[667Client]
+UI Themes
+== 界面主题
+
+[667Client]
+Scrollbar
+== 滚动条
+
+[667Client]
+Button
+== 按钮
+
+[667Client]
+Droplist
+== 下拉列表
+
+[667Client]
+Input field
+== 输入框
+
+[667Client]
+Function block
+== 功能块
+
+[667Client]
+UI background
+== 界面背景
+
+[667Client]
+Settings tabs
+== 设置标签
+
+[667Client]
+Badge
+== 徽章
+
+[667Client]
+Binds
+== 按键
+
+[667Client]
+Accent
+== 强调色
+
+[667Client]
+Enable colorable background
+== 启用可着色背景
+
+[667Client]
+Background color
+== 背景颜色
+
+[667Client]
+Exported!
+== 已导出！
+
+[667Client]
+Export
+== 导出
+
+[667Client]
+Imported!
+== 已导入！
+
+[667Client]
+Import
+== 导入
+
+[667Client]
+Copy theme to clipboard
+== 复制主题到剪贴板
+
+[667Client]
+Paste theme from clipboard
+== 从剪贴板粘贴主题
+
+[667Client]
+Enable motion blur
+== 启用动态模糊
+
+[667Client]
+Blend strength
+== 混合强度
+
+[667Client]
+Animations
+== 动画
+
+[667Client]
+Enable animations
+== 启用动画
+
+[667Client]
+Settings animation
+== 设置动画
+
+[667Client]
+Settings (ms)
+== 设置（毫秒）
+
+[667Client]
+Chat message animations
+== 聊天消息动画
+
+[667Client]
+Chat message (ms)
+== 聊天消息（毫秒）
+
+[667Client]
+Chat open animation
+== 聊天打开动画
+
+[667Client]
+Chat open (ms)
+== 打开聊天（毫秒）
+
+[667Client]
+Chat typing animation
+== 聊天输入动画
+
+[667Client]
+Chat typing (ms)
+== 聊天输入（毫秒）
+
+[667Client]
+Killfeed animation
+== 击杀信息动画
+
+[667Client]
+Killfeed (ms)
+== 击杀信息（毫秒）
+
+[667Client]
+Main menu animation
+== 主菜单动画
+
+[667Client]
+Main menu speed
+== 主菜单速度
+
+[667Client]
+Music Player
+== 音乐播放器
+
+[667Client]
+Enable music player
+== 启用音乐播放器
+
+[667Client]
+Static
+== 静态
+
+[667Client]
+Cover
+== 封面
+
+[667Client]
+Static color
+== 静态颜色
+
+[667Client]
+Visualizer mode
+== 可视化模式
+
+[667Client]
+Bottom
+== 底部
+
+[667Client]
+Center
+== 居中
+
+[667Client]
+Up
+== 向上
+
+[667Client]
+Text scale
+== 文本缩放
+
+[667Client]
+Columns
+== 柱状
+
+[667Client]
+Rounding
+== 圆角
+
+[667Client]
+Soft
+== 柔和
+
+[667Client]
+Show song lyrics
+== 显示歌词
+
+[667Client]
+Show current time
+== 显示当前时间
+
+[667Client]
+Keystrokes
+== 按键显示
+
+[667Client]
+Classic
+== 经典
+
+[667Client]
+Minecraft
+== 我的世界
+
+[667Client]
+Enable keyboard
+== 启用键盘
+
+[667Client]
+Full
+== 完整
+
+[667Client]
+Minimal
+== 精简
+
+[667Client]
+Micro
+== 微型
+
+[667Client]
+Only A/D
+== 仅 A/D
+
+[667Client]
+Pressed opacity
+== 按下不透明度
+
+[667Client]
+Enable LMB
+== 启用左键
+
+[667Client]
+Enable RMB
+== 启用右键
+
+[667Client]
+Enable Space
+== 启用空格
+
+[667Client]
+Enable mouse
+== 启用鼠标
+
+[667Client]
+Arrow
+== 箭头
+
+[667Client]
+Dot Dot
+== 点点
+
+[667Client]
+Nothing
+== 无
+
+[667Client]
+Aspect Ratio
+== 宽高比
+
+[667Client]
+Off (default)
+== 关闭（默认）
+
+[667Client]
+Preset
+== 预设
+
+[667Client]
+Game only
+== 仅游戏
+
+[667Client]
+Game no HUD
+== 游戏无 HUD
+
+[667Client]
+Custom size
+== 自定义大小
+
+[667Client]
+Looks like you're on a server where this feature is forbidden
+== 当前服务器似乎禁止此功能
+
+[667Client]
+Physic Balls
+== 物理球
+
+[667Client]
+Ball amount: %d
+== 球数量：%d
+
+[667Client]
+Clear all balls
+== 清除所有球
+
+[667Client]
+Ball skin
+== 球皮肤
+
+[667Client]
+Spawn count
+== 生成数量
+
+[667Client]
+New Ball
+== 新球
+
+[667Client]
+New Ball Cursor
+== 在光标处生成球
+
+[667Client]
+ticks
+== tick
+
+[667Client]
+Inputs
+== 输入
+
+[667Client]
+Enable Inputs
+== 启用输入
+
+[667Client]
+Fast
+== 快速
+
+[667Client]
+Best
+== 最佳
+
+[667Client]
+Saiko
+== Saiko
+
+[667Client]
+Delta
+== Delta
+
+[667Client]
+Cloud
+== Cloud
+
+[667Client]
+Prediction offset
+== 预测偏移
+
+[667Client]
+Fast Input others
+== 快速输入（其他玩家）
+
+[667Client]
+Smoothing
+== 平滑
+
+[667Client]
+Latency compensation
+== 延迟补偿
+
+[667Client]
+Interpolation
+== 插值
+
+[667Client]
+Linear
+== 线性
+
+[667Client]
+Cubic
+== 三次
+
+[667Client]
+Smooth
+== 平滑
+
+[667Client]
+Best input others
+== 最佳输入（其他玩家）
+
+[667Client]
+Saiko input others
+== Saiko 输入（其他玩家）
+
+[667Client]
+Delta input others
+== Delta 输入（其他玩家）
+
+[667Client]
+F input others
+== F 输入（其他玩家）
+
+[667Client]
+Cloud input others
+== Cloud 输入（其他玩家）
+
+[667Client]
+Sub-Tick aiming
+== 子 Tick 瞄准
+
+[667Client]
+Repredict on mid-tick hook direction change (may lag)
+== Tick 中途钩索转向时重新预测（可能卡顿）
+
+[667Client]
+Auto margin
+== 自动边距
+
+[667Client]
+Snap Tap
+== Snap Tap
+
+[667Client]
+Off
+== 关闭
+
+[667Client]
+Delay
+== 延迟
+
+[667Client]
+Gores mode
+== Gores 模式
+
+[667Client]
+Enable gores mode
+== 启用 Gores 模式
+
+[667Client]
+Disable if you have shotgun, grenade or laser
+== 持有霰弹枪、榴弹或激光时关闭
+
+[667Client]
+Optimizer
+== 优化器
+
+[667Client]
+Enable optimizer
+== 启用优化器
+
+[667Client]
+Disable all particles render
+== 关闭所有粒子渲染
+
+[667Client]
+Disable map quads render
+== 关闭地图四边形渲染
+
+[667Client]
+Disable high detail
+== 关闭高细节
+
+[667Client]
+FPS fog (cull outside limit)
+== FPS 雾（裁掉范围外内容）
+
+[667Client]
+FPS fog
+== FPS 雾
+
+[667Client]
+Render FPS fog rectangle
+== 绘制 FPS 雾矩形
+
+[667Client]
+Cull map tiles outside FPS fog
+== 裁掉 FPS 雾外的地图图块
+
+[667Client]
+Radius
+== 半径
+
+[667Client]
+Zoom %
+== 缩放 %
+
+[667Client]
+Radius (tiles)
+== 半径（图块）
+
+[667Client]
+Visible area (%)
+== 可见区域（%）
+
+[667Client]
+Performance
+== 性能
+
+[667Client]
+High DDNet Process Priority
+== 提高 DDNet 进程优先级
+
+[667Client]
+Lower Discords Process Priority
+== 降低 Discord 进程优先级
+
+[667Client]
+Gameplay QoL
+== 玩法便利
+
+[667Client]
+Automatic update
+== 自动更新
+
+[667Client]
+Cinematic camera
+== 电影镜头
+
+[667Client]
+Strength
+== 强度
+
+[667Client]
+Extend zoom (0.5 steps)
+== 扩展缩放（步进 0.5）
+
+[667Client]
+Better spectate
+== 改进观战
+
+[667Client]
+Replace your say /pause bind (default: Q) with +specpause (pause/spec radio)
+== 把 say /pause 按键（默认 Q）换成 +specpause（暂停/观战）
+
+[667Client]
+Show delay
+== 显示延迟
+
+[667Client]
+Notify when moved in spec
+== 观战中被移动时通知
+
+[667Client]
+Notification text
+== 通知文本
+
+[667Client]
+Lock team automatically after joining
+== 加入后自动锁定队伍
+
+[667Client]
+Auto lock delay
+== 自动锁定延迟
+
+[667Client]
+Confirm before quitting
+== 退出前确认
+
+[667Client]
+Moving/ego tiles prediction
+== 移动/自我图块预测
+
+[667Client]
+Fast Actions
+== 快速动作
+
+[667Client]
+Enable Fast Actions
+== 启用快速动作
+
+[667Client]
+Selected slot
+== 所选槽位
+
+[667Client]
+Name:
+== 名称：
+
+[667Client]
+Name (optional)
+== 名称（可选）
+
+[667Client]
+Clear command
+== 清空命令
+
+[667Client]
+In game: hold bind key, press 1..6, release key to execute
+== 游戏中：按住绑定键，按 1..6，松开后执行
+
+[667Client]
+Fast Actions key
+== 快速动作按键
+
+[667Client]
+Finish Prediction
+== 终点预测
+
+[667Client]
+Enable finish prediction
+== 启用终点预测
+
+[667Client]
+Show time
+== 显示时间
+
+[667Client]
+Time left
+== 剩余时间
+
+[667Client]
+Finish time
+== 完成时间
+
+[667Client]
+Show milliseconds
+== 显示毫秒
+
+[667Client]
+Show percentage
+== 显示百分比
+
+[667Client]
+Show always
+== 始终显示
+
+[667Client]
+Consider freeze walls
+== 计入冻结墙
+
+[667Client]
+Edge Info
+== 边缘信息
+
+[667Client]
+Show edge info
+== 显示边缘信息
+
+[667Client]
+Show edge info about freeze
+== 显示冻结边缘信息
+
+[667Client]
+Show edge info about jumps
+== 显示跳跃边缘信息
+
+[667Client]
+Color when over freeze
+== 位于冻结上方时的颜色
+
+[667Client]
+Color when over kill
+== 位于击杀上方时的颜色
+
+[667Client]
+Color when falling safely
+== 安全下落时的颜色
+
+[667Client]
+Chat QoL
+== 聊天便利
+
+[667Client]
+Save unsent messages
+== 保存未发送的消息
+
+[667Client]
+Silent typing
+== 静默输入
+
+[667Client]
+Commands in other layout
+== 其他键盘布局下的命令
+
+[667Client]
+Reply/copy message menu
+== 回复/复制消息菜单
+
+[667Client]
+Notify about saves on map
+== 地图存档通知
+
+[667Client]
+Twitch Chat
+== Twitch 聊天
+
+[667Client]
+Nick
+== 昵称
+
+[667Client]
+Stop
+== 停止
+
+[667Client]
+Start
+== 开始
+
+[667Client]
+Browser Utils
+== 浏览器工具
+
+[667Client]
+Auto server list refresh
+== 自动刷新服务器列表
+
+[667Client]
+Seconds
+== 秒
+
+[667Client]
+Short EGO/KoG server name
+== 缩短 EGO/KoG 服务器名
+
+[667Client]
+Show finished map on EGO
+== 在 EGO 上显示已完成地图
+
+[667Client]
+Use 667 Client MasterServer
+== 使用 667 Client 主服务器
+
+[667Client]
+Rollback Demo
+== 回滚演示
+
+[667Client]
+Enable rollback demo recording
+== 启用回滚演示录制
+
+[667Client]
+Rollback length
+== 回滚长度
+
+[667Client]
+Rollback bind
+== 回滚按键
+
+[667Client]
+Focus Mode
+== 专注模式
+
+[667Client]
+Enable Focus Mode
+== 启用专注模式
+
+[667Client]
+Hide Player Names
+== 隐藏玩家名
+
+[667Client]
+Hide Visual Effects
+== 隐藏视觉效果
+
+[667Client]
+Hide HUD
+== 隐藏 HUD
+
+[667Client]
+Hide Song Player
+== 隐藏播放器
+
+[667Client]
+Hide Unnecessary UI
+== 隐藏多余界面
+
+[667Client]
+Hide Chat
+== 隐藏聊天
+
+[667Client]
+Hide Scoreboard
+== 隐藏记分板
+
+[667Client]
+Auto reply when chat is hidden
+== 聊天隐藏时自动回复
+
+[667Client]
+Focus mode bind
+== 专注模式按键
+
+[667Client]
+Voice Moderation
+== 语音管理
+
+[667Client]
+Voice Binds
+== 语音按键
+
+[667Client]
+Voice
+== 语音
+
+[667Client]
+Push-to-talk
+== 按住说话
+
+[667Client]
+Mute microphone
+== 静音麦克风
+
+[667Client]
+Mute headphones
+== 静音耳机
+
+[667Client]
+System default
+== 系统默认
+
+[667Client]
+Device #%d
+== 设备 #%d
+
+[667Client]
+Enable voice chat
+== 启用语音聊天
+
+[667Client]
+In-Game Only
+== 仅在游戏中
+
+[667Client]
+Use team0
+== 使用 team0
+
+[667Client]
+Enable your group
+== 启用自己的分组
+
+[667Client]
+Radius filter
+== 距离过滤
+
+[667Client]
+Radius (tiles)
+== 半径（格）
+
+[667Client]
+Activation mode
+== 激活模式
+
+[667Client]
+Automatic
+== 自动
+
+[667Client]
+VAD threshold (%)
+== 语音活动检测阈值 (%)
+
+[667Client]
+VAD release delay (ms)
+== 语音活动检测释放延迟（毫秒）
+
+[667Client]
+Mic check (loopback)
+== 麦克风测试（听自己）
+
+[667Client]
+Mic level
+== 麦克风电平
+
+[667Client]
+Mic gain
+== 麦克风增益
+
+[667Client]
+Voice volume
+== 语音音量
+
+[667Client]
+Microphone
+== 麦克风
+
+[667Client]
+Headphones
+== 耳机
+
+[667Client]
+Status
+== 状态
+
+[667Client]
+Connected
+== 已连接
+
+[667Client]
+Offline
+== 离线
+
+[667Client]
+Reload servers
+== 重新加载服务器
+
+[667Client]
+Available servers
+== 可用服务器
+
+[667Client]
+Loading server list...
+== 正在加载服务器列表...
+
+[667Client]
+No servers loaded
+== 未加载服务器
+
+[667Client]
+Voice commands
+== 语音命令
+
+[667Client]
+!vmute "name" / !vunmute "name"
+== !vmute "名字" / !vunmute "名字"
+
+[667Client]
+!volume "name" 0-100
+== !volume "名字" 0-100
+
+[667Client]
+!vradius on/off/<tiles>
+== !vradius on/off/<格数>
+
+[667Client]
+Client Indicator
+== 客户端标识
+
+[667Client]
+Show indicator in name plates
+== 在名牌中显示标识
+
+[667Client]
+Show above yourself
+== 在自己上方显示
+
+[667Client]
+Name plate indicator size
+== 名牌标识大小
+
+[667Client]
+Show indicator in scoreboard
+== 在记分板中显示标识
+
+[667Client]
+Scoreboard indicator size
+== 记分板标识大小
+
+[667Client]
+Not connected to voice server
+== 未连接到语音服务器
+
+[667Client]
+Voice Moderator Login
+== 语音管理员登录
+
+[667Client]
+Mod key:
+== 管理密钥：
+
+[667Client]
+Authenticating...
+== 验证中...
+
+[667Client]
+Wrong key
+== 密钥错误
+
+[667Client]
+Login as Voice Mod
+== 以语音管理员登录
+
+[667Client]
+Voice players on this server
+== 此服务器上的语音玩家
+
+[667Client]
+Refresh
+== 刷新
+
+[667Client]
+No players in current voice room
+== 当前语音房间没有玩家
+
+[667Client]
+Action
+== 操作
+
+[667Client]
+slot %d
+== 槽位 %d
+
+[667Client]
+Mini games
+== 小游戏
+
+[667Client]
+667 Client Links
+== 667 Client 链接
+
+[667Client]
+Telegram
+== Telegram
+
+[667Client]
+Check update
+== 检查更新
+
+[667Client]
+Config Files
+== 配置文件
+
+[667Client]
+667 Client Settings
+== 667 Client 设置
+
+[667Client]
+667 Client Developers
+== 667 Client 开发者
+
+[667Client]
+Hide Settings Tabs
+== 隐藏设置标签
+
+[667Client]
+Laser Glow
+== 激光发光
+
+[667Client]
+Shotgun Glow
+== 霰弹发光
+
+[667Client]
+Rocket Glow
+== 火箭发光
+
+[667Client]
+Rocket
+== 火箭
+
+[667Client]
+Prism
+== 棱镜
+
+[667Client]
+Pulse
+== 脉冲
+
+[667Client]
+Crystal
+== 水晶
+
+[667Client]
+Power
+== 强度
+
+[667Client]
+Nuke effects
+== 爆炸效果
+
+[667Client]
+Enable Nuke effects
+== 启用爆炸效果
+
+[667Client]
+Screen shake
+== 屏幕震动
+
+[667Client]
+Nuke size
+== 爆炸大小
+
+[667Client]
+Custom hooks
+== 自定义钩索
+
+[667Client]
+Hook
+== 钩
+
+[667Client]
+None
+== 无
+
+[667Client]
+Whirlwind
+== 旋风
+
+[667Client]
+Black hole
+== 黑洞
+
+[667Client]
+Magic
+== 魔法
+
+[667Client]
+Fire
+== 火焰
+
+[667Client]
+Troll
+== 恶搞
+
+[667Client]
+Lightning
+== 闪电
+
+[667Client]
+Tentacle
+== 触手
+
+[667Client]
+Style the hook
+== 钩索样式
+
+[667Client]
+Style the tip
+== 钩尖样式
+
+[667Client]
+Grow time
+== 生长时间
+
+[667Client]
+Grab gust
+== 抓取气流
+
+[667Client]
+Eye
+== 眼睛
+
+[667Client]
+Wind lines
+== 风线
+
+[667Client]
+Spin speed
+== 旋转速度
+
+[667Client]
+Line thickness
+== 线条粗细
+
+[667Client]
+Wind opacity
+== 风的不透明度
+
+[667Client]
+Leaves
+== 树叶
+
+[667Client]
+Dust
+== 尘埃
+
+[667Client]
+Wind color
+== 风的颜色
+
+[667Client]
+Disk
+== 圆盘
+
+[667Client]
+Matter
+== 物质
+
+[667Client]
+Spin
+== 旋转
+
+[667Client]
+Disk color
+== 圆盘颜色
+
+[667Client]
+Runes
+== 符文
+
+[667Client]
+Sparkles
+== 闪光
+
+[667Client]
+Spell color
+== 法术颜色
+
+[667Client]
+Smoke
+== 烟雾
+
+[667Client]
+Flames
+== 火焰
+
+[667Client]
+Embers
+== 余烬
+
+[667Client]
+Fire color
+== 火焰颜色
+
+[667Client]
+Rays
+== 光线
+
+[667Client]
+Flow
+== 流动
+
+[667Client]
+Glitter
+== 闪粉
+
+[667Client]
+Ribbon width
+== 丝带宽度
+
+[667Client]
+Wall arcs
+== 贴墙弧线
+
+[667Client]
+Jitter
+== 抖动
+
+[667Client]
+Forks
+== 分叉
+
+[667Client]
+Sparks
+== 火花
+
+[667Client]
+Lightning color
+== 闪电颜色
+
+[667Client]
+Suckers
+== 吸盘
+
+[667Client]
+Writhing
+== 扭动
+
+[667Client]
+Thickness
+== 粗细
+
+[667Client]
+Slime
+== 粘液
+
+[667Client]
+Flesh color
+== 肉色
+
+[667Client]
+Hook effects
+== 钩索效果
+
+[667Client]
+Air jump ring
+== 二段跳光环
+
+[667Client]
+Disable jump particles
+== 关闭跳跃粒子
+
+[667Client]
+Hammer slash
+== 锤子挥砍
+
+[667Client]
+Disable hammer particles
+== 关闭锤子粒子
+
+[667Client]
+Hook lasso
+== 钩索套索
+
+[667Client]
+Hook box
+== 钩索方框
+
+[667Client]
+Hook hold
+== 钩索蓄力
+
+[667Client]
+Hold aura
+== 蓄力光环
+
+[667Client]
+Hold burst
+== 蓄力爆发
+
+[667Client]
+Energy motes
+== 能量粒子
+
+[667Client]
+Weather
+== 天气
+
+[667Client]
+Snow
+== 雪
+
+[667Client]
+Rain
+== 雨
+
+[667Client]
+Fireflies
+== 萤火虫
+
+[667Client]
+Amount
+== 数量
+
+[667Client]
+Dust color
+== 尘埃颜色
+
+[667Client]
+Rain color
+== 雨的颜色
+
+[667Client]
+Firefly color
+== 萤火虫颜色
+
+[667Client]
+Dots
+== 圆点
+
+[667Client]
+Snowflakes
+== 雪花
+
+[667Client]
+Snow color
+== 雪的颜色
+
+[667Client]
+Freeze lifesteal
+== 冻结吸血
+
+[667Client]
+Shield
+== 护盾
+
+[667Client]
+Reach
+== 范围
+
+[667Client]
+Frost
+== 冰霜
+
+[667Client]
+Custom hook color
+== 自定义钩索颜色
+
+[667Client]
+Cold color
+== 冷色
+
+[667Client]
+Freeze lightning
+== 冻结闪电
+
+[667Client]
+Impact
+== 冲击
+
+[667Client]
+Branches
+== 分支
+
+[667Client]
+Shake
+== 震动
+
+[667Client]
+Strike me
+== 劈中自己
+
+[667Client]
+Join a server to preview the lightning
+== 进入服务器以预览闪电
+
+[667Client]
+Enabled
+== 已启用
+
+[667Client]
+Scale
+== 缩放
+
+[667Client]
+Reset scale
+== 重置缩放
+
+[667Client]
+Reset position
+== 重置位置
+
+[667Client]
+Reset all
+== 全部重置
+
+[667Client]
+disabled
+== 已关闭
+
+[667Client]
+preview
+== 预览
+
+[667Client]
+Reset All
+== 全部重置
+
+[667Client]
+Disabled.
+== 已关闭。
+
+[667Client]
+Failed to load PNG.
+== PNG 加载失败。
+
+[667Client]
+Failed to upload PNG.
+== PNG 上传失败。
+
+[667Client]
+Loaded image.
+== 图片已加载。
+
+[667Client]
+Failed to read file.
+== 读取文件失败。
+
+[667Client]
+Failed to upload image.
+== 图片上传失败。
+
+[667Client]
+Failed to decode image.
+== 图片解码失败。
+
+[667Client]
+Loaded animated image.
+== 动态图片已加载。
+
+[667Client]
+Video backgrounds are unavailable in this build.
+== 此版本不支持视频背景。
+
+[667Client]
+Failed to open video.
+== 打开视频失败。
+
+[667Client]
+Failed to read video info.
+== 读取视频信息失败。
+
+[667Client]
+No video stream found.
+== 未找到视频流。
+
+[667Client]
+Unsupported video codec.
+== 不支持的视频编码。
+
+[667Client]
+Failed to initialize video decoder.
+== 初始化视频解码器失败。
+
+[667Client]
+Invalid video dimensions.
+== 视频尺寸无效。
+
+[667Client]
+Failed to allocate video frames.
+== 分配视频帧失败。
+
+[667Client]
+Failed to allocate RGBA frame.
+== 分配 RGBA 帧失败。
+
+[667Client]
+Failed to initialize video scaler.
+== 初始化视频缩放器失败。
+
+[667Client]
+Failed to decode first video frame.
+== 解码第一帧失败。
+
+[667Client]
+Loaded video.
+== 视频已加载。
+
+[667Client]
+No media selected.
+== 未选择媒体。
+
+[667Client]
+Failed while decoding video.
+== 解码视频时失败。
+
+[667Client]
+Back to Info
+== 返回信息
+
+[667Client]
+Press any key to start
+== 按任意键开始
+
+[667Client]
+Game Over
+== 游戏结束
+
+[667Client]
+Victory
+== 胜利
+
+[667Client]
+Draw - Stalemate
+== 和棋 — 僵局
+
+[667Client]
+Draw - Fifty move rule
+== 和棋 — 五十步规则
+
+[667Client]
+Draw - Threefold repetition
+== 和棋 — 三次重复
+
+[667Client]
+Winner: White
+== 胜者：白方
+
+[667Client]
+Winner: Black
+== 胜者：黑方
+
+[667Client]
+Turn: White
+== 回合：白方
+
+[667Client]
+Turn: Black
+== 回合：黑方
+
+[667Client]
+White Wins
+== 白方胜利
+
+[667Client]
+Black Wins
+== 黑方胜利
+
+[667Client]
+All pairs found
+== 全部配对完成
+
+[667Client]
+You Win
+== 你赢了
+
+[667Client]
+Bot Wins
+== 机器人赢了
+
+[667Client]
+All bricks cleared
+== 砖块已全部清除
+
+[667Client]
+Numbers
+== 数字
+
+[667Client]
+Clear
+== 清除
+
+[667Client]
+Sudoku Solved
+== 数独已完成
+
+[667Client]
+Get $200
+== 领取 $200
+
+[667Client]
+Multiplier:
+== 倍数：
+
+[667Client]
+Locked
+== 锁定
+
+[667Client]
+Not enough funds
+== 余额不足
+
+[667Client]
+Spinning...
+== 旋转中...
+
+[667Client]
+SPIN
+== 旋转
+
+[667Client]
+Type to search settings
+== 输入以搜索设置
+
+[667Client]
+Element
+== 元素
+
+[667Client]
+Casino
+== 赌场
+
+[667Client]
+Snake
+== 贪吃蛇
+
+[667Client]
+Minesweeper
+== 扫雷
+
+[667Client]
+Chess
+== 国际象棋
+
+[667Client]
+Memory
+== 记忆
+
+[667Client]
+Pong
+== 乒乓
+
+[667Client]
+Brick Breaker
+== 打砖块
+
+[667Client]
+Sudoku
+== 数独
+
+[667Client]
+Spin the reels, bet & win
+== 转动转轮，下注并获胜
+
+[667Client]
+Arrows/WASD, Space restart
+== 方向键/WASD，空格重新开始
+
+[667Client]
+LMB open, RMB flag, hover hints
+== 左键打开，右键插旗，悬停提示
+
+[667Client]
+Font Awesome chess pieces
+== Font Awesome 棋子
+
+[667Client]
+Find all matching pairs
+== 找出所有配对
+
+[667Client]
+W/S or Up/Down to move paddle
+== W/S 或上/下移动挡板
+
+[667Client]
+Break all bricks with the ball
+== 用球打掉所有砖块
+
+[667Client]
+Click cell, 1-9 place, 0/Del clear
+== 点击格子，1-9 填入，0/Del 清除
+
+[667Client]
+Easy
+== 简单
+
+[667Client]
+Medium
+== 中等
+
+[667Client]
+Hard
+== 困难
+
+[Gradient]
+Apply to
+== 应用到
+
+[Gradient]
+Own
+== 自己
+
+[Gradient]
+Others
+== 其他人
+
+[Gradient]
+All
+== 全部

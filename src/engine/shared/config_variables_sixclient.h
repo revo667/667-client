@@ -1,0 +1,452 @@
+// This file can be included several times.
+
+#ifndef MACRO_CONFIG_INT
+#error "The config macros must be defined"
+#define MACRO_CONFIG_INT(Name, ScriptName, Def, Min, Max, Save, Desc) ;
+#define MACRO_CONFIG_COL(Name, ScriptName, Def, Save, Desc) ;
+#define MACRO_CONFIG_STR(Name, ScriptName, Len, Def, Save, Desc) ;
+#endif
+
+// Frozen skin
+MACRO_CONFIG_STR(ScFrozenSkin, sc_frozen_skin, 24, "", CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_INSENSITIVE, "Skin to show on frozen players, empty keeps the default behavior")
+MACRO_CONFIG_INT(ScFrozenSkinDarken, sc_frozen_skin_darken, 0, 0, 70, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Darken the frozen skin override (0 - normal, 70 - max darkened)")
+
+// SettingsTabs
+MACRO_CONFIG_INT(ScSixClientSettingsTabs, sc_sixclient_settings_tabs, 0, 0, 65536, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Bit flags to disable 667 Client settings tabs") // 667client
+
+// Chat QoL
+MACRO_CONFIG_INT(ScSilentTyping, sc_silent_typing, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide PLAYERFLAG_CHATTING from others while typing")
+MACRO_CONFIG_INT(ScChatAltCommandLayout, sc_chat_alt_command_layout, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interpret slash chat commands typed in the Russian keyboard layout")
+MACRO_CONFIG_INT(ScChatMessageActions, sc_chat_message_actions, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable reply/copy message menu on chat messages")
+MACRO_CONFIG_INT(ScNotifySavesOnMap, sc_notify_saves_on_map, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify in chat when the current map has team saves")
+
+// Chat Filter
+MACRO_CONFIG_INT(ScChatOnlyTagsAndWhispers, sc_chat_only_tags_and_whispers, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show only highlighted and private chat messages")
+
+// Translate
+MACRO_CONFIG_STR(ScTranslateIncomingSource, sc_translate_incoming_source, 16, "auto", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Source language for incoming chat translation")
+MACRO_CONFIG_STR(ScTranslateIncomingIgnoreLanguages, sc_translate_incoming_ignore_languages, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Source languages that should not be auto-translated")
+MACRO_CONFIG_STR(ScTranslateOutgoingSource, sc_translate_outgoing_source, 16, "auto", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Source language for outgoing chat translation")
+MACRO_CONFIG_STR(ScTranslateOutgoingTarget, sc_translate_outgoing_target, 16, "en", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Target language for outgoing chat translation")
+MACRO_CONFIG_INT(ScTranslateOutgoingStripPunctuation, sc_translate_outgoing_strip_punctuation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Remove apostrophes from translated outgoing chat messages")
+MACRO_CONFIG_INT(ScTranslateShiftClickTarget, sc_translate_shift_click_target, 2, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Shift+click translate icon toggles: 0 others, 1 yours, 2 both")
+
+// Casino
+MACRO_CONFIG_INT(ScCasinoBalance, sc_casino_balance, 500, 0, 9999999, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Casino game balance in dollars")
+MACRO_CONFIG_INT(ScCasinoLastClaim, sc_casino_last_claim, 0, 0, 2147483647, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Unix timestamp of last casino free claim")
+
+// Auto update
+MACRO_CONFIG_INT(ScAutoUpdate, sc_auto_update, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically download and apply updates on startup")
+
+// Aspect ratio
+MACRO_CONFIG_INT(ScCustomAspectRatioMode, sc_custom_aspect_ratio_mode, -1, -1, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Aspect ratio mode (-1=legacy auto, 0=off, 1=preset, 2=custom)")
+MACRO_CONFIG_INT(ScCustomAspectRatioApplyMode, sc_custom_aspect_ratio_apply_mode, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Aspect ratio apply mode (0=game only, 1=full, 2=game no hud)")
+MACRO_CONFIG_INT(ScCustomAspectRatio, sc_custom_aspect_ratio, 0, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Aspect ratio value x100 (0=off, presets: 125=5:4, 133=4:3, 150=3:2, custom: 100-1000)")
+MACRO_CONFIG_INT(ScCustomAspectRatioNum, sc_custom_aspect_ratio_num, 0, 0, 100000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Custom aspect ratio numerator (width), 0=unset")
+MACRO_CONFIG_INT(ScCustomAspectRatioDen, sc_custom_aspect_ratio_den, 0, 0, 100000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Custom aspect ratio denominator (height), 0=unset")
+
+// Visuals QoL
+MACRO_CONFIG_INT(ScShowRealHitbox, sc_show_real_hitbox, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show a dot at the center of your real hitbox")
+MACRO_CONFIG_COL(ScShowRealHitboxColor, sc_show_real_hitbox_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Color of the real hitbox center dot")
+MACRO_CONFIG_INT(ScShowhudDummyCoordIndicator, sc_showhud_dummy_coord_indicator, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show player-below indicator when aligned above another player")
+MACRO_CONFIG_INT(ScShowCorrectCheckpoint, sc_show_correct_checkpoint, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show current tele checkpoint in movement information")
+MACRO_CONFIG_INT(ScShowPointsInTab, sc_show_points_in_tab, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show player points in the scoreboard on DDNet, EGO and Legit Network servers")
+MACRO_CONFIG_INT(ScShowSpectatorNames, sc_show_spectator_names, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show spectator nicknames in the spectator count HUD")
+MACRO_CONFIG_INT(ScShowVotePercentage, sc_show_vote_percentage, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show yes/no vote percentages on the vote HUD")
+MACRO_CONFIG_INT(ScScoreboardScale, sc_scoreboard_scale, 100, 50, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Scoreboard scale in percent, independent of UI scale")
+MACRO_CONFIG_INT(ScWheelScale, sc_wheel_scale, 100, 50, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Bind/emote wheel scale in percent, independent of UI scale")
+MACRO_CONFIG_INT(UiScale, ui_scale, 100, 50, 110, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Global UI scale in percent")
+
+// Discord RPC
+MACRO_CONFIG_INT(ScDiscordRPC, sc_discord_rpc, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable 667 Client discord rpc (restart requires)")
+
+// Cursor trail
+MACRO_CONFIG_INT(ScCursorTrail, sc_cursor_trail, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable cursor trail")
+MACRO_CONFIG_INT(ScCursorTrailMode, sc_cursor_trail_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cursor trail mode (0=cursor, 1=custom)")
+MACRO_CONFIG_STR(ScCursorTrailTrailImage, sc_cursor_trail_trail_image, IO_MAX_PATH_LENGTH, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Path to the custom cursor trail image")
+MACRO_CONFIG_INT(ScCursorTrailTrailSize, sc_cursor_trail_trail_size, 70, 10, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cursor trail size")
+MACRO_CONFIG_INT(ScCursorTrailNumberOfFrames, sc_cursor_trail_number_of_frames, 5, 1, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Number of cursor trail frames")
+MACRO_CONFIG_INT(ScCursorTrailOpacity, sc_cursor_trail_opacity, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cursor trail opacity")
+MACRO_CONFIG_INT(ScCursorTrailSamplingFps, sc_cursor_trail_sampling_fps, 120, 24, 120, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cursor trail sampling frequency")
+MACRO_CONFIG_INT(ScCursorTrailDisableMovement, sc_cursor_trail_disable_movement, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Keep cursor trail stable when the player moves")
+
+// Gameplay QoL
+MACRO_CONFIG_INT(TcEgoTilesAntiLag, tc_ego_tiles_antilag, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict Ego-Tiles freeze/unfreeze quads like the server")
+MACRO_CONFIG_INT(ScConfirmQuit, sc_confirm_quit, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show a confirmation dialog before quitting the game")
+MACRO_CONFIG_INT(ScCinematicCamera, sc_cinematic_camera, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable smooth cinematic camera movement in spectator freeview")
+MACRO_CONFIG_INT(ScCinematicCameraStrength, sc_cinematic_camera_strength, 50, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Strength of cinematic camera smoothing (0 = mild, 100 = strong)")
+MACRO_CONFIG_INT(ScSpecMovedNotify, sc_spec_moved_notify, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show 'moved in game' warning when someone hooks/hits your character while you are in spectator")
+MACRO_CONFIG_STR(ScSpecMovedNotifyText, sc_spec_moved_notify_text, 128, "you moved in game", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Text shown when someone hooks/hits your character while you are in spectator")
+MACRO_CONFIG_INT(ScAutoTeamLock, sc_auto_team_lock, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically lock your team after joining it")
+MACRO_CONFIG_INT(ScAutoTeamLockDelay, sc_auto_team_lock_delay, 5, 0, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Delay before auto-locking team after joining, in seconds")
+MACRO_CONFIG_INT(ScExtendZoom, sc_extend_zoom, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use 0.5 zoom steps instead of 1 for finer scroll zoom (10, 9.5, 9, 8.5 ...)")
+MACRO_CONFIG_INT(ScBetterSpectate, sc_better_spectate, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Replace say /pause bind (default Q) with +specpause radio menu")
+MACRO_CONFIG_INT(ScSpecPauseShowDelay, sc_spec_pause_show_delay, 0, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Delay before the spec pause radio becomes visible (ms)")
+
+// CameraDrift (demo playback only)
+MACRO_CONFIG_INT(ScCameraDrift, sc_camera_drift, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable camera drift during demo playback")
+MACRO_CONFIG_INT(ScCameraDriftAmount, sc_camera_drift_amount, 50, 1, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Amount of camera drift during demo playback")
+MACRO_CONFIG_INT(ScCameraDriftSmoothness, sc_camera_drift_smoothness, 20, 1, 20, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Smoothness of camera drift during demo playback")
+MACRO_CONFIG_INT(ScCameraDriftReverse, sc_camera_drift_reverse, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Reverse camera drift direction during demo playback")
+// Freeview Numpad Camera (spectator/demo playback)
+MACRO_CONFIG_INT(ScFreeviewNumpad, sc_freeview_numpad, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable numpad camera movement in freeview/spectator mode")
+MACRO_CONFIG_INT(ScFreeviewSpeed, sc_freeview_speed, 180, 1, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Freeview camera movement speed")
+MACRO_CONFIG_INT(ScFreeviewSmoothness, sc_freeview_smoothness, 25, 1, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Freeview camera smoothness (acceleration)")
+// DynamicFov (demo playback only)
+MACRO_CONFIG_INT(ScDynamicFov, sc_dynamic_fov, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable dynamic FOV during demo playback")
+MACRO_CONFIG_INT(ScDynamicFovAmount, sc_dynamic_fov_amount, 50, 1, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Amount of dynamic FOV during demo playback")
+MACRO_CONFIG_INT(ScDynamicFovSmoothness, sc_dynamic_fov_smoothness, 20, 1, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Smoothness of dynamic FOV during demo playback")
+
+// Quick binds (45 degrees / small sens)
+MACRO_CONFIG_INT(ScPrevMouseMaxDistance45Degrees, sc_prev_mouse_max_distance_45_degrees, 400, 0, 5000, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_INSENSITIVE, "Previous maximum cursor distance for 45 degrees")
+MACRO_CONFIG_INT(ScPrevInpMousesens45Degrees, sc_prev_inp_mousesens_45_degrees, 200, 1, 1000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Previous mouse sensitivity for 45 degrees")
+MACRO_CONFIG_INT(ScToggle45Degrees, sc_toggle_45_degrees, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use toggle mode for 45 degrees bind")
+MACRO_CONFIG_INT(ScPrevInpMousesensSmallSens, sc_prev_inp_mousesens_small_sens, 200, 1, 1000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Previous mouse sensitivity for small sens")
+MACRO_CONFIG_INT(ScToggleSmallSens, sc_toggle_small_sens, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use toggle mode for small sens bind")
+
+// Inputs
+MACRO_CONFIG_INT(ScInputDebounce, sc_input_debounce, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Preserve button presses shorter than one simulation tick")
+MACRO_CONFIG_INT(ScInputs, sc_inputs, 0, 0, 6, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input prediction mode (0 = off, 1 = fast, 2 = best, 3 = saiko, 4 = delta, 5 = f, 6 = cloud)")
+MACRO_CONFIG_INT(ScBestInputAmount, sc_best_input_amount, 0, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input prediction amount in 0.01 ticks")
+MACRO_CONFIG_INT(ScBestInputSmoothing, sc_best_input_smoothing, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input smoothing amount (0-100%)")
+MACRO_CONFIG_INT(ScBestInputLatencyComp, sc_best_input_latency_comp, 0, 0, 50, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input latency compensation (0-50%)")
+MACRO_CONFIG_INT(ScBestInputInterpolation, sc_best_input_interpolation, 1, 1, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input interpolation mode (1 = linear, 2 = cubic, 3 = smooth)")
+MACRO_CONFIG_INT(ScBestInputOthers, sc_best_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply best input to other tees")
+MACRO_CONFIG_INT(ScSaikoInputAmount, sc_saiko_input_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Saiko input amount in 0.01 ticks")
+MACRO_CONFIG_INT(ScSaikoInputOthers, sc_saiko_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply Saiko input to other tees")
+MACRO_CONFIG_INT(ScDeltaInputAmount, sc_delta_input_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Delta input amount in 0.01 ticks")
+MACRO_CONFIG_INT(ScDeltaInputOthers, sc_delta_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply delta input to other tees")
+MACRO_CONFIG_INT(ScFInputAmount, sc_f_input_amount, 0, 0, 5000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "F input amount in 0.001-tick units (0=off, 1000=1.000 ticks, max 5000=5.000 ticks)")
+MACRO_CONFIG_INT(ScFInputOthers, sc_f_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply F input to other tees")
+MACRO_CONFIG_INT(ScCloudInputAmount, sc_cloud_input_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cloud input amount in 0.01 ticks")
+MACRO_CONFIG_INT(ScCloudInputOthers, sc_cloud_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply cloud input to other tees")
+MACRO_CONFIG_INT(ScAutoMargin, sc_auto_margin, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto margin")
+
+// MuteOthers
+MACRO_CONFIG_INT(ScMuteOthersHook, sc_mute_others_hook, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Mute hook sounds of other players")
+MACRO_CONFIG_INT(ScMuteOthersHammer, sc_mute_others_hammer, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Mute hammer sounds of other players")
+MACRO_CONFIG_INT(ScMuteOthersAirJump, sc_mute_others_airjump, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Mute double jump sounds of other players")
+
+// Gores mode
+MACRO_CONFIG_INT(ScGoresMode, sc_gores_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Entity-like gores mode")
+MACRO_CONFIG_INT(ScGoresModeDisableIfWeapons, sc_gores_mode_disable_weapons, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Disable gores mode when holding shotgun, grenade or laser")
+
+// Fast Actions
+MACRO_CONFIG_INT(ScFastActions, sc_fast_actions, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable the Fast Actions quick command selector")
+
+// Snap Tap
+MACRO_CONFIG_INT(ScSnapTap, sc_snap_tap, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Snap Tap for opposite left/right inputs")
+MACRO_CONFIG_INT(ScSnapTapDelay, sc_snap_tap_delay, 0, 0, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Snap Tap direction switch delay in milliseconds (0 = off)")
+
+// 3D particles
+MACRO_CONFIG_INT(Bc3dParticles, sc_3d_particles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle 3D particles")
+MACRO_CONFIG_INT(Bc3dParticlesType, sc_3d_particles_type, 1, 1, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Type of 3D particles. 1 = Cube, 2 = Heart, 3 = Mixed")
+MACRO_CONFIG_INT(Bc3dParticlesDensity, sc_3d_particles_density, 50, 1, 600, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Density of 3D particles on the map")
+MACRO_CONFIG_INT(Bc3dParticlesSizeMax, sc_3d_particles_size_max, 8, 2, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Maximum size of 3D particles")
+MACRO_CONFIG_INT(Bc3dParticlesSpeed, sc_3d_particles_speed, 18, 1, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Base speed of 3D particles")
+MACRO_CONFIG_INT(Bc3dParticlesDepth, sc_3d_particles_depth, 300, 10, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Depth range for 3D particles")
+MACRO_CONFIG_INT(Bc3dParticlesAlpha, sc_3d_particles_alpha, 35, 1, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Alpha of 3D particles (1-100)")
+MACRO_CONFIG_INT(Bc3dParticlesPushRadius, sc_3d_particles_push_radius, 120, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player push radius for 3D particles")
+MACRO_CONFIG_INT(Bc3dParticlesPushStrength, sc_3d_particles_push_strength, 120, 0, 2000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player push strength for 3D particles")
+MACRO_CONFIG_INT(Bc3dParticlesCollide, sc_3d_particles_collide, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "3D particles collide with each other")
+MACRO_CONFIG_INT(Bc3dParticlesViewMargin, sc_3d_particles_view_margin, 200, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Margin outside view before 3D particles disappear")
+MACRO_CONFIG_INT(Bc3dParticlesColorMode, sc_3d_particles_color_mode, 1, 1, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color mode for 3D particles. 1 = Custom, 2 = Random")
+MACRO_CONFIG_COL(Bc3dParticlesColor, sc_3d_particles_color, 4294967295, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Color of 3D particles")
+MACRO_CONFIG_INT(Bc3dParticlesGlow, sc_3d_particles_glow, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable 3D particles glow")
+
+// Weapon Glow Visuals (Laser, Shotgun, Rocket)
+MACRO_CONFIG_INT(ScLaserGlow, sc_laser_glow, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Laser Glow visual effect")
+MACRO_CONFIG_INT(ScLaserGlowPower, sc_laser_glow_power, 50, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Laser Glow power/intensity (0-100)")
+MACRO_CONFIG_INT(ScLaserGlowMode, sc_laser_glow_mode, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Laser Glow mode: 0=Classic, 1=Prism, 2=Pulse, 3=Crystal")
+MACRO_CONFIG_COL(ScLaserGlowColor, sc_laser_glow_color, 5635840, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Laser Glow custom color")
+
+MACRO_CONFIG_INT(ScShotgunGlow, sc_shotgun_glow, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Shotgun Glow visual effect")
+MACRO_CONFIG_INT(ScShotgunGlowPower, sc_shotgun_glow_power, 50, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Shotgun Glow power/intensity (0-100)")
+MACRO_CONFIG_INT(ScShotgunGlowMode, sc_shotgun_glow_mode, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Shotgun Glow mode: 0=Classic, 1=Prism, 2=Pulse, 3=Crystal")
+MACRO_CONFIG_COL(ScShotgunGlowColor, sc_shotgun_glow_color, 5635840, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Shotgun Glow custom color")
+
+MACRO_CONFIG_INT(ScRocketGlow, sc_rocket_glow, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Rocket/Grenade Glow visual effect")
+MACRO_CONFIG_INT(ScRocketGlowPower, sc_rocket_glow_power, 50, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Rocket Glow power/intensity (0-100)")
+MACRO_CONFIG_INT(ScRocketGlowMode, sc_rocket_glow_mode, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Rocket Glow mode: 0=Classic, 1=Prism, 2=Pulse, 3=Crystal")
+MACRO_CONFIG_COL(ScRocketGlowColor, sc_rocket_glow_color, 2555648, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Rocket Glow custom color")
+
+// Meme Nuke Rocket Explosion & Screen Shake
+MACRO_CONFIG_INT(ScMemeNukeExplosion, sc_meme_nuke_explosion, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable meme mega nuclear explosion on rocket impact")
+MACRO_CONFIG_INT(ScMemeNukeShake, sc_meme_nuke_shake, 100, 0, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Screen shake intensity for nuke rocket explosion (0-200%)")
+MACRO_CONFIG_INT(ScMemeNukeScale, sc_meme_nuke_scale, 100, 20, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Scale of the meme nuke explosion (20-300%)")
+
+// Assets (cursor / arrow / audio)
+MACRO_CONFIG_STR(ClAssetCursor, cl_asset_cursor, 50, "default", CFGFLAG_CLIENT | CFGFLAG_SAVE, "The asset for cursor")
+MACRO_CONFIG_STR(ClAssetArrow, cl_asset_arrow, 50, "default", CFGFLAG_CLIENT | CFGFLAG_SAVE, "The asset for arrow")
+MACRO_CONFIG_STR(SndPack, snd_pack, 64, "default", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Sound pack")
+
+// Profile assets
+MACRO_CONFIG_INT(ScProfileAssets, sc_profile_assets, 0, 0, 511, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Bitmask of asset types to save/load in profiles")
+
+// Better preview
+MACRO_CONFIG_INT(ScBetterPreview, sc_better_preview, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Better preview")
+
+// Media background
+MACRO_CONFIG_INT(ScMenuMediaBackground, sc_menu_media_background, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable custom media background in offline menus")
+MACRO_CONFIG_INT(ScGameMediaBackground, sc_game_media_background, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable custom media background in game background rendering")
+MACRO_CONFIG_STR(ScMenuMediaBackgroundPath, sc_menu_media_background_path, IO_MAX_PATH_LENGTH, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Path to the custom menu media background file")
+MACRO_CONFIG_INT(ScGameMediaBackgroundOffset, sc_game_media_background_offset, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "How much the custom media background is fixed to the map when rendering the in-game background")
+
+// Menu UI
+MACRO_CONFIG_INT(ScMenuUiStyle, sc_menu_ui_style, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Menu UI style (0 = legacy, 1 = Better UI)")
+MACRO_CONFIG_INT(ScMenuUiNewCheckbox, sc_menu_ui_new_checkbox, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use better checkbox style when Better UI is enabled")
+MACRO_CONFIG_INT(ScMenuUiNewScrollbar, sc_menu_ui_new_scrollbar, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use better scrollbar style when Better UI is enabled")
+MACRO_CONFIG_INT(ScMenuUiNewTabOption, sc_menu_ui_new_tab_option, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use better settings tab navigation when Better UI is enabled")
+MACRO_CONFIG_INT(ScMenuUiTabSide, sc_menu_ui_tab_side, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings tabs side when Better tab option is on (0 = left, 1 = right)")
+MACRO_CONFIG_INT(ScMenuUiNewColorPicker, sc_menu_ui_new_color_picker, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use better color picker style when Better UI is enabled")
+MACRO_CONFIG_INT(ScMenuUiBetterFont, sc_menu_ui_better_font, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Better font (Actay Wide Bold) instead of default/TClient font")
+MACRO_CONFIG_INT(ScShowStylePicker, sc_show_style_picker, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show one-time menu UI style picker on first launch")
+MACRO_CONFIG_INT(ScSettingsNavExpanded, sc_settings_nav_expanded, 0, 0, 7, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Better settings nav expanded groups (bit 0 = DDNet, 1 = TClient, 2 = 667 Client)")
+
+// UI Themes
+MACRO_CONFIG_INT(ScUiThemes, sc_ui_themes, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable UI Themes")
+MACRO_CONFIG_INT(ScUiThemeElement, sc_ui_theme_element, 0, 0, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Selected UI Themes custom element")
+MACRO_CONFIG_INT(ScCustomUiBackground, sc_custom_ui_background, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable colorable UI background")
+MACRO_CONFIG_INT(ScCustomUiGradientAnimateSpeed, sc_custom_ui_gradient_animate_speed, 35, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI Themes gradient animate speed")
+MACRO_CONFIG_INT(ScCustomUiText, sc_custom_ui_text, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI text color")
+MACRO_CONFIG_COL(ScCustomUiTextColor, sc_custom_ui_text_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI text color")
+MACRO_CONFIG_INT(ScCustomUiTextGradient, sc_custom_ui_text_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI text gradient color")
+MACRO_CONFIG_COL(ScCustomUiTextGradientColor, sc_custom_ui_text_gradient_color, 0xFFA0A0A0U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI text gradient color")
+MACRO_CONFIG_INT(ScCustomUiTextUseAccent, sc_custom_ui_text_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI text accent color")
+MACRO_CONFIG_COL(ScCustomUiTextAccentColor, sc_custom_ui_text_accent_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI text accent color")
+MACRO_CONFIG_INT(ScCustomUiCheckbox, sc_custom_ui_checkbox, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI checkbox color")
+MACRO_CONFIG_COL(ScCustomUiCheckboxColor, sc_custom_ui_checkbox_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI checkbox color")
+MACRO_CONFIG_INT(ScCustomUiCheckboxGradient, sc_custom_ui_checkbox_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI checkbox gradient color")
+MACRO_CONFIG_COL(ScCustomUiCheckboxGradientColor, sc_custom_ui_checkbox_gradient_color, 0xFFA0A0A0U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI checkbox gradient color")
+MACRO_CONFIG_INT(ScCustomUiCheckboxUseAccent, sc_custom_ui_checkbox_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI checkbox accent color")
+MACRO_CONFIG_COL(ScCustomUiCheckboxAccentColor, sc_custom_ui_checkbox_accent_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI checkbox accent color")
+MACRO_CONFIG_INT(ScCustomUiScrollbar, sc_custom_ui_scrollbar, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI scrollbar color")
+MACRO_CONFIG_COL(ScCustomUiScrollbarColor, sc_custom_ui_scrollbar_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI scrollbar color")
+MACRO_CONFIG_INT(ScCustomUiScrollbarGradient, sc_custom_ui_scrollbar_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI scrollbar gradient color")
+MACRO_CONFIG_COL(ScCustomUiScrollbarGradientColor, sc_custom_ui_scrollbar_gradient_color, 0xFFA0A0A0U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI scrollbar gradient color")
+MACRO_CONFIG_INT(ScCustomUiScrollbarUseAccent, sc_custom_ui_scrollbar_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI scrollbar accent color")
+MACRO_CONFIG_COL(ScCustomUiScrollbarAccentColor, sc_custom_ui_scrollbar_accent_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI scrollbar accent color")
+MACRO_CONFIG_INT(ScCustomUiButton, sc_custom_ui_button, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI button color")
+MACRO_CONFIG_COL(ScCustomUiButtonColor, sc_custom_ui_button_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI button color")
+MACRO_CONFIG_INT(ScCustomUiButtonGradient, sc_custom_ui_button_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI button gradient color")
+MACRO_CONFIG_COL(ScCustomUiButtonGradientColor, sc_custom_ui_button_gradient_color, 0xFFA0A0A0U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI button gradient color")
+MACRO_CONFIG_INT(ScCustomUiButtonUseAccent, sc_custom_ui_button_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI button accent color")
+MACRO_CONFIG_COL(ScCustomUiButtonAccentColor, sc_custom_ui_button_accent_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI button accent color")
+MACRO_CONFIG_INT(ScCustomUiDropdown, sc_custom_ui_dropdown, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI dropdown color")
+MACRO_CONFIG_COL(ScCustomUiDropdownColor, sc_custom_ui_dropdown_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI dropdown color")
+MACRO_CONFIG_INT(ScCustomUiDropdownGradient, sc_custom_ui_dropdown_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI dropdown gradient color")
+MACRO_CONFIG_COL(ScCustomUiDropdownGradientColor, sc_custom_ui_dropdown_gradient_color, 0xFFA0A0A0U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI dropdown gradient color")
+MACRO_CONFIG_INT(ScCustomUiDropdownUseAccent, sc_custom_ui_dropdown_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI dropdown accent color")
+MACRO_CONFIG_COL(ScCustomUiDropdownAccentColor, sc_custom_ui_dropdown_accent_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI dropdown accent color")
+MACRO_CONFIG_INT(ScCustomUiEditBox, sc_custom_ui_editbox, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI edit box color")
+MACRO_CONFIG_COL(ScCustomUiEditBoxColor, sc_custom_ui_editbox_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI edit box color")
+MACRO_CONFIG_INT(ScCustomUiEditBoxGradient, sc_custom_ui_editbox_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI edit box gradient color")
+MACRO_CONFIG_COL(ScCustomUiEditBoxGradientColor, sc_custom_ui_editbox_gradient_color, 0xFFA0A0A0U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI edit box gradient color")
+MACRO_CONFIG_INT(ScCustomUiEditBoxUseAccent, sc_custom_ui_editbox_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI edit box accent color")
+MACRO_CONFIG_COL(ScCustomUiEditBoxAccentColor, sc_custom_ui_editbox_accent_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI edit box accent color")
+MACRO_CONFIG_INT(ScCustomUiBlock, sc_custom_ui_block, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI settings block color")
+MACRO_CONFIG_COL(ScCustomUiBlockColor, sc_custom_ui_block_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI settings block color")
+MACRO_CONFIG_INT(ScCustomUiBlockGradient, sc_custom_ui_block_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI settings block gradient color")
+MACRO_CONFIG_COL(ScCustomUiBlockGradientColor, sc_custom_ui_block_gradient_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI settings block gradient color")
+MACRO_CONFIG_INT(ScCustomUiBlockUseAccent, sc_custom_ui_block_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI settings block accent color")
+MACRO_CONFIG_COL(ScCustomUiBlockAccentColor, sc_custom_ui_block_accent_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI settings block accent color")
+MACRO_CONFIG_INT(ScCustomUiBlockOpacity, sc_custom_ui_block_opacity, 25, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings block background opacity")
+MACRO_CONFIG_INT(ScCustomUiMainPanel, sc_custom_ui_main_panel, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI main panel color")
+MACRO_CONFIG_COL(ScCustomUiMainPanelColor, sc_custom_ui_main_panel_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI main panel color")
+MACRO_CONFIG_INT(ScCustomUiMainPanelGradient, sc_custom_ui_main_panel_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI main panel gradient color")
+MACRO_CONFIG_COL(ScCustomUiMainPanelGradientColor, sc_custom_ui_main_panel_gradient_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI main panel gradient color")
+MACRO_CONFIG_INT(ScCustomUiMainPanelUseAccent, sc_custom_ui_main_panel_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI main panel accent color")
+MACRO_CONFIG_COL(ScCustomUiMainPanelAccentColor, sc_custom_ui_main_panel_accent_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI main panel accent color")
+MACRO_CONFIG_INT(ScCustomUiMainPanelOpacity, sc_custom_ui_main_panel_opacity, 50, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Main panel background opacity")
+MACRO_CONFIG_INT(ScCustomUiNavTab, sc_custom_ui_nav_tab, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI settings nav tab color")
+MACRO_CONFIG_COL(ScCustomUiNavTabColor, sc_custom_ui_nav_tab_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI settings nav tab color")
+MACRO_CONFIG_INT(ScCustomUiNavTabGradient, sc_custom_ui_nav_tab_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI settings nav tab gradient color")
+MACRO_CONFIG_COL(ScCustomUiNavTabGradientColor, sc_custom_ui_nav_tab_gradient_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI settings nav tab gradient color")
+MACRO_CONFIG_INT(ScCustomUiNavTabUseAccent, sc_custom_ui_nav_tab_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI settings nav tab accent color")
+MACRO_CONFIG_COL(ScCustomUiNavTabAccentColor, sc_custom_ui_nav_tab_accent_color, 0xFF000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI settings nav tab accent color")
+MACRO_CONFIG_INT(ScCustomUiNavTabOpacity, sc_custom_ui_nav_tab_opacity, 50, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings nav tab opacity")
+MACRO_CONFIG_INT(ScCustomUiBadge, sc_custom_ui_badge, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI badge color")
+MACRO_CONFIG_COL(ScCustomUiBadgeColor, sc_custom_ui_badge_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI badge color")
+MACRO_CONFIG_INT(ScCustomUiBadgeGradient, sc_custom_ui_badge_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI badge gradient color")
+MACRO_CONFIG_COL(ScCustomUiBadgeGradientColor, sc_custom_ui_badge_gradient_color, 0xFFA0A0A0U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI badge gradient color")
+MACRO_CONFIG_INT(ScCustomUiBadgeUseAccent, sc_custom_ui_badge_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI badge accent color")
+MACRO_CONFIG_COL(ScCustomUiBadgeAccentColor, sc_custom_ui_badge_accent_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI badge accent color")
+MACRO_CONFIG_INT(ScCustomUiBind, sc_custom_ui_bind, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI key bind color")
+MACRO_CONFIG_COL(ScCustomUiBindColor, sc_custom_ui_bind_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI key bind color")
+MACRO_CONFIG_INT(ScCustomUiBindGradient, sc_custom_ui_bind_gradient, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI key bind gradient color")
+MACRO_CONFIG_COL(ScCustomUiBindGradientColor, sc_custom_ui_bind_gradient_color, 0xFFA0A0A0U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI key bind gradient color")
+MACRO_CONFIG_INT(ScCustomUiBindUseAccent, sc_custom_ui_bind_use_accent, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom UI key bind accent color")
+MACRO_CONFIG_COL(ScCustomUiBindAccentColor, sc_custom_ui_bind_accent_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Custom UI key bind accent color")
+
+// Browser Utils
+MACRO_CONFIG_INT(ScAutoServerListRefresh, sc_auto_server_list_refresh, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically refresh the server browser list while a browser tab is open")
+MACRO_CONFIG_INT(ScAutoServerListRefreshSeconds, sc_auto_server_list_refresh_seconds, 10, 1, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto refresh interval for the server browser list in seconds")
+MACRO_CONFIG_INT(ScUseShortKogServerName, sc_use_short_kog_server_name, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use short names for E-Gores and KoG servers in browser list")
+MACRO_CONFIG_INT(ScShowFinishedMapOnEgo, sc_show_finished_map_on_ego, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show completed EGO maps in the server browser")
+MACRO_CONFIG_INT(ScServerMapPreview, sc_server_map_preview, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show a live map preview under the selected server")
+
+// Optimizer
+MACRO_CONFIG_INT(ScOptimizer, sc_optimizer, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable optimizer features")
+MACRO_CONFIG_INT(ScOptimizerDisableParticles, sc_optimizer_disable_particles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Disable rendering/updating all particles")
+MACRO_CONFIG_INT(ScOptimizerDisableQuads, sc_optimizer_disable_quads, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Disable rendering map quad layers")
+MACRO_CONFIG_INT(ScOptimizerDisableHighDetail, sc_optimizer_disable_high_detail, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Disable high detail map layers (mirrors gfx_high_detail off while optimizer is enabled)")
+MACRO_CONFIG_INT(ScOptimizerFpsFog, sc_optimizer_fps_fog, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cull non-map rendering outside a distance limit around the camera")
+MACRO_CONFIG_INT(ScOptimizerFpsFogMode, sc_optimizer_fps_fog_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "FPS fog mode (0=manual radius tiles, 1=by zoom percent)")
+MACRO_CONFIG_INT(ScOptimizerFpsFogRadiusTiles, sc_optimizer_fps_fog_radius_tiles, 40, 5, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "FPS fog manual radius in tiles (tile=32 units)")
+MACRO_CONFIG_INT(ScOptimizerFpsFogZoomPercent, sc_optimizer_fps_fog_zoom_percent, 70, 10, 120, CFGFLAG_CLIENT | CFGFLAG_SAVE, "FPS fog visible area percent in zoom mode")
+MACRO_CONFIG_INT(ScOptimizerFpsFogRenderRect, sc_optimizer_fps_fog_render_rect, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Render an outline rectangle showing the FPS fog area")
+MACRO_CONFIG_INT(ScOptimizerFpsFogCullMapTiles, sc_optimizer_fps_fog_cull_map_tiles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cull map tile rendering outside the FPS fog area")
+
+// Process priority (from Entity-Client)
+MACRO_CONFIG_INT(ScHighProcessPriority, sc_high_process_priority, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Set DDNets process priority to high")
+MACRO_CONFIG_INT(ScDiscordNormalProcessPriority, sc_discord_normal_process_priority, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Set Discord process priority to normal")
+
+// Chat media
+MACRO_CONFIG_INT(ScChatMediaPreview, sc_chat_media_preview, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Render media previews from chat links")
+MACRO_CONFIG_INT(ScChatMediaPhotos, sc_chat_media_photos, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Render photo previews from chat links")
+MACRO_CONFIG_INT(ScChatMediaGifs, sc_chat_media_gifs, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Render GIF and animated media previews from chat links")
+MACRO_CONFIG_INT(ScChatMediaContentFilter, sc_chat_media_content_filter, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Allow chat media previews only from configured domains")
+MACRO_CONFIG_STR(ScChatMediaAllowedDomains, sc_chat_media_allowed_domains, 512, "tenor.com; imgur.com; giphy.com; gifs.teeworlds.xyz", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Semicolon-separated allowlist for chat media domains")
+MACRO_CONFIG_INT(ScChatMediaPreviewMaxWidth, sc_chat_media_preview_max_width, 220, 120, 400, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Maximum width of chat media previews")
+
+// Chat bubbles (above players)
+MACRO_CONFIG_INT(ScChatBubbles, sc_chat_bubbles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show chat bubbles above players")
+MACRO_CONFIG_INT(ScChatBubblesSelf, sc_chat_bubbles_self, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show chat bubbles above yourself")
+MACRO_CONFIG_INT(ScChatBubblesDemo, sc_chat_bubbles_demo, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show chat bubbles in demo playback")
+MACRO_CONFIG_INT(ScChatBubbleSize, sc_chat_bubble_size, 20, 20, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Size of chat bubbles")
+MACRO_CONFIG_INT(ScChatBubbleShowTime, sc_chat_bubble_showtime, 500, 100, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "How long to show chat bubbles (centiseconds)")
+MACRO_CONFIG_INT(ScChatBubbleFadeOut, sc_chat_bubble_fadeout, 35, 15, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat bubble fade-out duration (centiseconds)")
+MACRO_CONFIG_INT(ScChatBubbleFadeIn, sc_chat_bubble_fadein, 15, 15, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat bubble fade-in duration (centiseconds)")
+MACRO_CONFIG_INT(ScChatBubbleAnimation, sc_chat_bubble_animation, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Animate chat bubble stacking movement")
+MACRO_CONFIG_INT(ScChatBubbleCustomColors, sc_chat_bubble_custom_colors, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom colors for chat bubbles")
+MACRO_CONFIG_COL(ScChatBubbleBgColor, sc_chat_bubble_bg_color, 0x40000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Chat bubble background color")
+MACRO_CONFIG_COL(ScChatBubbleTextColor, sc_chat_bubble_text_color, 0xFFFFFFFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Chat bubble text color")
+MACRO_CONFIG_COL(ScChatBubbleOutlineColor, sc_chat_bubble_outline_color, 0x80000000U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Chat bubble text outline color")
+MACRO_CONFIG_INT(ScChatBubbleRounding, sc_chat_bubble_rounding, 0, 0, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat bubble corner rounding (0 = auto from size)")
+
+// Animations
+MACRO_CONFIG_INT(ScAnimations, sc_animations, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle 667 Client UI animations")
+MACRO_CONFIG_INT(ScModuleUiRevealAnimation, sc_module_ui_reveal_animation, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle settings UI animations (module reveals and tab switch)")
+MACRO_CONFIG_INT(ScModuleUiRevealAnimationMs, sc_module_ui_reveal_animation_ms, 180, 1, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Module settings reveal time (in ms)")
+MACRO_CONFIG_INT(ScChatAnimation, sc_chat_animation, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle chat animation")
+MACRO_CONFIG_INT(ScChatAnimationMs, sc_chat_animation_ms, 300, 1, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat animation time (in ms)")
+MACRO_CONFIG_INT(ScChatOpenAnimation, sc_chat_open_animation, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle chat open animation")
+MACRO_CONFIG_INT(ScChatOpenAnimationMs, sc_chat_open_animation_ms, 220, 1, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat open animation time (in ms)")
+MACRO_CONFIG_INT(ScChatTypingAnimation, sc_chat_typing_animation, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle chat typing animation")
+MACRO_CONFIG_INT(ScChatTypingAnimationMs, sc_chat_typing_animation_ms, 180, 1, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat typing animation time (in ms)")
+MACRO_CONFIG_INT(ScKillfeedAnimation, sc_killfeed_animation, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle killfeed animation")
+MACRO_CONFIG_INT(ScKillfeedAnimationMs, sc_killfeed_animation_ms, 200, 1, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Killfeed animation time (in ms)")
+MACRO_CONFIG_INT(ScMainMenuAnimation, sc_main_menu_animation, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle main menu button hover animation")
+MACRO_CONFIG_INT(ScMainMenuAnimationSpeed, sc_main_menu_animation_speed, 12, 1, 50, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Main menu hover animation speed")
+MACRO_CONFIG_INT(ScChatAnimationType, sc_chat_animation_type, 3, 1, 4, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat animation type")
+
+// Legacy HUD layout mirrors from 667 Client 2.0 (load-only; migrated into hud_layout.cfg)
+MACRO_CONFIG_INT(ScHudMusicPlayerX, sc_hud_music_player_x, 198, -1000, 1000, CFGFLAG_CLIENT, "Legacy music player HUD X")
+MACRO_CONFIG_INT(ScHudMusicPlayerY, sc_hud_music_player_y, 0, -1000, 1000, CFGFLAG_CLIENT, "Legacy music player HUD Y")
+MACRO_CONFIG_INT(ScHudMusicPlayerScale, sc_hud_music_player_scale, 100, 25, 300, CFGFLAG_CLIENT, "Legacy music player HUD scale")
+MACRO_CONFIG_INT(ScHudMusicPlayerLayoutMigrated, sc_hud_music_player_layout_migrated, 0, 0, 5, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player HUD layout anchor migration from the legacy layout")
+
+MACRO_CONFIG_INT(ScHudChatX, sc_hud_chat_x, 5, -1000, 1000, CFGFLAG_CLIENT, "Legacy chat HUD X")
+MACRO_CONFIG_INT(ScHudChatY, sc_hud_chat_y, 278, -1000, 1000, CFGFLAG_CLIENT, "Legacy chat HUD Y")
+MACRO_CONFIG_INT(ScHudChatScale, sc_hud_chat_scale, 100, 25, 300, CFGFLAG_CLIENT, "Legacy chat HUD scale")
+MACRO_CONFIG_INT(ScHudVotesX, sc_hud_votes_x, 0, -1000, 1000, CFGFLAG_CLIENT, "Legacy votes HUD X")
+MACRO_CONFIG_INT(ScHudVotesY, sc_hud_votes_y, 60, -1000, 1000, CFGFLAG_CLIENT, "Legacy votes HUD Y")
+MACRO_CONFIG_INT(ScHudVotesScale, sc_hud_votes_scale, 100, 25, 300, CFGFLAG_CLIENT, "Legacy votes HUD scale")
+
+// Keystrokes
+MACRO_CONFIG_INT(ScKeystrokesStyle, sc_keystrokes_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Keystrokes style (0 = Classic, 1 = Minecraft)")
+MACRO_CONFIG_INT(ScKeystrokesKeyboard, sc_keystrokes_keyboard, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show keyboard keystrokes HUD")
+MACRO_CONFIG_INT(ScKeystrokesKeyboardPreset, sc_keystrokes_keyboard_preset, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Keyboard keystrokes preset (0 = wasd-minimal, 1 = wasd-full, 2 = micro)")
+MACRO_CONFIG_INT(ScKeystrokesMouse, sc_keystrokes_mouse, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show mouse keystrokes HUD")
+MACRO_CONFIG_INT(ScKeystrokesMousePreset, sc_keystrokes_mouse_preset, 1, 1, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Mouse keystrokes preset (1 = mouse-arrow, 2 = mouse-dot-dot, 3 = mouse-nothing)")
+MACRO_CONFIG_INT(ScKeystrokesMcLayout, sc_keystrokes_mc_layout, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Minecraft keystrokes layout (0 = Full, 1 = Only A/D)")
+MACRO_CONFIG_INT(ScKeystrokesMcShowLmb, sc_keystrokes_mc_show_lmb, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show LMB in Minecraft keystrokes")
+MACRO_CONFIG_INT(ScKeystrokesMcShowRmb, sc_keystrokes_mc_show_rmb, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show RMB in Minecraft keystrokes")
+MACRO_CONFIG_INT(ScKeystrokesMcShowSpace, sc_keystrokes_mc_show_space, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show Space in Minecraft keystrokes")
+MACRO_CONFIG_INT(ScKeystrokesMcPressedOpacity, sc_keystrokes_mc_pressed_opacity, 92, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Pressed key opacity in Minecraft keystrokes")
+
+// Finish prediction
+MACRO_CONFIG_INT(ScFinishPrediction, sc_finish_prediction, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable finish prediction")
+MACRO_CONFIG_INT(ScFinishPredictionShowAlways, sc_finish_prediction_show_always, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show finish prediction even before race start")
+MACRO_CONFIG_INT(ScFinishPredictionTimeMode, sc_finish_prediction_time_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Finish prediction time mode (0=remaining, 1=predicted finish time)")
+MACRO_CONFIG_INT(ScFinishPredictionShowTime, sc_finish_prediction_show_time, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show finish prediction time")
+MACRO_CONFIG_INT(ScFinishPredictionShowPercentage, sc_finish_prediction_show_percentage, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show finish prediction progress percentage")
+MACRO_CONFIG_INT(ScFinishPredictionShowMillis, sc_finish_prediction_show_millis, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show finish prediction milliseconds")
+MACRO_CONFIG_INT(ScFinishPredictionConsiderFreezeWalls, sc_finish_prediction_consider_freeze_walls, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Experimental: treat jumpable freeze walls as passable for finish prediction")
+
+// Music Player
+MACRO_CONFIG_INT(ScMusicPlayer, sc_music_player, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Music Player HUD element")
+MACRO_CONFIG_INT(ScMusicPlayerVisualizerMode, sc_music_player_visualizer_mode, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player visualizer mode (0=bottom, 1=center, 2=up)")
+MACRO_CONFIG_INT(ScMusicPlayerVisualizerRounding, sc_music_player_visualizer_rounding, 0, 0, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player visualizer rounding (0=cube, 200=soft)")
+MACRO_CONFIG_INT(ScMusicPlayerVisualizerColumns, sc_music_player_visualizer_columns, 5, 5, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player visualizer bar count")
+MACRO_CONFIG_INT(ScMusicPlayerColorMode, sc_music_player_color_mode, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player color mode (0=static visualizer, 1=cover visualizer)")
+MACRO_CONFIG_COL(ScMusicPlayerStaticColor, sc_music_player_static_color, 128, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Static color for the music player when static color mode is selected")
+MACRO_CONFIG_INT(ScMusicPlayerTextScale, sc_music_player_text_scale, 110, 70, 150, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player text scale in percent")
+MACRO_CONFIG_INT(ScMusicPlayerShowLyrics, sc_music_player_show_lyrics, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show synchronized song lyrics in the music player")
+MACRO_CONFIG_INT(ScMusicPlayerShowCurrentTime, sc_music_player_show_current_time, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show current time tab under lyrics in the music player")
+
+// Focus Mode Settings
+MACRO_CONFIG_INT(ClFocusMode, p_focus_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable focus mode to minimize visual distractions")
+MACRO_CONFIG_INT(ClFocusModeHideNames, p_focus_mode_hide_names, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide player names in focus mode")
+MACRO_CONFIG_INT(ClFocusModeHideEffects, p_focus_mode_hide_effects, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide visual effects in focus mode")
+MACRO_CONFIG_INT(ClFocusModeHideHud, p_focus_mode_hide_hud, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide HUD in focus mode")
+MACRO_CONFIG_INT(ClFocusModeHideSongPlayer, p_focus_mode_hide_song_player, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide song player in focus mode")
+MACRO_CONFIG_INT(ClFocusModeHideUI, p_focus_mode_hide_ui, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide unnecessary UI elements in focus mode")
+MACRO_CONFIG_INT(ClFocusModeHideChat, p_focus_mode_hide_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide chat in focus mode")
+MACRO_CONFIG_INT(ClFocusModeHideScoreboard, p_focus_mode_hide_scoreboard, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide scoreboard in focus mode")
+MACRO_CONFIG_INT(ClFocusModeAutoReply, p_focus_mode_auto_reply, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto reply to pings when focus mode hides chat")
+MACRO_CONFIG_STR(ClFocusModeAutoReplyMessage, p_focus_mode_auto_reply_message, 128, "my chat is hidden", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Message to auto reply when focus mode hides chat")
+
+// Corner indicator
+MACRO_CONFIG_INT(ScCornerIndicator, sc_corner_indicator, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show the corner indicator for off-screen teammates")
+MACRO_CONFIG_INT(ScCornerIndicatorOnlyInTeam, sc_corner_indicator_only_in_team, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Only show the corner indicator while in a DDRace team")
+MACRO_CONFIG_INT(ScCornerIndicatorShowAlive, sc_corner_indicator_show_alive, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show alive teammates in the corner indicator")
+MACRO_CONFIG_INT(ScCornerIndicatorShowFrozen, sc_corner_indicator_show_frozen, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show frozen teammates in the corner indicator")
+MACRO_CONFIG_INT(ScCornerIndicatorIndicateLastTeammate, sc_corner_indicator_indicate_last_teammate, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Indicate frozen teammates in the corner indicator when the local player is the last alive")
+MACRO_CONFIG_INT(ScCornerIndicatorProximity, sc_corner_indicator_proximity, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Scale the corner indicator by distance")
+MACRO_CONFIG_INT(ScCornerIndicatorProximityRange, sc_corner_indicator_proximity_range, 2000, 200, 8000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Corner indicator proximity range")
+MACRO_CONFIG_INT(ScCornerIndicatorProximityMinSize, sc_corner_indicator_proximity_min_size, 16, 4, 64, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Minimum corner indicator size when scaled by distance")
+MACRO_CONFIG_INT(ScCornerIndicatorNinjaFrozen, sc_corner_indicator_ninja_frozen, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use the ninja skin for frozen corner indicators")
+MACRO_CONFIG_INT(ScCornerIndicatorSizeAlive, sc_corner_indicator_size_alive, 48, 12, 128, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Alive corner indicator size")
+MACRO_CONFIG_INT(ScCornerIndicatorSizeFrozen, sc_corner_indicator_size_frozen, 48, 12, 128, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Frozen corner indicator size")
+MACRO_CONFIG_INT(ScCornerIndicatorLastTeammateSize, sc_corner_indicator_last_teammate_size, 48, 12, 128, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Corner indicator size when indicating the last teammate")
+MACRO_CONFIG_INT(ScCornerIndicatorCustomColors, sc_corner_indicator_custom_colors, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use custom colors for the corner indicator")
+MACRO_CONFIG_COL(ScCornerIndicatorColorAlive, sc_corner_indicator_color_alive, 0xFFAAFF80U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Alive corner indicator color")
+MACRO_CONFIG_COL(ScCornerIndicatorColorFrozen, sc_corner_indicator_color_frozen, 0xFF6BFF8AU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Frozen corner indicator color")
+MACRO_CONFIG_COL(ScCornerIndicatorLastTeammateColor, sc_corner_indicator_last_teammate_color, 0xFF6EFF80U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Corner indicator color when indicating the last teammate")
+
+// Hook effects
+MACRO_CONFIG_COL(ScHookFxColor, sc_hook_fx_color, 9371558, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color of the hook, air jump and hammer effects")
+MACRO_CONFIG_INT(ScHookTether, sc_hook_tether, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "A lasso and pulses along the hook when you hook another player")
+MACRO_CONFIG_INT(ScHookLassoBox, sc_hook_lasso_box, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Corner brackets on the player your hook holds")
+MACRO_CONFIG_INT(ScAirJump, sc_air_jump, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "A ring of light under your feet when you jump in the air, colored like the hook")
+MACRO_CONFIG_INT(ScAirJumpHideParticles, sc_air_jump_hide_particles, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide the normal air jump particles while the air jump ring is on")
+MACRO_CONFIG_INT(ScHammerSlash, sc_hammer_slash, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "A glowing slash when you swing the hammer, colored like the hook")
+MACRO_CONFIG_INT(ScHammerHideParticles, sc_hammer_hide_particles, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide the normal hammer hit particles while the hammer slash is on")
+
+// Hook hold effect
+MACRO_CONFIG_INT(ScGatheredEnergy, sc_gathered_energy, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Energy gathers around you while your hook holds another tee")
+MACRO_CONFIG_INT(ScGatheredEnergyAmount, sc_gathered_energy_amount, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Amount of energy motes gathering around you in percent")
+MACRO_CONFIG_INT(ScGatheredEnergyAura, sc_gathered_energy_aura, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Draw the aura and the ground ring of the gathered energy")
+MACRO_CONFIG_INT(ScGatheredEnergyBurst, sc_gathered_energy_burst, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Blow the gathered energy apart when the hook comes off the other tee")
+
+// Atmosphere
+MACRO_CONFIG_INT(ScAtmosphere, sc_atmosphere, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weather around you")
+MACRO_CONFIG_INT(ScWeather, sc_weather, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weather type (0 = snow, 1 = rain, 2 = fireflies, 3 = dust)")
+MACRO_CONFIG_INT(ScWeatherAmount, sc_weather_amount, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Amount of weather in percent")
+MACRO_CONFIG_INT(ScWeatherSnowSize, sc_weather_snow_size, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Size of snow particles in percent")
+MACRO_CONFIG_INT(ScWeatherSnowSpeed, sc_weather_snow_speed, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speed of snow particles in percent")
+MACRO_CONFIG_COL(ScWeatherSnowColor, sc_weather_snow_color, 255, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color of the snow")
+MACRO_CONFIG_INT(ScWeatherSnowflakes, sc_weather_snowflakes, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Snow look (0 = dots, 1 = snowflakes)")
+MACRO_CONFIG_INT(ScWeatherRainSize, sc_weather_rain_size, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Size of rain streaks in percent")
+MACRO_CONFIG_INT(ScWeatherRainSpeed, sc_weather_rain_speed, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speed of rain in percent")
+MACRO_CONFIG_INT(ScWeatherRainTilt, sc_weather_rain_tilt, 5, -75, 75, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Rain tilt from vertical in degrees")
+MACRO_CONFIG_COL(ScWeatherRainColor, sc_weather_rain_color, 10063569, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color of the rain")
+MACRO_CONFIG_INT(ScWeatherFireflySize, sc_weather_firefly_size, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Size of fireflies in percent")
+MACRO_CONFIG_INT(ScWeatherFireflySpeed, sc_weather_firefly_speed, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speed of fireflies in percent")
+MACRO_CONFIG_COL(ScWeatherFireflyColor, sc_weather_firefly_color, 3791782, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color of the fireflies")
+MACRO_CONFIG_INT(ScAmbientDust, sc_ambient_dust, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Drift motes of dust through the world for atmosphere")
+MACRO_CONFIG_COL(ScAmbientDustColor, sc_ambient_dust_color, 1981660, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color of the ambient dust motes")
+MACRO_CONFIG_INT(ScAmbientDustAmount, sc_ambient_dust_amount, 100, 25, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Amount of ambient dust motes in percent")
+MACRO_CONFIG_INT(ScWeatherDustSize, sc_weather_dust_size, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Size of dust motes in percent")
+MACRO_CONFIG_INT(ScWeatherDustSpeed, sc_weather_dust_speed, 100, 25, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speed of dust motes in percent")

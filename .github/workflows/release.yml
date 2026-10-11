@@ -1,0 +1,211 @@
+name: Release Assets
+
+# Flow:
+#   1. git tag build-1.5 && git push origin build-1.5
+#   2. Actions builds and creates a DRAFT release (github-actions[bot])
+#   3. Draft is invisible to the in-game updater (/releases API skips drafts)
+#   4. Edit the draft: change tag to v2.2, set title/notes, then Publish
+#
+# Build tags use build-* so retargeting the draft to a final v* tag does NOT
+# start a second workflow. No gate job / concurrency (those queued behind stuck
+# GitHub hosted-runner failures).
+on:
+  push:
+    tags:
+      - "build-*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Existing tag to publish assets for (for example, build-1.5 or v1.0.0)"
+        required: true
+      release_name:
+        description: "Release name used when creating or updating a release manually"
+        required: true
+      body:
+        description: "Optional release notes for manual publishing"
+        required: false
+
+permissions:
+  contents: write
+
+env:
+  CLIENT_NAME: 667client
+
+jobs:
+  build-cmake:
+    name: Build Release (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_HTTP_MULTIPLEXING: false
+      # Exposed at job level so steps can read the cert without re-resolving secrets.
+      WINDOWS_CERT_BASE64: ${{ secrets.WINDOWS_CERT_BASE64 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - name: linux
+          os: ubuntu-24.04
+          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_BUNDLED_LIBS=ON -DDISCORD_DYNAMIC=ON -DVULKAN=ON
+          cmake-init-env: CXXFLAGS="-Werror -Wno-unused-function"
+          package-file: "*-linux_x86_64.tar.xz"
+          artifact-name: release-linux
+          asset-name: 667client-linux.tar.xz
+        - name: windows
+          os: windows-latest
+          cmake-args: -A x64 -DTOOLS=OFF -DDOWNLOAD_GTEST=OFF -DVULKAN=ON
+          cmake-init-env: CXXFLAGS= LDFLAGS=
+          package-file: "*-win64.zip"
+          artifact-name: release-windows
+          asset-name: 667client-windows.zip
+        - name: macos
+          os: macOS-latest
+          # Universal PCH builds split architectures and reject the shared ARM compiler flags.
+          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_BUNDLED_LIBS=ON -DPRECOMPILE_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_SYSTEM_IGNORE_PATH=/usr/lib -DCMAKE_FIND_FRAMEWORK=LAST
+          cmake-init-env: CXXFLAGS=
+          package-file: "*-macos.dmg"
+          artifact-name: release-macos
+          asset-name: 667client-macos.dmg
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Prepare Linux
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install pkg-config ninja-build libcurl4-openssl-dev libdbus-1-dev libfreetype6-dev libnotify-dev libogg-dev libopus-dev libopusfile-dev libsdl2-dev libsqlite3-dev libpng-dev libvulkan-dev libglew-dev -y
+
+    - name: Prepare macOS
+      if: contains(matrix.os, 'macOS')
+      run: |
+        brew update
+        brew install pkg-config ninja molten-vk vulkan-headers glslang spirv-tools glew libpng opusfile wavpack x264
+        brew upgrade freetype
+        pip3 install --break-system-packages dmgbuild pyobjc-framework-Quartz
+        echo /Library/Frameworks/Python.framework/Versions/3.12/bin >> "$GITHUB_PATH"
+        python3 -c 'import sysconfig; print(sysconfig.get_path("scripts"))' >> "$GITHUB_PATH"
+        sudo rm -rf /Library/Developer/CommandLineTools
+
+    - name: Add Rust macOS targets
+      if: contains(matrix.os, 'macOS')
+      run: |
+        rustup default stable
+        rustup update
+        rustup target add x86_64-apple-darwin aarch64-apple-darwin
+
+    - name: Install Vulkan SDK
+      uses: humbletim/install-vulkan-sdk@v1.2
+      with:
+        version: 1.3.296.0
+        cache: true
+
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: |
+          ./
+
+    - name: Build release binaries
+      shell: bash
+      run: |
+        if [[ "${{ matrix.os }}" == windows-latest ]]; then
+          cmake -S . -B build-release ${{ matrix.cmake-args }}
+        elif [[ "${{ matrix.os }}" == "macOS-latest" ]]; then
+          cmake -S . -B build-release ${{ matrix.cmake-args }} \
+            -DPNG_LIBRARY="${GITHUB_WORKSPACE}/ddnet-libs/png/mac/libfat/libpng16.16.dylib" \
+            -DPNG_INCLUDEDIR="${GITHUB_WORKSPACE}/ddnet-libs/png/include"
+        else
+          cmake -S . -B build-release ${{ matrix.cmake-args }}
+        fi
+        cmake --build build-release --config Release --target game-client
+        if [[ "${{ matrix.os }}" != "macOS-latest" ]]; then
+          cmake --build build-release --config Release --target sixclient-updater
+        fi
+
+    # Sign when secrets are present. Without a cert the build still ships unsigned —
+    # Defender may false-positive until WINDOWS_CERT_BASE64 / WINDOWS_CERT_PASSWORD are set.
+    - name: Sign Windows binaries
+      if: contains(matrix.os, 'windows') && env.WINDOWS_CERT_BASE64 != ''
+      env:
+        WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+      shell: pwsh
+      run: |
+        if([string]::IsNullOrWhiteSpace($env:WINDOWS_CERT_PASSWORD)) {
+          throw "WINDOWS_CERT_PASSWORD secret is required when WINDOWS_CERT_BASE64 is set."
+        }
+        $CertPath = Join-Path $env:RUNNER_TEMP "codesign.pfx"
+        [IO.File]::WriteAllBytes($CertPath, [Convert]::FromBase64String($env:WINDOWS_CERT_BASE64))
+        $SignTool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" |
+          Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+        if(-not $SignTool) { throw "signtool.exe not found" }
+        # Multi-config MSVC builds put binaries under a per-config subdirectory, so locate
+        # them instead of hardcoding the layout.
+        $Targets = @("DDNet.exe", "667client-updater.exe") | ForEach-Object {
+          Get-ChildItem -Path build-release -Filter $_ -Recurse -File |
+            Select-Object -First 1 -ExpandProperty FullName
+        } | Where-Object { $_ }
+        if($Targets.Count -ne 2) { throw "expected 2 binaries to sign, found $($Targets.Count)" }
+        foreach($Target in $Targets) {
+          & $SignTool sign /f $CertPath /p $env:WINDOWS_CERT_PASSWORD `
+            /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /v $Target
+          if($LASTEXITCODE -ne 0) { throw "signing failed for $Target" }
+        }
+        Remove-Item $CertPath -Force
+
+    - name: Package release build
+      run: |
+        cmake --build build-release --config Release --target package_default
+        mkdir artifacts
+        mv build-release/${{ matrix.package-file }} artifacts/${{ matrix.asset-name }}
+
+    - name: Upload release package
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: artifacts/${{ matrix.asset-name }}
+
+  publish:
+    name: Publish Release Assets
+    needs:
+      - build-cmake
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download release packages
+      uses: actions/download-artifact@v4
+      with:
+        pattern: release-*
+        path: artifacts
+        merge-multiple: true
+
+    - name: List downloaded release packages
+      run: ls -R artifacts
+
+    # Draft so the in-game updater ignores it until you Publish in the GitHub UI.
+    # Creating via GITHUB_TOKEN attributes the release to github-actions[bot].
+    - name: Create draft GitHub release from tag
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: ${{ github.ref_name }}
+        draft: true
+        generate_release_notes: true
+        files: |
+          artifacts/${{ env.CLIENT_NAME }}-linux.tar.xz
+          artifacts/${{ env.CLIENT_NAME }}-windows.zip
+          artifacts/${{ env.CLIENT_NAME }}-macos.dmg
+
+    - name: Create or update release manually
+      if: github.event_name == 'workflow_dispatch'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.event.inputs.tag_name }}
+        name: ${{ github.event.inputs.release_name }}
+        body: ${{ github.event.inputs.body }}
+        draft: true
+        files: |
+          artifacts/${{ env.CLIENT_NAME }}-linux.tar.xz
+          artifacts/${{ env.CLIENT_NAME }}-windows.zip
+          artifacts/${{ env.CLIENT_NAME }}-macos.dmg
