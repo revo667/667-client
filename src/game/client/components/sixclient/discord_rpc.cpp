@@ -89,7 +89,13 @@ void SixClientFormatDiscordText(char *pBuf, int BufSize, const char *pTemplate, 
 }
 
 #if defined(CONF_DISCORD)
+#if defined(_WIN32)
+#define IStorage WindowsIStorage
 #include <discord_game_sdk.h>
+#undef IStorage
+#else
+#include <discord_game_sdk.h>
+#endif
 
 typedef enum EDiscordResult(DISCORD_API *FDiscordCreate)(DiscordVersion, struct DiscordCreateParams *, struct IDiscordCore **);
 
