@@ -79,7 +79,7 @@ jobs:
           asset-name: 667client-windows.zip
         - name: macos
           os: macOS-latest
-          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_BUNDLED_LIBS=ON -DPRECOMPILE_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_SYSTEM_IGNORE_PATH=/usr/lib -DCMAKE_FIND_FRAMEWORK=LAST -DVULKAN=ON
+          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_BUNDLED_LIBS=ON -DPRECOMPILE_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_SYSTEM_IGNORE_PATH=/usr/lib -DCMAKE_FIND_FRAMEWORK=LAST
           cmake-init-env: CXXFLAGS=
           package-file: "*-macos.dmg"
           artifact-name: release-macos
@@ -127,6 +127,22 @@ jobs:
         version: 1.3.296.0
         cache: true
 
+    - name: Locate universal MoltenVK
+      if: contains(matrix.os, 'macOS')
+      shell: bash
+      run: |
+        LIB=""
+        while IFS= read -r CANDIDATE; do
+          ARCHS=$(lipo -archs "$CANDIDATE" 2>/dev/null || true)
+          echo "$CANDIDATE: $ARCHS"
+          if [[ "$ARCHS" == *arm64* && "$ARCHS" == *x86_64* ]]; then
+            LIB="$CANDIDATE"
+            break
+          fi
+        done < <(find "$VULKAN_SDK" /opt/homebrew -name libMoltenVK.a 2>/dev/null)
+        echo "Using MoltenVK: ${LIB:-none}"
+        echo "MOLTENVK_STATIC=$LIB" >> "$GITHUB_ENV"
+
     - name: Cache Rust dependencies
       uses: Swatinem/rust-cache@v2
       with:
@@ -139,7 +155,12 @@ jobs:
         if [[ "${{ matrix.os }}" == windows-latest ]]; then
           cmake -S . -B build-release ${{ matrix.cmake-args }}
         elif [[ "${{ matrix.os }}" == "macOS-latest" ]]; then
-          cmake -S . -B build-release ${{ matrix.cmake-args }} \
+          if [[ -n "$MOLTENVK_STATIC" ]]; then
+            VULKAN_ARGS=(-DVULKAN=ON "-DVULKAN_LIBRARIES=$MOLTENVK_STATIC")
+          else
+            VULKAN_ARGS=(-DVULKAN=OFF)
+          fi
+          cmake -S . -B build-release ${{ matrix.cmake-args }} "${VULKAN_ARGS[@]}" \
             -DPNG_LIBRARY="${GITHUB_WORKSPACE}/ddnet-libs/png/mac/libfat/libpng16.16.dylib" \
             -DPNG_INCLUDEDIR="${GITHUB_WORKSPACE}/ddnet-libs/png/include"
         else
