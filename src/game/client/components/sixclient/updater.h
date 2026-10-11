@@ -33,6 +33,7 @@ class CUpdater : public IUpdater
 	ETaskKind m_TaskKind = ETaskKind::NONE;
 	bool m_AutoCheckPending = false;
 	bool m_ApplyStarted = false;
+	int m_DownloadRetries = 0;
 
 	char m_aLatestVersion[64];
 	char m_aArchiveName[128];

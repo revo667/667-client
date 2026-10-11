@@ -2,6 +2,7 @@
 
 #include <base/fs.h>
 #include <base/io.h>
+#include <base/log.h>
 #include <base/process.h>
 #include <base/str.h>
 #include <base/time.h>
@@ -41,7 +42,7 @@ static constexpr const char *GITHUB_LATEST_RELEASE_URL = "https://github.com/rev
 #if defined(CONF_PLATFORM_LINUX)
 static constexpr const char *UPDATE_ARCHIVE_PATH = "update/667client-release.tar.xz";
 #elif defined(CONF_PLATFORM_MACOS)
-static constexpr const char *UPDATE_ARCHIVE_PATH = "667client-update.dmg";
+static constexpr const char *UPDATE_ARCHIVE_PATH = "667Client/update/667client-update.dmg";
 #else
 static constexpr const char *UPDATE_ARCHIVE_PATH = "update/667client-release.zip";
 #endif
@@ -367,7 +368,6 @@ void CUpdater::Init()
 #elif !defined(CONF_HEADLESS_CLIENT) && defined(CONF_PLATFORM_MACOS)
 	char aAppPath[IO_MAX_PATH_LENGTH];
 	m_AutoCheckPending = MacAppBundlePath(m_pStorage, aAppPath, sizeof(aAppPath));
-	MacTempPath(UPDATE_ARCHIVE_PATH, m_aArchivePath, sizeof(m_aArchivePath));
 #endif
 }
 
@@ -379,6 +379,8 @@ void CUpdater::SetCurrentState(EUpdaterState NewState)
 
 void CUpdater::SetStatus(const char *pStatus)
 {
+	if(pStatus && pStatus[0])
+		log_info("updater", "%s", pStatus);
 	const CLockScope LockScope(m_Lock);
 	str_copy(m_aStatus, pStatus ? pStatus : "", sizeof(m_aStatus));
 }
@@ -470,6 +472,7 @@ void CUpdater::ParseReleaseTask()
 		return;
 	}
 
+	log_info("updater", "found %s (running %s), asset %s", aVersion, SIXCLIENT_VERSION, aArchiveName);
 	str_copy(m_aLatestVersion, aVersion, sizeof(m_aLatestVersion));
 	str_copy(m_aArchiveName, aArchiveName, sizeof(m_aArchiveName));
 	str_copy(m_aArchiveUrl, aArchiveUrl, sizeof(m_aArchiveUrl));
@@ -481,8 +484,10 @@ void CUpdater::StartArchiveDownload()
 {
 	ResetTask();
 #if defined(CONF_PLATFORM_MACOS)
-	MacTempPath(UPDATE_ARCHIVE_PATH, m_aArchivePath, sizeof(m_aArchivePath));
-	(void)fs_remove(m_aArchivePath);
+	str_copy(m_aArchivePath, UPDATE_ARCHIVE_PATH, sizeof(m_aArchivePath));
+	m_pStorage->CreateFolder("667Client", IStorage::TYPE_SAVE);
+	m_pStorage->CreateFolder("667Client/update", IStorage::TYPE_SAVE);
+	m_pStorage->RemoveFile(m_aArchivePath, IStorage::TYPE_SAVE);
 #else
 	str_copy(m_aArchivePath, UPDATE_ARCHIVE_PATH, sizeof(m_aArchivePath));
 	m_pStorage->RemoveBinaryFile(m_aArchivePath);
@@ -493,9 +498,13 @@ void CUpdater::StartArchiveDownload()
 	SetCurrentState(IUpdater::DOWNLOADING);
 
 	m_TaskKind = ETaskKind::DOWNLOAD_ARCHIVE;
+#if defined(CONF_PLATFORM_MACOS)
+	m_pCurrentTask = HttpGetFile(m_aArchiveUrl, m_pStorage, m_aArchivePath, IStorage::TYPE_SAVE);
+#else
 	m_pCurrentTask = HttpGetFile(m_aArchiveUrl, m_pStorage, m_aArchivePath, IStorage::TYPE_ABSOLUTE);
+#endif
 	m_pCurrentTask->HeaderString("User-Agent", CLIENT_NAME);
-	m_pCurrentTask->Timeout(CTimeout{10000, 0, 500, 10});
+	m_pCurrentTask->Timeout(CTimeout{30000, 0, 500, 20});
 	m_pCurrentTask->IpResolve(IPRESOLVE::V4);
 	m_pHttp->Run(m_pCurrentTask);
 }
@@ -517,7 +526,9 @@ bool CUpdater::LaunchApply(bool Relaunch)
 		SetStatus("Auto update needs the installed 667 Client app");
 		return false;
 	}
-	if(!fs_is_file(m_aArchivePath))
+	char aArchivePath[IO_MAX_PATH_LENGTH];
+	m_pStorage->GetCompletePath(IStorage::TYPE_SAVE, m_aArchivePath, aArchivePath, sizeof(aArchivePath));
+	if(!fs_is_file(aArchivePath))
 	{
 		SetStatus("Downloaded archive missing");
 		return false;
@@ -535,7 +546,8 @@ bool CUpdater::LaunchApply(bool Relaunch)
 
 	char aPid[32];
 	str_format(aPid, sizeof(aPid), "%d", process_id());
-	const char *apArguments[] = {aScriptPath, aPid, m_aArchivePath, aAppPath, Relaunch ? "1" : "0"};
+	log_info("updater", "installing %s into %s", aArchivePath, aAppPath);
+	const char *apArguments[] = {aScriptPath, aPid, aArchivePath, aAppPath, Relaunch ? "1" : "0"};
 	if(process_execute("/bin/sh", EShellExecuteWindowState::BACKGROUND, apArguments, std::size(apArguments)) == INVALID_PROCESS)
 	{
 		SetStatus("Failed to launch updater");
@@ -660,8 +672,17 @@ void CUpdater::Update()
 		return;
 	}
 
-	if(m_pCurrentTask->State() != EHttpState::DONE || m_pCurrentTask->StatusCode() >= 400)
+	const bool RequestDone = m_pCurrentTask->State() == EHttpState::DONE;
+	if(!RequestDone || m_pCurrentTask->StatusCode() >= 400)
 	{
+		log_error("updater", "request failed (state %d, http %d)", (int)m_pCurrentTask->State(), RequestDone ? m_pCurrentTask->StatusCode() : 0);
+		if(m_TaskKind == ETaskKind::DOWNLOAD_ARCHIVE && m_DownloadRetries < 3)
+		{
+			m_DownloadRetries++;
+			SetStatus("Download failed, retrying");
+			StartArchiveDownload();
+			return;
+		}
 		ResetTask();
 		SetStatus("Update check failed");
 		SetCurrentState(IUpdater::FAIL);
