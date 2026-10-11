@@ -22,6 +22,7 @@ if(NOT VULKAN_FOUND)
     find_library(VULKAN_LIBRARIES
       NAMES libMoltenVK.a
       HINTS
+        "$ENV{VULKAN_SDK}/lib/MoltenVK.xcframework/macos-arm64_x86_64"
         "$ENV{VULKAN_SDK}/lib"
         "$ENV{VULKAN_SDK}/../MoltenVK/MoltenVK.xcframework/macos-arm64_x86_64"
         "$ENV{VULKAN_SDK}/MoltenVK/MoltenVK.xcframework/macos-arm64_x86_64"

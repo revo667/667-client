@@ -139,7 +139,7 @@ jobs:
             LIB="$CANDIDATE"
             break
           fi
-        done < <(find "$VULKAN_SDK" /opt/homebrew -name libMoltenVK.a 2>/dev/null)
+        done < <(find "$VULKAN_SDK" /opt/homebrew -name libMoltenVK.a 2>/dev/null | grep -viE 'ios|tvos|xros|visionos|watchos|simulator|catalyst')
         echo "Using MoltenVK: ${LIB:-none}"
         echo "MOLTENVK_STATIC=$LIB" >> "$GITHUB_ENV"
 
