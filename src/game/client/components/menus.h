@@ -637,6 +637,7 @@ protected:
 	// 667client
 	void DoRocketPreview(const CUIRect *pRect);
 	void RenderSettingsSixClientWeaponGlow(CUIRect &Column);
+	void RenderSettingsSixClientDiscord(CUIRect &Column);
 	void RenderSettingsSixClientFx(CUIRect &Column, bool HookColumn);
 	// 667client
 

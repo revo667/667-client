@@ -1283,19 +1283,19 @@ public:
 		}
 		// 667client
 		{
-			const char *pBcFontPath = "667Client/ActayWide-Bold.otf";
-			void *pBcFontData;
+			const char *pScFontPath = "667Client/ActayWide-Bold.otf";
+			void *pScFontData;
 			unsigned ScFontDataSize;
-			if(Storage()->ReadFile(pBcFontPath, IStorage::TYPE_ALL, &pBcFontData, &ScFontDataSize))
+			if(Storage()->ReadFile(pScFontPath, IStorage::TYPE_ALL, &pScFontData, &ScFontDataSize))
 			{
-				if(LoadFontCollection(pBcFontPath, static_cast<FT_Byte *>(pBcFontData), (FT_Long)ScFontDataSize))
-					m_vpFontData.push_back(pBcFontData);
+				if(LoadFontCollection(pScFontPath, static_cast<FT_Byte *>(pScFontData), (FT_Long)ScFontDataSize))
+					m_vpFontData.push_back(pScFontData);
 				else
-					free(pBcFontData);
+					free(pScFontData);
 			}
 			else
 			{
-				log_error("textrender", "Failed to open/read font file '%s'", pBcFontPath);
+				log_error("textrender", "Failed to open/read font file '%s'", pScFontPath);
 			}
 		}
 		// 667client

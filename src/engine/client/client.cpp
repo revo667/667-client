@@ -237,6 +237,13 @@ int CClient::SendMsgActive(CMsgPacker *pMsg, int Flags)
 	return SendMsg(g_Config.m_ClDummy, pMsg, Flags);
 }
 
+#if defined(CONF_FAMILY_WINDOWS)
+extern "C" {
+__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 void CClient::SendTaterInfo(int Conn)
 {
 	CMsgPacker Msg(NETMSG_IAMTATER, true);

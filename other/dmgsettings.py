@@ -21,7 +21,7 @@ def read_plist(path):
 # .. Useful stuff ..............................................................
 server_enabled = 'server' in defines
 
-application_client = defines.get('client', 'DDNet.app')
+application_client = defines.get('client', '667 Client.app')
 appname_client = os.path.basename(application_client)
 if server_enabled:
 	application_server = defines.get('server', 'DDNet-Server.app')

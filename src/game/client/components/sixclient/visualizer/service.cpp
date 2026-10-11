@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "service.h"
 
 #include "source.h"

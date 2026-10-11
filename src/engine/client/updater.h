@@ -3,7 +3,7 @@
 
 #include <base/detect.h>
 
-#define CLIENT_EXEC "DDNet"
+#define CLIENT_EXEC "667client"
 #define SERVER_EXEC "DDNet-Server"
 
 #if defined(CONF_FAMILY_WINDOWS)

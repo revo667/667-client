@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "camera_demos.h"
 
 #include <base/math.h>

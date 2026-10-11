@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "profile_assets.h"
 
 #include <engine/graphics.h>

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "menu_media_background.h"
 
 #include <base/fs.h>

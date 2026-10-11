@@ -256,8 +256,9 @@ if(NOT "${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()
 
 set(SERVER_EXECUTABLE DDNet-Server CACHE STRING "Name of the built server executable")
-set(CLIENT_EXECUTABLE DDNet CACHE STRING "Name of the build client executable")
-set(IOS_BUNDLE_IDENTIFIER "org.ddnet.client" CACHE STRING "iOS bundle identifier")
+set(CLIENT_EXECUTABLE 667client CACHE STRING "Name of the build client executable")
+set(CLIENT_APP_NAME "667 Client" CACHE STRING "Name of the client application bundle")
+set(IOS_BUNDLE_IDENTIFIER "com.revo667.client" CACHE STRING "iOS bundle identifier")
 
 ########################################################################
 # Compiler flags
@@ -953,6 +954,10 @@ elseif(TARGET_OS STREQUAL "mac")
     endif()
     enable_language(OBJCXX)
     set(CMAKE_OBJCXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_OBJCXX_FLAGS}")
+    if(NOT CMAKE_OBJC_COMPILER)
+      set(CMAKE_OBJC_COMPILER "${CMAKE_C_COMPILER}")
+    endif()
+    enable_language(OBJC)
   endif()
   find_library(CARBON Carbon)
   find_library(COCOA Cocoa)
@@ -960,9 +965,13 @@ elseif(TARGET_OS STREQUAL "mac")
   find_library(SECURITY Security)
   set(PLATFORM_CLIENT
     src/macos/client.mm
+    src/macos/latency.h
+    src/macos/latency.mm
     src/macos/notifications.mm
   )
-  set(PLATFORM_CLIENT_LIBS ${COCOA} ${OPENGL})
+  find_library(AUDIOTOOLBOX AudioToolbox)
+  find_library(COREAUDIO CoreAudio)
+  set(PLATFORM_CLIENT_LIBS ${COCOA} ${OPENGL} ${AUDIOTOOLBOX} ${COREAUDIO})
   set(PLATFORM_LIBS ${CARBON} ${SECURITY})
 elseif(TARGET_OS STREQUAL "ios")
   # Frameworks required by SDL2, see its CMakeLists.txt.
@@ -2895,8 +2904,10 @@ if(CLIENT)
     components/sixclient/fast_actions.h
     components/sixclient/optimizer.cpp
     components/sixclient/optimizer.h
-    components/sixclient/process_priority.cpp
-    components/sixclient/process_priority.h
+    components/sixclient/system_tuning.cpp
+    components/sixclient/system_volume.cpp
+    components/sixclient/system_volume.h
+    components/sixclient/system_tuning.h
     components/sixclient/discord_rpc.cpp
     components/sixclient/discord_rpc.h
     components/sixclient/media_decoder.cpp
@@ -2941,6 +2952,9 @@ if(CLIENT)
     components/sixclient/laser_glow.cpp
     components/sixclient/rocket_glow.cpp
     components/sixclient/nuke_vfx.cpp
+    components/sixclient/menus_discord.cpp
+    components/sixclient/music_dock.cpp
+    components/sixclient/music_dock.h
     components/sixclient/menus_fx.cpp
     components/sixclient/fx/components.h
     components/sixclient/fx/own_tee.h
@@ -3369,11 +3383,11 @@ if(CLIENT)
   endif()
 
   if(TARGET_OS STREQUAL "windows")
-    set(VERSION_EXECUTABLE "${CLIENT_EXECUTABLE}")
-    set(VERSION_COMPANY "${CLIENT_EXECUTABLE} Team")
+    set(VERSION_EXECUTABLE "667 Client")
+    set(VERSION_COMPANY "667 Client Team")
     configure_file("other/versioninfo/versioninfo.rc.in" "client.versioninfo.rc")
     configure_file("other/manifest/client.manifest.in" "client.manifest")
-    set(CLIENT_ICON "other/icons/DDNet.rc")
+    set(CLIENT_ICON "other/icons/667client.rc")
     set(CLIENT_VERSIONINFO "${CMAKE_CURRENT_BINARY_DIR}/client.versioninfo.rc")
     if(NOT MINGW)
       set(CLIENT_MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/client.manifest")
@@ -3516,6 +3530,46 @@ if(CLIENT)
     target_include_directories(game-client SYSTEM PRIVATE ${PULSE_SIMPLE_INCLUDE_DIRS})
   else()
     target_compile_definitions(game-client PRIVATE SC_MUSICPLAYER_HAS_PULSE=0)
+  endif()
+
+  if(TARGET_OS STREQUAL "mac")
+    set(MEDIAREMOTE_ADAPTER_DIR ${PROJECT_SOURCE_DIR}/src/engine/external/mediaremote-adapter)
+    add_library(MediaRemoteAdapter SHARED
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/env.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/get.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/globals.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/keys.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/now_playing.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/repeat.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/seek.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/send.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/shuffle.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/speed.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/stream.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/adapter/test.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/private/MediaRemote.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/utility/Debounce.m
+      ${MEDIAREMOTE_ADAPTER_DIR}/src/utility/helpers.m
+    )
+    set_target_properties(MediaRemoteAdapter PROPERTIES
+      FRAMEWORK TRUE
+      FRAMEWORK_VERSION A
+      MACOSX_FRAMEWORK_IDENTIFIER com.vandenbe.MediaRemoteAdapter
+      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
+      OUTPUT_NAME MediaRemoteAdapter
+    )
+    target_include_directories(MediaRemoteAdapter PRIVATE ${MEDIAREMOTE_ADAPTER_DIR}/include ${MEDIAREMOTE_ADAPTER_DIR}/src)
+    target_compile_options(MediaRemoteAdapter PRIVATE -fobjc-arc -fvisibility=default -w)
+    find_library(UNIFORM_TYPE_IDENTIFIERS UniformTypeIdentifiers)
+    target_link_libraries(MediaRemoteAdapter "-framework Foundation" "-framework AppKit")
+    if(UNIFORM_TYPE_IDENTIFIERS)
+      target_link_libraries(MediaRemoteAdapter ${UNIFORM_TYPE_IDENTIFIERS})
+    endif()
+    add_custom_command(TARGET MediaRemoteAdapter POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy ${MEDIAREMOTE_ADAPTER_DIR}/bin/mediaremote-adapter.pl $<TARGET_FILE_DIR:MediaRemoteAdapter>/Resources/mediaremote-adapter.pl
+      COMMAND codesign --force --deep --sign - $<TARGET_BUNDLE_DIR:MediaRemoteAdapter>
+    )
+    add_dependencies(game-client MediaRemoteAdapter)
   endif()
 
   list(APPEND TARGETS_OWN game-client)
@@ -4338,11 +4392,11 @@ if(CLIENT AND DMGBUILD_FOUND)
   set(DMG_TMPDIR pack_${CPACK_PACKAGE_FILE_NAME}_dmg)
   set(DMG_MKDIRS
     # tidy-alphabetical-start
-    ${CLIENT_EXECUTABLE}.app
-    ${CLIENT_EXECUTABLE}.app/Contents
-    ${CLIENT_EXECUTABLE}.app/Contents/Frameworks
-    ${CLIENT_EXECUTABLE}.app/Contents/MacOS
-    ${CLIENT_EXECUTABLE}.app/Contents/Resources
+    "${CLIENT_APP_NAME}.app"
+    "${CLIENT_APP_NAME}.app/Contents"
+    "${CLIENT_APP_NAME}.app/Contents/Frameworks"
+    "${CLIENT_APP_NAME}.app/Contents/MacOS"
+    "${CLIENT_APP_NAME}.app/Contents/Resources"
     # tidy-alphabetical-end
   )
   if(SERVER)
@@ -4376,34 +4430,35 @@ if(CLIENT AND DMGBUILD_FOUND)
   if(MACOS_CODESIGN)
     set(CODESIGN_COMMANDS
         # tidy-alphabetical-start
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/SDL2.framework
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/discord_game_sdk.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavcodec.61.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavformat.61.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libavutil.59.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libfreetype.6.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libpng16.16.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libsteam_api.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libswresample.5.dylib
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/libswscale.8.dylib
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/MediaRemoteAdapter.framework"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/SDL2.framework"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/discord_game_sdk.dylib"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/libavcodec.61.dylib"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/libavformat.61.dylib"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/libavutil.59.dylib"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/libfreetype.6.dylib"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/libpng16.16.dylib"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/libsteam_api.dylib"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/libswresample.5.dylib"
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/libswscale.8.dylib"
         # tidy-alphabetical-end
     )
     foreach(target ${TARGET_TOOLS})
       list(APPEND CODESIGN_COMMANDS
-          COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${target}
+          COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/MacOS/${target}"
       )
     endforeach()
     if(SERVER)
       list(APPEND CODESIGN_COMMANDS
-          COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
+          COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/MacOS/${SERVER_EXECUTABLE}"
       )
     endif()
     list(APPEND CODESIGN_COMMANDS
-        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
+        COMMAND codesign --force --options runtime --timestamp --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/MacOS/${CLIENT_EXECUTABLE}"
 
-        COMMAND codesign --force --options runtime --timestamp --deep --sign "${MACOS_APP_IDENTITY}" ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app
+        COMMAND codesign --force --options runtime --timestamp --deep --sign "${MACOS_APP_IDENTITY}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app"
         # Verify signature
-        COMMAND codesign --verify --deep --strict --verbose=2 "${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app"
+        COMMAND codesign --verify --deep --strict --verbose=2 "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app"
     )
     if(SERVER)
       list(APPEND CODESIGN_COMMANDS
@@ -4426,7 +4481,7 @@ if(CLIENT AND DMGBUILD_FOUND)
       COMMAND ${CMAKE_COMMAND} -E copy bundle/server/Info.plist ${PROJECT_SOURCE_DIR}/other/bundle/server/PkgInfo ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/
       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game-server> $<TARGET_FILE:game-server-launcher> ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/
       COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_strip_rpath.py ${CMAKE_OTOOL} ${CMAKE_INSTALL_NAME_TOOL} ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
-      COMMAND ${CMAKE_COMMAND} -E copy ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE}
+      COMMAND ${CMAKE_COMMAND} -E copy ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/${SERVER_EXECUTABLE} "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/MacOS/${SERVER_EXECUTABLE}"
     )
     set(DMG_SERVER_DEPENDS
       game-server-launcher
@@ -4439,13 +4494,13 @@ if(CLIENT AND DMGBUILD_FOUND)
       # tidy-alphabetical-end
     )
     set(DMGBUILD_COMMAND
-      COMMAND dmgbuild -s ${PROJECT_SOURCE_DIR}/other/dmgsettings.py -D client=${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app -D server=${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app -D background=${PROJECT_SOURCE_DIR}/other/dmgbackground.png "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}" ${CPACK_PACKAGE_FILE_NAME}.dmg
+      COMMAND dmgbuild -s ${PROJECT_SOURCE_DIR}/other/dmgsettings.py -D "client=${DMG_TMPDIR}/${CLIENT_APP_NAME}.app" -D server=${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app -D background=${PROJECT_SOURCE_DIR}/other/dmgbackground.png "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}" ${CPACK_PACKAGE_FILE_NAME}.dmg
     )
   else()
     set(DMG_SERVER_COMMANDS)
     set(DMG_SERVER_DEPENDS other/dmgbackground_single.png)
     set(DMGBUILD_COMMAND
-      COMMAND dmgbuild -s ${PROJECT_SOURCE_DIR}/other/dmgsettings.py -D client=${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app -D background=${PROJECT_SOURCE_DIR}/other/dmgbackground_single.png "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}" ${CPACK_PACKAGE_FILE_NAME}.dmg
+      COMMAND dmgbuild -s ${PROJECT_SOURCE_DIR}/other/dmgsettings.py -D "client=${DMG_TMPDIR}/${CLIENT_APP_NAME}.app" -D background=${PROJECT_SOURCE_DIR}/other/dmgbackground_single.png "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}" ${CPACK_PACKAGE_FILE_NAME}.dmg
     )
   endif()
 
@@ -4454,24 +4509,25 @@ if(CLIENT AND DMGBUILD_FOUND)
     ${DMG_MKDIR_COMMANDS}
 
     # CLIENT
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/data ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/data
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/other/icons/${CLIENT_EXECUTABLE}.icns ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Resources/
-    COMMAND ${CMAKE_COMMAND} -E copy bundle/client/Info.plist ${PROJECT_SOURCE_DIR}/other/bundle/client/PkgInfo ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game-client> ${TARGET_TOOLS_FILES} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/
-    COMMAND /bin/cp -a ${PROJECT_SOURCE_DIR}/ddnet-libs/sdl/${LIB_DIR}/SDL2.framework ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/data "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Resources/data"
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/other/icons/${CLIENT_EXECUTABLE}.icns "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Resources/"
+    COMMAND ${CMAKE_COMMAND} -E copy bundle/client/Info.plist ${PROJECT_SOURCE_DIR}/other/bundle/client/PkgInfo "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/"
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game-client> ${TARGET_TOOLS_FILES} "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/MacOS/"
+    COMMAND /bin/cp -a ${PROJECT_SOURCE_DIR}/ddnet-libs/sdl/${LIB_DIR}/SDL2.framework "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND /bin/cp -a $<TARGET_BUNDLE_DIR:MediaRemoteAdapter> "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
     # tidy-alphabetical-start
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/discord/${LIB_DIR}/discord_game_sdk.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libavcodec.61.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libavformat.61.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libavutil.59.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libswresample.5.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libswscale.8.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/freetype/${LIB_DIR}/libfreetype.6.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/png/${LIB_DIR}/libpng16.16.dylib ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/discord/${LIB_DIR}/discord_game_sdk.dylib "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libavcodec.61.dylib "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libavformat.61.dylib "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libavutil.59.dylib "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libswresample.5.dylib "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/ffmpeg/${LIB_DIR}/libswscale.8.dylib "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/freetype/${LIB_DIR}/libfreetype.6.dylib "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/ddnet-libs/png/${LIB_DIR}/libpng16.16.dylib "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
     # tidy-alphabetical-end
-    COMMAND ${CMAKE_COMMAND} -E copy ${STEAM_API_DYLIB_FOR_PACKAGE} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/Frameworks/
-    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_strip_rpath.py ${CMAKE_OTOOL} ${CMAKE_INSTALL_NAME_TOOL} ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
-    COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath @loader_path/../Frameworks ${DMG_TMPDIR}/${CLIENT_EXECUTABLE}.app/Contents/MacOS/${CLIENT_EXECUTABLE}
+    COMMAND ${CMAKE_COMMAND} -E copy ${STEAM_API_DYLIB_FOR_PACKAGE} "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
+    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_strip_rpath.py ${CMAKE_OTOOL} ${CMAKE_INSTALL_NAME_TOOL} "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/MacOS/${CLIENT_EXECUTABLE}"
+    COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath @loader_path/../Frameworks "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/MacOS/${CLIENT_EXECUTABLE}"
 
     # SERVER
     ${DMG_SERVER_COMMANDS}
@@ -4483,6 +4539,7 @@ if(CLIENT AND DMGBUILD_FOUND)
 
     DEPENDS
       game-client
+      MediaRemoteAdapter
       ${TARGET_STEAMAPI}
       ${PROJECT_BINARY_DIR}/bundle/client/Info.plist
       ${DMG_SERVER_DEPENDS}

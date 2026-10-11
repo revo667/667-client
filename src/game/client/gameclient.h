@@ -37,7 +37,8 @@
 #include "components/sixclient/fast_actions.h" // sixclient
 #include "components/sixclient/snap_tap.h" // sixclient
 #include "components/sixclient/optimizer.h" // sixclient
-#include "components/sixclient/process_priority.h" // sixclient
+#include "components/sixclient/system_tuning.h" // sixclient
+#include "components/sixclient/music_dock.h" // sixclient
 #include "components/sixclient/music_player.h" // sixclient
 #include "components/sixclient/browser_utils.h" // sixclient
 #include "components/sixclient/ego_finished_maps.h" // sixclient
@@ -236,8 +237,9 @@ public:
 	CFastPractice m_FastPractice; // 667client
 	CBcAutoMargin m_ScAutoMargin; // 667client
 	COptimizer m_Optimizer; // 667client
-	CProcessPriority m_ProcessPriority; // 667client
+	CSystemTuning m_SystemTuning; // 667client
 	CMusicPlayer m_MusicPlayer; // 667client
+	CMusicDock m_MusicDock; // 667client
 	CBrowserUtils m_BrowserUtils; // 667client
 	CEgoFinishedMaps m_EgoFinishedMaps; // 667client
 	CFinishPrediction m_FinishPrediction; // 667client

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "cursor_trail.h"
 
 #include <base/str.h>

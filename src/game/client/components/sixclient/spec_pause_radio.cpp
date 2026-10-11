@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "spec_pause_radio.h"
 
 #include <base/color.h>

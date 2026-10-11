@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include <engine/shared/config.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
@@ -638,7 +637,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const float RealHitboxColorHeight = g_Config.m_ScShowRealHitbox ? RealHitboxColorLineSize + RealHitboxColorLineSpacing : 0.0f;
 	const float VisualsQoLBlockHeight =
 		LineSize + MarginSmall +
-		8.0f * LineSize +
+		7.0f * LineSize +
 		RealHitboxColorHeight +
 		3.0f * LineSize;
 	CUIRect VisualsQoLBlock;
@@ -677,7 +676,6 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScShowSpectatorNames, ScLocalize("Show spectator nicknames"), &g_Config.m_ScShowSpectatorNames, &SpectatorNamesRow, LineSize);
 	}
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScShowVotePercentage, ScLocalize("Show vote percentage"), &g_Config.m_ScShowVotePercentage, &VisualsQoLBlock, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScDiscordRPC, ScLocalize("667 Client discord rpc (restart requires)"), &g_Config.m_ScDiscordRPC, &VisualsQoLBlock, LineSize);
 	VisualsQoLBlock.HSplitTop(LineSize, &Button, &VisualsQoLBlock);
 	Ui()->DoScrollbarOption(&g_Config.m_ScWheelScale, &g_Config.m_ScWheelScale, &Button, ScLocalize("Bind/Emote wheel scale"), 50, 100, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "%");
 	VisualsQoLBlock.HSplitTop(LineSize, &Button, &VisualsQoLBlock);
@@ -1961,7 +1959,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const bool MusicPlayerEnabled = g_Config.m_ScMusicPlayer != 0;
 	const bool MusicPlayerShowStaticColor = MusicPlayerEnabled && g_Config.m_ScMusicPlayerColorMode == 0;
 	const bool MusicPlayerShowLyrics = MusicPlayerEnabled && g_Config.m_ScMusicPlayerShowLyrics != 0;
-	const float MusicPlayerBaseRows = 6.0f;
+	const float MusicPlayerBaseRows = 7.0f;
 	const float MusicPlayerLyricsTargetHeight = MarginSmall + LineSize;
 	const float MusicPlayerLyricsExpandedHeight = SC_MODULE_REVEAL(MusicPlayerShowLyrics, MusicPlayerLyricsTargetHeight, Client()->RenderFrameTime());
 	const float MusicPlayerExpandedTargetHeight =
@@ -2000,6 +1998,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		g_Config.m_ScMusicPlayerVisualizerColumns = DefaultConfig::ScMusicPlayerVisualizerColumns;
 		g_Config.m_ScMusicPlayerShowLyrics = DefaultConfig::ScMusicPlayerShowLyrics;
 		g_Config.m_ScMusicPlayerShowCurrentTime = DefaultConfig::ScMusicPlayerShowCurrentTime;
+		g_Config.m_ScMusicDock = DefaultConfig::ScMusicDock;
 	}
 	GameClient()->m_Tooltips.DoToolTip(&s_MusicPlayerResetButton, &MusicPlayerResetButton, ScLocalize("Reset to defaults"));
 	static CButtonContainer s_MusicPlayerHudEditorButton;
@@ -2107,6 +2106,10 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 			MainView.HSplitTop(LineSize, &Content, &MainView);
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMusicPlayerShowCurrentTime, ScLocalize("Show current time"), &g_Config.m_ScMusicPlayerShowCurrentTime, &Content, LineSize);
 		}
+
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		MainView.HSplitTop(LineSize, &Content, &MainView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMusicDock, ScLocalize("Open dock on hover (player, lyrics, quick actions)"), &g_Config.m_ScMusicDock, &Content, LineSize);
 
 		Ui()->ClipDisable();
 	}
@@ -2511,6 +2514,9 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		Ui()->DoLabel(&Label, ScLocalize("Looks like you're on a server where this feature is forbidden"), 14.0f, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
+
+	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
+	RenderSettingsSixClientDiscord(RightColumn);
 
 	const float RightColumnEndY = RightColumn.y;
 	CUIRect VisualsScrollContentRect;
@@ -3017,10 +3023,15 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-#if defined(CONF_FAMILY_WINDOWS)
 	LeftColumn.HSplitTop(MarginBetweenViews, nullptr, &LeftColumn);
 
-	const float PerformanceBlockHeight = LineSize + MarginSmall + LineSize + MarginSmall + LineSize;
+#if defined(CONF_FAMILY_WINDOWS)
+	const float PerformanceOptionRows = 4.0f;
+#else
+	const float PerformanceOptionRows = 1.0f;
+#endif
+	const float PerformanceHintSize = 11.0f;
+	const float PerformanceBlockHeight = LineSize + PerformanceOptionRows * (MarginSmall + LineSize) + MarginSmall + 3.0f * (PerformanceHintSize + 3.0f) + MarginSmall + LineSize;
 	CUIRect PerformanceBlock;
 	LeftColumn.HSplitTop(PerformanceBlockHeight, &PerformanceBlock, &LeftColumn);
 
@@ -3030,25 +3041,80 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	PerformanceBlockBg.x -= BlockPadding * 0.5f;
 	PerformanceBlockBg.y -= BlockPadding * 0.5f;
 	SixClientUiTheme::DrawUiBlock(&PerformanceBlockBg, IGraphics::CORNER_ALL, 10.0f);
-	SixClientSettingsSearch::DrawBlockHighlight(&g_Config.m_ScHighProcessPriority, &PerformanceBlockBg);
+	SixClientSettingsSearch::DrawBlockHighlight(&g_Config.m_ScLowLatencyTimers, &PerformanceBlockBg);
 
 	MainLeft = PerformanceBlock;
 	MainLeft.HSplitTop(LineSize, &Label, &MainLeft);
 	Ui()->DoLabel(&Label, ScLocalize("Performance"), HeadlineFontSize, TEXTALIGN_ML);
-	MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
 
-	MainLeft.HSplitTop(LineSize, &Content, &MainLeft);
-	if(DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScHighProcessPriority, ScLocalize("High DDNet Process Priority"), &g_Config.m_ScHighProcessPriority, &Content, LineSize))
-		GameClient()->m_ProcessPriority.SetDDNetProcessPriority(g_Config.m_ScHighProcessPriority);
-
+#if defined(CONF_FAMILY_WINDOWS)
 	MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
 	MainLeft.HSplitTop(LineSize, &Content, &MainLeft);
-	if(DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScDiscordNormalProcessPriority, ScLocalize("Lower Discords Process Priority"), &g_Config.m_ScDiscordNormalProcessPriority, &Content, LineSize))
+	if(DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScHighProcessPriority, ScLocalize("High process priority"), &g_Config.m_ScHighProcessPriority, &Content, LineSize))
+		GameClient()->m_SystemTuning.SetDDNetProcessPriority(g_Config.m_ScHighProcessPriority);
+
+	MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
+	MainLeft.HSplitTop(LineSize, &Content, &MainLeft);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScLowLatencyTimers, ScLocalize("Low latency timers (1 ms, no power throttling)"), &g_Config.m_ScLowLatencyTimers, &Content, LineSize);
+
+	MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
+	MainLeft.HSplitTop(LineSize, &Content, &MainLeft);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMmcss, ScLocalize("Game thread scheduling (MMCSS)"), &g_Config.m_ScMmcss, &Content, LineSize);
+
+	MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
+	MainLeft.HSplitTop(LineSize, &Content, &MainLeft);
+	if(DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScDiscordNormalProcessPriority, ScLocalize("Lower Discord process priority"), &g_Config.m_ScDiscordNormalProcessPriority, &Content, LineSize))
 	{
 		if(g_Config.m_ScDiscordNormalProcessPriority)
-			GameClient()->m_ProcessPriority.StartDiscordPriorityThread();
+			GameClient()->m_SystemTuning.StartDiscordPriorityThread();
 	}
+#else
+	MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
+	MainLeft.HSplitTop(LineSize, &Content, &MainLeft);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScLowLatencyTimers, ScLocalize("Low latency timers (no App Nap or timer coalescing)"), &g_Config.m_ScLowLatencyTimers, &Content, LineSize);
 #endif
+
+	{
+		char aStatus[256];
+		CUIRect StatusLine;
+		MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.65f);
+
+		char aFpsLimit[32];
+		if(g_Config.m_GfxRefreshRate > 0)
+			str_format(aFpsLimit, sizeof(aFpsLimit), "%d", g_Config.m_GfxRefreshRate);
+		else
+			str_copy(aFpsLimit, ScLocalize("unlimited"));
+		char aUpdateRate[32];
+		if(g_Config.m_ClRefreshRate > 0)
+			str_format(aUpdateRate, sizeof(aUpdateRate), "%d Hz", g_Config.m_ClRefreshRate);
+		else
+			str_copy(aUpdateRate, ScLocalize("unlimited"));
+		str_format(aStatus, sizeof(aStatus), "%s: %s  ·  %s: %s  ·  %s: %s", ScLocalize("V-Sync"), g_Config.m_GfxVsync ? ScLocalize("on") : ScLocalize("off"), ScLocalize("FPS limit"), aFpsLimit, ScLocalize("Update rate"), aUpdateRate);
+		MainLeft.HSplitTop(PerformanceHintSize + 3.0f, &StatusLine, &MainLeft);
+		Ui()->DoLabel(&StatusLine, aStatus, PerformanceHintSize, TEXTALIGN_ML);
+
+		const char *pTimerState = GameClient()->m_SystemTuning.LowLatencyTimersActive() ? ScLocalize("active") : ScLocalize("inactive");
+		str_format(aStatus, sizeof(aStatus), "%s: %s  ·  %s: %s  ·  FSAA: %dx", ScLocalize("Backend"), g_Config.m_GfxBackend, ScLocalize("Low latency timers"), pTimerState, g_Config.m_GfxFsaaSamples);
+		MainLeft.HSplitTop(PerformanceHintSize + 3.0f, &StatusLine, &MainLeft);
+		Ui()->DoLabel(&StatusLine, aStatus, PerformanceHintSize, TEXTALIGN_ML);
+
+#if defined(CONF_PLATFORM_MACOS)
+		const char *pHint = g_Config.m_GfxFullscreen ? ScLocalize("Fullscreen: macOS Game Mode can turn on automatically") : ScLocalize("Windowed: switch to fullscreen to allow macOS Game Mode");
+#else
+		const char *pHint = g_Config.m_GfxVsync || g_Config.m_GfxFsaaSamples > 0 ? ScLocalize("V-Sync and FSAA add input delay") : ScLocalize("No delay adding graphics options are active");
+#endif
+		MainLeft.HSplitTop(PerformanceHintSize + 3.0f, &StatusLine, &MainLeft);
+		Ui()->DoLabel(&StatusLine, pHint, PerformanceHintSize, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	}
+
+	MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
+	MainLeft.HSplitTop(LineSize, &Button, &MainLeft);
+	static CButtonContainer s_LowLatencyPresetButton;
+	if(DoButton_Menu(&s_LowLatencyPresetButton, ScLocalize("Apply low latency preset"), 0, &Button))
+		GameClient()->m_SystemTuning.ApplyLowLatencyPreset();
+	GameClient()->m_Tooltips.DoToolTip(&s_LowLatencyPresetButton, &Button, ScLocalize("Turns off V-Sync, removes the update rate limit and enables the low latency options above"));
 
 	CUIRect RightColumn = RightView;
 	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);

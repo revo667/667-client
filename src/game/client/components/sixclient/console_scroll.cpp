@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "console_scroll.h"
 
 #include <base/vmath.h>

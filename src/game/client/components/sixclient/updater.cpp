@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "updater.h"
 
 #include <base/process.h>

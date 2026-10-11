@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "music_player.h"
 #include "music_player_lyrics.h"
 
@@ -15,8 +14,10 @@
 #include <engine/engine.h>
 #include <engine/font_icons.h>
 #include <engine/graphics.h>
+#include <engine/external/json-parser/json.h>
 #include <engine/shared/config.h>
 #include <engine/http.h>
+#include <engine/shared/json.h>
 #include <engine/shared/jobs.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
@@ -61,6 +62,21 @@
 
 #if defined(CONF_PLATFORM_LINUX) && SC_MUSICPLAYER_HAS_DBUS
 #include <dbus/dbus.h>
+#endif
+
+#if defined(CONF_PLATFORM_MACOS)
+#include <cerrno>
+#include <climits>
+#include <fcntl.h>
+#include <mach-o/dyld.h>
+#include <poll.h>
+#include <signal.h>
+#include <spawn.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+extern char **environ;
 #endif
 
 #if defined(CONF_FAMILY_WINDOWS) && __has_include(<winrt/Windows.Media.Control.h>)
@@ -1292,6 +1308,490 @@ namespace
 		{
 			QueueAction(m_RequestNext);
 		}
+	};
+#endif
+
+#if defined(CONF_PLATFORM_MACOS)
+	static std::string MacExecutableDir()
+	{
+		char aPath[4096];
+		uint32_t Size = sizeof(aPath);
+		if(_NSGetExecutablePath(aPath, &Size) != 0)
+			return {};
+		char aResolved[PATH_MAX];
+		if(!realpath(aPath, aResolved))
+			return {};
+		const std::string Path = aResolved;
+		const size_t Slash = Path.rfind('/');
+		return Slash == std::string::npos ? std::string() : Path.substr(0, Slash);
+	}
+
+	static bool MacPathExists(const std::string &Path)
+	{
+		struct stat Stat;
+		return !Path.empty() && stat(Path.c_str(), &Stat) == 0;
+	}
+
+	static pid_t MacSpawn(const std::vector<std::string> &vArgs, int *pStdoutFd)
+	{
+		int aPipe[2] = {-1, -1};
+		if(pStdoutFd && pipe(aPipe) != 0)
+			return -1;
+
+		posix_spawnattr_t Attr;
+		posix_spawnattr_init(&Attr);
+		posix_spawnattr_setflags(&Attr, POSIX_SPAWN_CLOEXEC_DEFAULT);
+
+		posix_spawn_file_actions_t Actions;
+		posix_spawn_file_actions_init(&Actions);
+		posix_spawn_file_actions_addopen(&Actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0);
+		posix_spawn_file_actions_addopen(&Actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0);
+		if(pStdoutFd)
+			posix_spawn_file_actions_adddup2(&Actions, aPipe[1], STDOUT_FILENO);
+		else
+			posix_spawn_file_actions_addopen(&Actions, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
+
+		std::vector<char *> vpArgv;
+		for(const std::string &Arg : vArgs)
+			vpArgv.push_back(const_cast<char *>(Arg.c_str()));
+		vpArgv.push_back(nullptr);
+
+		pid_t Pid = -1;
+		const int Result = posix_spawn(&Pid, vpArgv[0], &Actions, &Attr, vpArgv.data(), environ);
+		posix_spawn_file_actions_destroy(&Actions);
+		posix_spawnattr_destroy(&Attr);
+
+		if(pStdoutFd)
+		{
+			close(aPipe[1]);
+			if(Result != 0)
+			{
+				close(aPipe[0]);
+				return -1;
+			}
+			*pStdoutFd = aPipe[0];
+		}
+		return Result == 0 ? Pid : -1;
+	}
+
+	static int64_t MacEpochMicros()
+	{
+		return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+
+	static double JsonNumber(const json_value *pValue)
+	{
+		if(pValue->type == json_integer)
+			return (double)pValue->u.integer;
+		if(pValue->type == json_double)
+			return pValue->u.dbl;
+		return 0.0;
+	}
+
+	class CMacNowPlayingProvider final : public IMusicPlaybackProvider
+	{
+		enum
+		{
+			COMMAND_PREVIOUS = 5,
+			COMMAND_PLAY_PAUSE = 2,
+			COMMAND_NEXT = 4,
+		};
+
+		struct SState
+		{
+			std::string m_Bundle;
+			std::string m_Title;
+			std::string m_Artist;
+			std::string m_Album;
+			std::string m_ArtBase64;
+			double m_DurationUs = 0.0;
+			double m_ElapsedUs = 0.0;
+			double m_TimestampUs = 0.0;
+			double m_Rate = 1.0;
+			bool m_Playing = false;
+		};
+
+		std::thread m_Thread;
+		std::mutex m_Mutex;
+		bool m_Shutdown = false;
+		std::vector<int> m_vPendingCommands;
+		std::vector<pid_t> m_vCommandPids;
+		pid_t m_StreamPid = -1;
+
+		std::string m_Framework;
+		std::string m_Script;
+
+		SNowPlayingSnapshot m_Latest;
+		bool m_HasLatest = false;
+		double m_ElapsedUs = 0.0;
+		double m_TimestampUs = 0.0;
+		double m_Rate = 1.0;
+		uint32_t m_ArtHash = 0;
+		std::vector<unsigned char> m_vArtBytes;
+		std::string m_AppleScriptService;
+
+		bool ShutdownRequested()
+		{
+			std::lock_guard<std::mutex> Lock(m_Mutex);
+			return m_Shutdown;
+		}
+
+		void ReapCommands()
+		{
+			for(auto It = m_vCommandPids.begin(); It != m_vCommandPids.end();)
+			{
+				int Status = 0;
+				if(waitpid(*It, &Status, WNOHANG) != 0)
+					It = m_vCommandPids.erase(It);
+				else
+					++It;
+			}
+		}
+
+		std::vector<int> TakeCommands()
+		{
+			std::lock_guard<std::mutex> Lock(m_Mutex);
+			std::vector<int> vCommands;
+			vCommands.swap(m_vPendingCommands);
+			return vCommands;
+		}
+
+		void PublishAdapterState(const SState &State)
+		{
+			SNowPlayingSnapshot Snapshot;
+			Snapshot.m_Valid = !State.m_Title.empty();
+			Snapshot.m_ServiceId = State.m_Bundle;
+			Snapshot.m_Title = State.m_Title;
+			Snapshot.m_Artist = State.m_Artist;
+			Snapshot.m_Album = State.m_Album;
+			Snapshot.m_DurationMs = (int64_t)(State.m_DurationUs / 1000.0);
+			Snapshot.m_PlaybackState = State.m_Playing ? EMusicPlaybackState::PLAYING : (Snapshot.m_Valid ? EMusicPlaybackState::PAUSED : EMusicPlaybackState::STOPPED);
+			Snapshot.m_CanPrev = Snapshot.m_Valid;
+			Snapshot.m_CanPlayPause = Snapshot.m_Valid;
+			Snapshot.m_CanNext = Snapshot.m_Valid;
+
+			const uint32_t ArtHash = HashBytes(State.m_ArtBase64);
+			if(ArtHash != m_ArtHash)
+			{
+				m_ArtHash = ArtHash;
+				m_vArtBytes.clear();
+				if(!State.m_ArtBase64.empty())
+				{
+					m_vArtBytes.resize(State.m_ArtBase64.size() * 3 / 4 + 4);
+					const int Length = str_base64_decode(m_vArtBytes.data(), (int)m_vArtBytes.size(), State.m_ArtBase64.c_str());
+					if(Length > 0)
+						m_vArtBytes.resize(Length);
+					else
+						m_vArtBytes.clear();
+				}
+			}
+			if(!m_vArtBytes.empty())
+			{
+				Snapshot.m_Art.m_Type = SMusicArt::EType::BYTES;
+				Snapshot.m_Art.m_vBytes = m_vArtBytes;
+				Snapshot.m_Art.m_Key = Snapshot.m_ServiceId + "|" + Snapshot.m_Title + "|" + Snapshot.m_Artist + "|" + std::to_string(m_vArtBytes.size());
+			}
+			else
+			{
+				Snapshot.m_Art.m_Key = Snapshot.m_ServiceId + "|" + Snapshot.m_Title + "|" + Snapshot.m_Artist;
+			}
+
+			std::lock_guard<std::mutex> Lock(m_Mutex);
+			m_Latest = std::move(Snapshot);
+			m_HasLatest = true;
+			m_ElapsedUs = State.m_ElapsedUs;
+			m_TimestampUs = State.m_TimestampUs > 0.0 ? State.m_TimestampUs : (double)MacEpochMicros();
+			m_Rate = State.m_Rate;
+		}
+
+		static void ApplyPayload(SState &State, const json_value *pPayload, bool Diff)
+		{
+			if(!Diff)
+				State = SState();
+			if(pPayload->type != json_object)
+				return;
+
+			for(unsigned i = 0; i < pPayload->u.object.length; i++)
+			{
+				const char *pName = pPayload->u.object.values[i].name;
+				const json_value *pValue = pPayload->u.object.values[i].value;
+				const bool IsNull = pValue->type == json_null;
+				const char *pString = pValue->type == json_string ? pValue->u.string.ptr : "";
+
+				if(str_comp(pName, "bundleIdentifier") == 0)
+					State.m_Bundle = IsNull ? "" : pString;
+				else if(str_comp(pName, "title") == 0)
+					State.m_Title = IsNull ? "" : pString;
+				else if(str_comp(pName, "artist") == 0)
+					State.m_Artist = IsNull ? "" : pString;
+				else if(str_comp(pName, "album") == 0)
+					State.m_Album = IsNull ? "" : pString;
+				else if(str_comp(pName, "artworkData") == 0)
+					State.m_ArtBase64 = IsNull ? "" : pString;
+				else if(str_comp(pName, "durationMicros") == 0)
+					State.m_DurationUs = JsonNumber(pValue);
+				else if(str_comp(pName, "elapsedTimeMicros") == 0)
+					State.m_ElapsedUs = JsonNumber(pValue);
+				else if(str_comp(pName, "timestampEpochMicros") == 0)
+					State.m_TimestampUs = JsonNumber(pValue);
+				else if(str_comp(pName, "playbackRate") == 0)
+					State.m_Rate = IsNull ? 1.0 : JsonNumber(pValue);
+				else if(str_comp(pName, "playing") == 0)
+					State.m_Playing = pValue->type == json_boolean && pValue->u.boolean;
+			}
+		}
+
+		void SendAdapterCommand(int Command)
+		{
+			const pid_t Pid = MacSpawn({"/usr/bin/perl", m_Script, m_Framework, "send", std::to_string(Command)}, nullptr);
+			if(Pid > 0)
+				m_vCommandPids.push_back(Pid);
+		}
+
+		bool RunAdapter()
+		{
+			int Failures = 0;
+			while(!ShutdownRequested() && Failures < 3)
+			{
+				int Fd = -1;
+				const pid_t Pid = MacSpawn({"/usr/bin/perl", m_Script, m_Framework, "stream", "--micros", "--debounce=100"}, &Fd);
+				if(Pid <= 0)
+					return false;
+				{
+					std::lock_guard<std::mutex> Lock(m_Mutex);
+					m_StreamPid = Pid;
+				}
+
+				SState State;
+				bool GotData = false;
+				std::string Buffer;
+				char aChunk[65536];
+				while(!ShutdownRequested())
+				{
+					for(int Command : TakeCommands())
+						SendAdapterCommand(Command);
+					ReapCommands();
+
+					struct pollfd PollFd = {Fd, POLLIN, 0};
+					const int Ready = poll(&PollFd, 1, 200);
+					if(Ready < 0 && errno != EINTR)
+						break;
+					if(Ready <= 0)
+						continue;
+
+					const ssize_t Read = read(Fd, aChunk, sizeof(aChunk));
+					if(Read <= 0)
+						break;
+					Buffer.append(aChunk, (size_t)Read);
+
+					size_t LineEnd;
+					while((LineEnd = Buffer.find('\n')) != std::string::npos)
+					{
+						json_value *pRoot = JsonParse(Buffer.data(), LineEnd);
+						Buffer.erase(0, LineEnd + 1);
+						if(!pRoot)
+							continue;
+						const json_value *pDiff = json_object_get(pRoot, "diff");
+						const json_value *pPayload = json_object_get(pRoot, "payload");
+						if(pPayload->type == json_object)
+						{
+							ApplyPayload(State, pPayload, pDiff->type == json_boolean && pDiff->u.boolean);
+							PublishAdapterState(State);
+							GotData = true;
+						}
+						json_value_free(pRoot);
+					}
+				}
+
+				close(Fd);
+				kill(Pid, SIGTERM);
+				waitpid(Pid, nullptr, 0);
+				{
+					std::lock_guard<std::mutex> Lock(m_Mutex);
+					m_StreamPid = -1;
+				}
+				Failures = GotData ? 0 : Failures + 1;
+				if(!ShutdownRequested())
+					std::this_thread::sleep_for(std::chrono::seconds(1));
+			}
+			return ShutdownRequested();
+		}
+
+		static std::string RunAppleScript(const char *pScript)
+		{
+			int Fd = -1;
+			const pid_t Pid = MacSpawn({"/usr/bin/osascript", "-e", pScript}, &Fd);
+			if(Pid <= 0)
+				return {};
+			std::string Output;
+			char aChunk[4096];
+			ssize_t Read;
+			while((Read = read(Fd, aChunk, sizeof(aChunk))) > 0)
+				Output.append(aChunk, (size_t)Read);
+			close(Fd);
+			waitpid(Pid, nullptr, 0);
+			while(!Output.empty() && (Output.back() == '\n' || Output.back() == '\r'))
+				Output.pop_back();
+			return Output;
+		}
+
+		static double ParseLocaleNumber(std::string Value)
+		{
+			std::replace(Value.begin(), Value.end(), ',', '.');
+			return std::strtod(Value.c_str(), nullptr);
+		}
+
+		void SendAppleScriptCommand(int Command)
+		{
+			const char *pApp = m_AppleScriptService == "music" ? "Music" : "Spotify";
+			const char *pVerb = Command == COMMAND_NEXT ? "next track" : (Command == COMMAND_PREVIOUS ? "previous track" : "playpause");
+			char aScript[128];
+			str_format(aScript, sizeof(aScript), "tell application \"%s\" to %s", pApp, pVerb);
+			RunAppleScript(aScript);
+		}
+
+		void RunAppleScriptFallback()
+		{
+			static const char *s_pNowPlayingScript =
+				"set out to \"\"\n"
+				"if application \"Spotify\" is running then\n"
+				"tell application \"Spotify\"\n"
+				"if player state is not stopped then set out to \"spotify\" & tab & (player state as string) & tab & (name of current track) & tab & (artist of current track) & tab & (album of current track) & tab & ((duration of current track) as string) & tab & ((player position) as string) & tab & (artwork url of current track)\n"
+				"end tell\n"
+				"end if\n"
+				"if out is \"\" and application \"Music\" is running then\n"
+				"tell application \"Music\"\n"
+				"if player state is not stopped then set out to \"music\" & tab & (player state as string) & tab & (name of current track) & tab & (artist of current track) & tab & (album of current track) & tab & (((duration of current track) * 1000) as integer as string) & tab & ((player position) as string) & tab & \"\"\n"
+				"end tell\n"
+				"end if\n"
+				"return out";
+
+			while(!ShutdownRequested())
+			{
+				for(int Command : TakeCommands())
+					SendAppleScriptCommand(Command);
+
+				const std::string Output = RunAppleScript(s_pNowPlayingScript);
+				std::vector<std::string> vFields;
+				size_t Start = 0;
+				while(true)
+				{
+					const size_t Tab = Output.find('\t', Start);
+					vFields.push_back(Output.substr(Start, Tab == std::string::npos ? std::string::npos : Tab - Start));
+					if(Tab == std::string::npos)
+						break;
+					Start = Tab + 1;
+				}
+
+				SNowPlayingSnapshot Snapshot;
+				double PositionUs = 0.0;
+				if(vFields.size() >= 8 && !vFields[2].empty())
+				{
+					m_AppleScriptService = vFields[0];
+					Snapshot.m_Valid = true;
+					Snapshot.m_ServiceId = vFields[0] == "music" ? "com.apple.Music" : "com.spotify.client";
+					Snapshot.m_PlaybackState = vFields[1] == "playing" ? EMusicPlaybackState::PLAYING : EMusicPlaybackState::PAUSED;
+					Snapshot.m_Title = vFields[2];
+					Snapshot.m_Artist = vFields[3];
+					Snapshot.m_Album = vFields[4];
+					Snapshot.m_DurationMs = (int64_t)ParseLocaleNumber(vFields[5]);
+					PositionUs = ParseLocaleNumber(vFields[6]) * 1000000.0;
+					Snapshot.m_CanPrev = true;
+					Snapshot.m_CanPlayPause = true;
+					Snapshot.m_CanNext = true;
+					if(IsUrlScheme(vFields[7], "https://"))
+					{
+						Snapshot.m_Art.m_Type = SMusicArt::EType::URL;
+						Snapshot.m_Art.m_Url = vFields[7];
+						Snapshot.m_Art.m_Key = vFields[7];
+					}
+					else
+					{
+						Snapshot.m_Art.m_Key = Snapshot.m_ServiceId + "|" + Snapshot.m_Title + "|" + Snapshot.m_Artist;
+					}
+				}
+
+				{
+					std::lock_guard<std::mutex> Lock(m_Mutex);
+					m_ElapsedUs = PositionUs;
+					m_TimestampUs = (double)MacEpochMicros();
+					m_Rate = 1.0;
+					m_Latest = std::move(Snapshot);
+					m_HasLatest = true;
+				}
+
+				for(int i = 0; i < 10 && !ShutdownRequested(); i++)
+				{
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+					std::lock_guard<std::mutex> Lock(m_Mutex);
+					if(!m_vPendingCommands.empty())
+						break;
+				}
+			}
+		}
+
+		void Run()
+		{
+			if(MacPathExists(m_Framework) && MacPathExists(m_Script) && RunAdapter())
+				return;
+			RunAppleScriptFallback();
+		}
+
+		void QueueCommand(int Command)
+		{
+			std::lock_guard<std::mutex> Lock(m_Mutex);
+			m_vPendingCommands.push_back(Command);
+		}
+
+	public:
+		CMacNowPlayingProvider()
+		{
+			const std::string ExeDir = MacExecutableDir();
+			for(const std::string &Candidate : {ExeDir + "/MediaRemoteAdapter.framework", ExeDir + "/../Frameworks/MediaRemoteAdapter.framework"})
+			{
+				if(MacPathExists(Candidate + "/Resources/mediaremote-adapter.pl"))
+				{
+					m_Framework = Candidate;
+					m_Script = Candidate + "/Resources/mediaremote-adapter.pl";
+					break;
+				}
+			}
+			m_Thread = std::thread([this]() { Run(); });
+		}
+
+		~CMacNowPlayingProvider() override
+		{
+			{
+				std::lock_guard<std::mutex> Lock(m_Mutex);
+				m_Shutdown = true;
+				if(m_StreamPid > 0)
+					kill(m_StreamPid, SIGTERM);
+			}
+			if(m_Thread.joinable())
+				m_Thread.join();
+			for(pid_t Pid : m_vCommandPids)
+				waitpid(Pid, nullptr, 0);
+		}
+
+		bool Poll(SNowPlayingSnapshot &Out) override
+		{
+			std::lock_guard<std::mutex> Lock(m_Mutex);
+			if(!m_HasLatest || !m_Latest.m_Valid)
+			{
+				Out = SNowPlayingSnapshot();
+				return false;
+			}
+			Out = m_Latest;
+			double PositionUs = m_ElapsedUs;
+			if(Out.m_PlaybackState == EMusicPlaybackState::PLAYING)
+				PositionUs += ((double)MacEpochMicros() - m_TimestampUs) * m_Rate;
+			Out.m_PositionMs = std::clamp<int64_t>((int64_t)(PositionUs / 1000.0), 0, Out.m_DurationMs > 0 ? Out.m_DurationMs : INT64_MAX);
+			return true;
+		}
+
+		void Previous() override { QueueCommand(COMMAND_PREVIOUS); }
+		void PlayPause() override { QueueCommand(COMMAND_PLAY_PAUSE); }
+		void Next() override { QueueCommand(COMMAND_NEXT); }
 	};
 #endif
 
@@ -2924,6 +3424,8 @@ public:
 #endif
 #elif defined(CONF_FAMILY_WINDOWS) && SC_MUSICPLAYER_HAS_WINRT
 			m_pProvider = std::make_unique<CWindowsNowPlayingProvider>();
+#elif defined(CONF_PLATFORM_MACOS)
+			m_pProvider = std::make_unique<CMacNowPlayingProvider>();
 #else
 			m_pProvider = std::make_unique<CNullNowPlayingProvider>();
 #endif
@@ -3664,7 +4166,7 @@ public:
 		const CUIRect UiExpandedRect = HudToUiRect(ProbeMetrics.m_ExpandedRect, UiScreen, Width, Height);
 		const float UiMargin = 2.5f * ProbeMetrics.m_Scale * UiScreen.h / Height;
 		bool HoverCandidate = false;
-		if(AllowInteraction)
+		if(AllowInteraction && !g_Config.m_ScMusicDock)
 		{
 			HoverCandidate =
 				IsPointInsideRect(ProbeMetrics.m_ViewRect, MousePos, 2.5f * ProbeMetrics.m_Scale) ||
@@ -3832,6 +4334,56 @@ vec2 CMusicPlayer::GetHudPushOffsetForRect(const CUIRect &Rect, float CanvasWidt
 			pBest = &Candidate;
 	}
 	return pBest->m_Offset * Reservation.m_PushAmount;
+}
+
+bool CMusicPlayer::GetDockInfo(SDockInfo &Out) const
+{
+	Out = SDockInfo();
+	if(!m_pImpl)
+		return false;
+
+	const SNowPlayingSnapshot &Snapshot = m_pImpl->m_Snapshot;
+	Out.m_HudVisible = m_pImpl->m_HudReservation.m_Visible;
+	Out.m_HudRect = m_pImpl->m_HudReservation.m_Rect;
+	if(!Snapshot.m_Valid)
+		return false;
+
+	Out.m_Valid = true;
+	Out.m_Title = Snapshot.m_Title;
+	Out.m_Artist = Snapshot.m_Artist;
+	Out.m_Album = Snapshot.m_Album;
+	Out.m_DurationMs = Snapshot.m_DurationMs;
+	Out.m_PositionMs = m_pImpl->DisplayPositionMs();
+	Out.m_Playing = Snapshot.m_PlaybackState == EMusicPlaybackState::PLAYING;
+	Out.m_CanPrev = Snapshot.m_CanPrev;
+	Out.m_CanPlayPause = Snapshot.m_CanPlayPause;
+	Out.m_CanNext = Snapshot.m_CanNext;
+	Out.m_HasArt = !m_pImpl->m_vArtFrames.empty() &&
+		       MediaDecoder::GetCurrentFrameTexture(m_pImpl->m_vArtFrames, m_pImpl->m_ArtAnimated, m_pImpl->m_ArtAnimationStart, Out.m_ArtTexture);
+	Out.m_Accent = m_pImpl->m_Accent;
+	Out.m_PaletteMid = m_pImpl->m_Palette.m_Mid;
+	Out.m_PaletteDark = m_pImpl->m_Palette.m_Dark;
+	Out.m_LyricsState = m_pImpl->m_Lyrics.State();
+	Out.m_Lyrics = m_pImpl->m_Lyrics.LineWindow();
+	return true;
+}
+
+void CMusicPlayer::DockPrevious()
+{
+	if(m_pImpl && m_pImpl->m_pProvider)
+		m_pImpl->m_pProvider->Previous();
+}
+
+void CMusicPlayer::DockPlayPause()
+{
+	if(m_pImpl && m_pImpl->m_pProvider)
+		m_pImpl->m_pProvider->PlayPause();
+}
+
+void CMusicPlayer::DockNext()
+{
+	if(m_pImpl && m_pImpl->m_pProvider)
+		m_pImpl->m_pProvider->Next();
 }
 
 CUIRect CMusicPlayer::GetHudEditorRect(bool ForcePreview) const

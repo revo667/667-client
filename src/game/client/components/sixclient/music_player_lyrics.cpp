@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "music_player_lyrics.h"
 
 #include <base/math.h>
@@ -515,6 +514,30 @@ void CMusicPlayerLyrics::Update(IHttp *pHttp, const char *pTitle, const char *pA
 	}
 
 	SyncMediaClock(SnapshotPositionMs, DurationMs, Playing, false);
+}
+
+CMusicPlayerLyrics::SLineWindow CMusicPlayerLyrics::LineWindow() const
+{
+	SLineWindow Window;
+	if(m_vLines.empty())
+		return Window;
+
+	Window.m_HasLines = true;
+	const int64_t Position = CurrentPositionMs();
+	const int Index = FindLineIndex(Position);
+	if(Index < 0)
+	{
+		Window.m_Next = m_vLines.front().m_Text;
+		return Window;
+	}
+
+	Window.m_Current = m_vLines[Index].m_Text;
+	Window.m_Progress = LineProgress(Index, Position);
+	if(Index > 0)
+		Window.m_Previous = m_vLines[Index - 1].m_Text;
+	if(Index + 1 < (int)m_vLines.size())
+		Window.m_Next = m_vLines[Index + 1].m_Text;
+	return Window;
 }
 
 int CMusicPlayerLyrics::FindLineIndex(int64_t PositionMs) const

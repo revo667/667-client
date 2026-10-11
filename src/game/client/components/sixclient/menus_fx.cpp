@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include <algorithm>
 
 #include <engine/font_icons.h>

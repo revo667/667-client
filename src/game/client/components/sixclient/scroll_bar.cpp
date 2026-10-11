@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "scroll_bar.h"
 
 #include <base/color.h>

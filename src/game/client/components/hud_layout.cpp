@@ -350,11 +350,11 @@ void MigrateFromLegacyConfigs()
 		return;
 	EnsureRuntimeLayouts();
 
-	const bool MusicPlayerLegacyBcOverride =
+	const bool MusicPlayerLegacyScOverride =
 		g_Config.m_ScHudMusicPlayerX != (int)gs_aModuleLayouts[MODULE_MUSIC_PLAYER].m_X ||
 		g_Config.m_ScHudMusicPlayerY != (int)gs_aModuleLayouts[MODULE_MUSIC_PLAYER].m_Y ||
 		g_Config.m_ScHudMusicPlayerScale != gs_aModuleLayouts[MODULE_MUSIC_PLAYER].m_Scale;
-	if(MusicPlayerLegacyBcOverride)
+	if(MusicPlayerLegacyScOverride)
 	{
 		gs_MusicPlayerHasLegacySource = true;
 		gs_MusicPlayerLegacyCanvasX = (float)g_Config.m_ScHudMusicPlayerX;

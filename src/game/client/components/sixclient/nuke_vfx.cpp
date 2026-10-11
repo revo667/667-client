@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "weapon_vfx.h"
 
 #include <base/math.h>

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "ui_animations.h"
 
 #include <base/str.h>

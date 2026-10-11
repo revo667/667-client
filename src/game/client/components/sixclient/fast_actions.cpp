@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "fast_actions.h"
 
 #include <base/str.h>

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "source.h"
 
 namespace SixClientVisualizer

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "keystrokes.h"
 
 #include <base/log.h>

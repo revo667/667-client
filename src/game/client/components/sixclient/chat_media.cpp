@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "chat_media.h"
 
 #include <base/color.h>

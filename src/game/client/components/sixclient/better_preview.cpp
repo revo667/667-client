@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "better_preview.h"
 
 #include <game/client/ui.h>

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "media_decoder.h"
 
 #include <base/dbg.h>

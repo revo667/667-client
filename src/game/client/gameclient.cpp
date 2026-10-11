@@ -180,6 +180,7 @@ void CGameClient::OnConsoleInit()
 					      &m_Mod, // TClient
 					      &m_CustomCommunities, // TClient
 					      &m_MusicPlayer, // 667client
+					      &m_MusicDock, // 667client
 					      &m_BrowserUtils, // 667client
 					      &m_EgoFinishedMaps, // 667client
 					      &m_ShowPoints, // 667client
@@ -198,7 +199,7 @@ void CGameClient::OnConsoleInit()
 					      &m_FastActions, // 667client
 					      &m_SnapTap, // 667client
 					      &m_Optimizer, // 667client
-					      &m_ProcessPriority, // 667client
+					      &m_SystemTuning, // 667client
 					      &m_WarList, // TClient
 					      &m_StatusBar, // TClient
 					      &m_InfoMessages,

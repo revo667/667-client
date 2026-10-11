@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "server_map_preview.h"
 
 #include <base/color.h>

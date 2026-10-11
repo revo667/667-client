@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "chat_scroll.h"
 
 #include <base/str.h>

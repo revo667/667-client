@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "settings_search.h"
 
 #include <base/str.h>
@@ -71,10 +70,10 @@ static const char *LeafLabel(int Leaf)
 	case SETTINGS_NAV_LEAF_TC_INFO: return TCLocalize("Info");
 	case SETTINGS_NAV_LEAF_TC_PROFILE: return TCLocalize("Profiles");
 	case SETTINGS_NAV_LEAF_TC_CONFIGS: return TCLocalize("Configs");
-	case SETTINGS_NAV_LEAF_BC_VISUALS: return ScLocalize("Visuals");
-	case SETTINGS_NAV_LEAF_BC_GAMEPLAY: return ScLocalize("Gameplay");
-	case SETTINGS_NAV_LEAF_BC_OTHERS: return ScLocalize("Others");
-	case SETTINGS_NAV_LEAF_BC_INFO: return ScLocalize("Info");
+	case SETTINGS_NAV_LEAF_SC_VISUALS: return ScLocalize("Visuals");
+	case SETTINGS_NAV_LEAF_SC_GAMEPLAY: return ScLocalize("Gameplay");
+	case SETTINGS_NAV_LEAF_SC_OTHERS: return ScLocalize("Others");
+	case SETTINGS_NAV_LEAF_SC_INFO: return ScLocalize("Info");
 	default: return Localize("Settings");
 	}
 }

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "settings_nav.h"
 #include "widgets.h"
 
@@ -53,10 +52,10 @@ static const int s_aTclientLeaves[] = {
 	SETTINGS_NAV_LEAF_TC_INFO,
 };
 static const int s_aSixclientLeaves[] = {
-	SETTINGS_NAV_LEAF_BC_VISUALS,
-	SETTINGS_NAV_LEAF_BC_GAMEPLAY,
-	SETTINGS_NAV_LEAF_BC_OTHERS,
-	SETTINGS_NAV_LEAF_BC_INFO,
+	SETTINGS_NAV_LEAF_SC_VISUALS,
+	SETTINGS_NAV_LEAF_SC_GAMEPLAY,
+	SETTINGS_NAV_LEAF_SC_OTHERS,
+	SETTINGS_NAV_LEAF_SC_INFO,
 };
 
 static int LeafVisualRank(int Leaf)
@@ -146,19 +145,19 @@ SSettingsLeafTarget LeafTarget(int Leaf)
 	case SETTINGS_NAV_LEAF_TC_CONFIGS:
 		Target.m_SettingsPage = CMenus::SETTINGS_CONFIGS;
 		break;
-	case SETTINGS_NAV_LEAF_BC_VISUALS:
+	case SETTINGS_NAV_LEAF_SC_VISUALS:
 		Target.m_SettingsPage = CMenus::SETTINGS_SIXCLIENT;
 		Target.m_SixClientTab = SC_TAB_VISUALS;
 		break;
-	case SETTINGS_NAV_LEAF_BC_GAMEPLAY:
+	case SETTINGS_NAV_LEAF_SC_GAMEPLAY:
 		Target.m_SettingsPage = CMenus::SETTINGS_SIXCLIENT;
 		Target.m_SixClientTab = SC_TAB_GAMEPLAY;
 		break;
-	case SETTINGS_NAV_LEAF_BC_OTHERS:
+	case SETTINGS_NAV_LEAF_SC_OTHERS:
 		Target.m_SettingsPage = CMenus::SETTINGS_SIXCLIENT;
 		Target.m_SixClientTab = SC_TAB_OTHERS;
 		break;
-	case SETTINGS_NAV_LEAF_BC_INFO:
+	case SETTINGS_NAV_LEAF_SC_INFO:
 		Target.m_SettingsPage = CMenus::SETTINGS_SIXCLIENT;
 		Target.m_SixClientTab = SC_TAB_INFO;
 		break;
@@ -173,7 +172,7 @@ int GroupForLeaf(int Leaf)
 {
 	if(Leaf >= SETTINGS_NAV_LEAF_TC_SETTINGS && Leaf <= SETTINGS_NAV_LEAF_TC_CONFIGS)
 		return SETTINGS_NAV_GROUP_TCLIENT;
-	if(Leaf >= SETTINGS_NAV_LEAF_BC_VISUALS && Leaf <= SETTINGS_NAV_LEAF_BC_INFO)
+	if(Leaf >= SETTINGS_NAV_LEAF_SC_VISUALS && Leaf <= SETTINGS_NAV_LEAF_SC_INFO)
 		return SETTINGS_NAV_GROUP_SIXCLIENT;
 	return SETTINGS_NAV_GROUP_DDNET;
 }
@@ -185,9 +184,9 @@ bool IsLeafVisible(int Leaf, int TcTabFlags, int ScTabFlags)
 		const int Tab = Leaf - SETTINGS_NAV_LEAF_TC_SETTINGS;
 		return !IsFlagSet(TcTabFlags, Tab);
 	}
-	if(Leaf >= SETTINGS_NAV_LEAF_BC_VISUALS && Leaf <= SETTINGS_NAV_LEAF_BC_OTHERS)
+	if(Leaf >= SETTINGS_NAV_LEAF_SC_VISUALS && Leaf <= SETTINGS_NAV_LEAF_SC_OTHERS)
 	{
-		const int Tab = Leaf - SETTINGS_NAV_LEAF_BC_VISUALS;
+		const int Tab = Leaf - SETTINGS_NAV_LEAF_SC_VISUALS;
 		return !IsFlagSet(ScTabFlags, Tab);
 	}
 	return true;
@@ -221,10 +220,10 @@ int LeafFromState(int SettingsPage, int TClientTab, int SixClientTab)
 	case CMenus::SETTINGS_SIXCLIENT:
 		switch(SixClientTab)
 		{
-		case SC_TAB_GAMEPLAY: return SETTINGS_NAV_LEAF_BC_GAMEPLAY;
-		case SC_TAB_OTHERS: return SETTINGS_NAV_LEAF_BC_OTHERS;
-		case SC_TAB_INFO: return SETTINGS_NAV_LEAF_BC_INFO;
-		default: return SETTINGS_NAV_LEAF_BC_VISUALS;
+		case SC_TAB_GAMEPLAY: return SETTINGS_NAV_LEAF_SC_GAMEPLAY;
+		case SC_TAB_OTHERS: return SETTINGS_NAV_LEAF_SC_OTHERS;
+		case SC_TAB_INFO: return SETTINGS_NAV_LEAF_SC_INFO;
+		default: return SETTINGS_NAV_LEAF_SC_VISUALS;
 		}
 	default:
 		return SETTINGS_NAV_LEAF_GENERAL;
@@ -391,10 +390,10 @@ void CMenus::RenderSettingsNavNewStyle(CUIRect &TabBar)
 		case SETTINGS_NAV_LEAF_TC_INFO: return TCLocalize("Info");
 		case SETTINGS_NAV_LEAF_TC_PROFILE: return Localize("Profiles");
 		case SETTINGS_NAV_LEAF_TC_CONFIGS: return Localize("Configs");
-		case SETTINGS_NAV_LEAF_BC_VISUALS: return ScLocalize("Visuals");
-		case SETTINGS_NAV_LEAF_BC_GAMEPLAY: return ScLocalize("Gameplay");
-		case SETTINGS_NAV_LEAF_BC_OTHERS: return ScLocalize("Others");
-		case SETTINGS_NAV_LEAF_BC_INFO: return ScLocalize("Info");
+		case SETTINGS_NAV_LEAF_SC_VISUALS: return ScLocalize("Visuals");
+		case SETTINGS_NAV_LEAF_SC_GAMEPLAY: return ScLocalize("Gameplay");
+		case SETTINGS_NAV_LEAF_SC_OTHERS: return ScLocalize("Others");
+		case SETTINGS_NAV_LEAF_SC_INFO: return ScLocalize("Info");
 		default: return "";
 		}
 	};

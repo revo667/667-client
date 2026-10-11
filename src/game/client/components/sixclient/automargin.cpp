@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "automargin.h"
 
 #include <engine/client.h>

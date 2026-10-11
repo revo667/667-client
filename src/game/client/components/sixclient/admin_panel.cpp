@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "admin_panel.h"
 
 #include <base/math.h>

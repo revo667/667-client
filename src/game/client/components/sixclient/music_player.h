@@ -1,11 +1,18 @@
-/* Copyright © 2026 BestProject Team */
 #ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_MUSIC_PLAYER_H
 #define GAME_CLIENT_COMPONENTS_SIXCLIENT_MUSIC_PLAYER_H
+
+#include "music_player_lyrics.h"
+
+#include <base/color.h>
+
+#include <engine/graphics.h>
 
 #include <game/client/component.h>
 #include <game/client/ui_rect.h>
 
+#include <cstdint>
 #include <memory>
+#include <string>
 
 class ITextRender;
 
@@ -22,6 +29,29 @@ public:
 		float m_PushAmount = 0.0f;
 	};
 
+	struct SDockInfo
+	{
+		bool m_Valid = false;
+		std::string m_Title;
+		std::string m_Artist;
+		std::string m_Album;
+		int64_t m_PositionMs = 0;
+		int64_t m_DurationMs = 0;
+		bool m_Playing = false;
+		bool m_CanPrev = false;
+		bool m_CanPlayPause = false;
+		bool m_CanNext = false;
+		bool m_HasArt = false;
+		IGraphics::CTextureHandle m_ArtTexture;
+		ColorRGBA m_Accent = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		ColorRGBA m_PaletteMid = ColorRGBA(0.15f, 0.16f, 0.18f, 1.0f);
+		ColorRGBA m_PaletteDark = ColorRGBA(0.07f, 0.08f, 0.09f, 1.0f);
+		bool m_HudVisible = false;
+		CUIRect m_HudRect{};
+		CMusicPlayerLyrics::EDisplayState m_LyricsState = CMusicPlayerLyrics::EDisplayState::Idle;
+		CMusicPlayerLyrics::SLineWindow m_Lyrics;
+	};
+
 	CMusicPlayer();
 	~CMusicPlayer() override;
 
@@ -36,6 +66,10 @@ public:
 	SHudReservation HudReservation() const;
 	vec2 GetHudPushOffsetForRect(const CUIRect &Rect, float CanvasWidth, float CanvasHeight, float Padding = 0.0f) const;
 	CUIRect GetHudEditorRect(bool ForcePreview = false) const;
+	bool GetDockInfo(SDockInfo &Out) const;
+	void DockPrevious();
+	void DockPlayPause();
+	void DockNext();
 	void RenderHudEditor(bool ForcePreview);
 
 private:

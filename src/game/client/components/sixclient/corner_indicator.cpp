@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "corner_indicator.h"
 
 #include <base/color.h>

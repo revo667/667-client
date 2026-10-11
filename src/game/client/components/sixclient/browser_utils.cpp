@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "browser_utils.h"
 
 #include <base/str.h>

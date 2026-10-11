@@ -58,7 +58,18 @@ MACRO_CONFIG_INT(ScWheelScale, sc_wheel_scale, 100, 50, 100, CFGFLAG_CLIENT | CF
 MACRO_CONFIG_INT(UiScale, ui_scale, 100, 50, 110, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Global UI scale in percent")
 
 // Discord RPC
-MACRO_CONFIG_INT(ScDiscordRPC, sc_discord_rpc, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable 667 Client discord rpc (restart requires)")
+MACRO_CONFIG_INT(ScDiscordRPC, sc_discord_rpc, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Discord Rich Presence")
+MACRO_CONFIG_STR(ScDiscordDetails, sc_discord_details, 128, "{map}", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Discord Rich Presence first line while playing")
+MACRO_CONFIG_STR(ScDiscordState, sc_discord_state, 128, "{server}", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Discord Rich Presence second line while playing")
+MACRO_CONFIG_STR(ScDiscordMenuDetails, sc_discord_menu_details, 128, "In menus", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Discord Rich Presence first line in menus")
+MACRO_CONFIG_STR(ScDiscordMenuState, sc_discord_menu_state, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Discord Rich Presence second line in menus")
+MACRO_CONFIG_STR(ScDiscordLargeImage, sc_discord_large_image, 128, "667clientlogo", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Discord Rich Presence large image (asset key or https URL)")
+MACRO_CONFIG_STR(ScDiscordLargeText, sc_discord_large_text, 128, "667 Client {version}", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Discord Rich Presence large image hover text")
+MACRO_CONFIG_STR(ScDiscordSmallImage, sc_discord_small_image, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Discord Rich Presence small image (asset key or https URL, empty to hide)")
+MACRO_CONFIG_STR(ScDiscordSmallText, sc_discord_small_text, 128, "{player}", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Discord Rich Presence small image hover text")
+MACRO_CONFIG_INT(ScDiscordShowTime, sc_discord_show_time, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show elapsed time in Discord Rich Presence")
+MACRO_CONFIG_INT(ScDiscordShowParty, sc_discord_show_party, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show the server player count as party size in Discord Rich Presence")
+MACRO_CONFIG_INT(ScDiscordAllowJoin, sc_discord_allow_join, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Let Discord friends join your server from Rich Presence")
 
 // Cursor trail
 MACRO_CONFIG_INT(ScCursorTrail, sc_cursor_trail, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable cursor trail")
@@ -297,7 +308,9 @@ MACRO_CONFIG_INT(ScOptimizerFpsFogZoomPercent, sc_optimizer_fps_fog_zoom_percent
 MACRO_CONFIG_INT(ScOptimizerFpsFogRenderRect, sc_optimizer_fps_fog_render_rect, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Render an outline rectangle showing the FPS fog area")
 MACRO_CONFIG_INT(ScOptimizerFpsFogCullMapTiles, sc_optimizer_fps_fog_cull_map_tiles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cull map tile rendering outside the FPS fog area")
 
-// Process priority (from Entity-Client)
+// System tuning
+MACRO_CONFIG_INT(ScLowLatencyTimers, sc_low_latency_timers, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Request precise timers while the window is active (Windows: 1 ms timer resolution and no power throttling, macOS: no App Nap or timer coalescing)")
+MACRO_CONFIG_INT(ScMmcss, sc_mmcss, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Register the game thread with the Windows multimedia scheduler (MMCSS Games) while the window is active")
 MACRO_CONFIG_INT(ScHighProcessPriority, sc_high_process_priority, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Set DDNets process priority to high")
 MACRO_CONFIG_INT(ScDiscordNormalProcessPriority, sc_discord_normal_process_priority, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Set Discord process priority to normal")
 
@@ -375,6 +388,7 @@ MACRO_CONFIG_INT(ScFinishPredictionShowMillis, sc_finish_prediction_show_millis,
 MACRO_CONFIG_INT(ScFinishPredictionConsiderFreezeWalls, sc_finish_prediction_consider_freeze_walls, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Experimental: treat jumpable freeze walls as passable for finish prediction")
 
 // Music Player
+MACRO_CONFIG_INT(ScMusicDock, sc_music_dock, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Open a dock with the player, lyrics and quick actions when the free cursor reaches the music player")
 MACRO_CONFIG_INT(ScMusicPlayer, sc_music_player, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Music Player HUD element")
 MACRO_CONFIG_INT(ScMusicPlayerVisualizerMode, sc_music_player_visualizer_mode, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player visualizer mode (0=bottom, 1=center, 2=up)")
 MACRO_CONFIG_INT(ScMusicPlayerVisualizerRounding, sc_music_player_visualizer_rounding, 0, 0, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player visualizer rounding (0=cube, 200=soft)")

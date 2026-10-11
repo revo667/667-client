@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "quick_binds.h"
 
 #include <base/math.h>

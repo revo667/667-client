@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include <game/client/components/menus.h>
 
 #include <base/math.h>

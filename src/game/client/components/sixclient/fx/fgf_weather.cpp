@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "fgf_weather.h"
 
 #include <base/math.h>

@@ -1,6 +1,6 @@
 /* Copyright © 2026 BestProject Team */
-#ifndef GAME_CLIENT_BC_MENU_BADGES_H
-#define GAME_CLIENT_BC_MENU_BADGES_H
+#ifndef GAME_CLIENT_SC_MENU_BADGES_H
+#define GAME_CLIENT_SC_MENU_BADGES_H
 
 #include <base/color.h>
 

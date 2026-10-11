@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "snap_tap.h"
 
 #include <base/str.h>

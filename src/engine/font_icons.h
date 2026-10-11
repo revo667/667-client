@@ -47,6 +47,7 @@ namespace FontIcon
 	inline const char *const FILE = "\uF15B";
 	inline const char *const FILM = "\uF008";
 	inline const char *const FLAG_CHECKERED = "\uF11E";
+	inline const char *const FLOPPY_DISK = "\uF0C7";
 	inline const char *const FOLDER = "\uF07B";
 	inline const char *const FOLDER_OPEN = "\uF07C";
 	inline const char *const FOLDER_TREE = "\uF802";
@@ -86,6 +87,7 @@ namespace FontIcon
 	inline const char *const REDO = "\uF2F9";
 	inline const char *const RIGHT_FROM_BRACKET = "\uF2F5";
 	inline const char *const RIGHT_TO_BRACKET = "\uF2F6";
+	inline const char *const SKULL = "\uF54C";
 	inline const char *const SLASH = "\uF715";
 	inline const char *const SORT_DOWN = "\uF0DD";
 	inline const char *const SORT_UP = "\uF0DE";
@@ -99,7 +101,11 @@ namespace FontIcon
 	inline const char *const UNDO = "\uF2EA";
 	inline const char *const UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER = "\uF424"; // 667client
 	inline const char *const USER = "\uF007";
+	inline const char *const USER_GROUP = "\uF500";
 	inline const char *const VIDEO = "\uF03D";
+	inline const char *const VOLUME_HIGH = "\uF028";
+	inline const char *const VOLUME_LOW = "\uF027";
+	inline const char *const VOLUME_XMARK = "\uF6A9";
 	inline const char *const XMARK = "\uF00D";
 
 	// TClient

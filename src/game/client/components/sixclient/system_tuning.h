@@ -1,6 +1,5 @@
-/* Copyright © 2026 BestProject Team */
-#ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_PROCESS_PRIORITY_H
-#define GAME_CLIENT_COMPONENTS_SIXCLIENT_PROCESS_PRIORITY_H
+#ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_SYSTEM_TUNING_H
+#define GAME_CLIENT_COMPONENTS_SIXCLIENT_SYSTEM_TUNING_H
 
 #include <engine/console.h>
 
@@ -8,7 +7,7 @@
 
 #include <atomic>
 
-class CProcessPriority : public CComponent
+class CSystemTuning : public CComponent
 {
 	int Sizeof() const override { return sizeof(*this); }
 
@@ -22,7 +21,14 @@ class CProcessPriority : public CComponent
 	bool m_HasWindowActive = false;
 	bool m_LastWindowActive = true;
 
+	bool m_LowLatencyTimersApplied = false;
+	bool m_MmcssApplied = false;
+	void *m_pMmcssHandle = nullptr;
+
 	void SetDiscordProcessesNormalPriority();
+	void SetLowLatencyTimers(bool Enable);
+	void SetMmcss(bool Enable);
+	void UpdateLatencyState(bool WindowActive);
 
 	void OnInit() override;
 	void OnRender() override;
@@ -32,6 +38,10 @@ class CProcessPriority : public CComponent
 public:
 	void SetDDNetProcessPriority(bool Set);
 	void StartDiscordPriorityThread();
+	void ApplyLowLatencyPreset();
+
+	bool LowLatencyTimersActive() const { return m_LowLatencyTimersApplied; }
+	bool MmcssActive() const { return m_MmcssApplied; }
 };
 
 #endif

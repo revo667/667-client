@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "finish_prediction.h"
 
 #include "fast_practice.h"

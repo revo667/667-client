@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "fast_practice.h"
 
 #include <base/math.h>

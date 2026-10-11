@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_MUSIC_PLAYER_LYRICS_H
 #define GAME_CLIENT_COMPONENTS_SIXCLIENT_MUSIC_PLAYER_LYRICS_H
 
@@ -36,6 +35,15 @@ public:
 		std::string m_Text;
 	};
 
+	struct SLineWindow
+	{
+		bool m_HasLines = false;
+		std::string m_Previous;
+		std::string m_Current;
+		std::string m_Next;
+		float m_Progress = 0.0f;
+	};
+
 	void Reset();
 	void ClearActiveTrack();
 	void ClearLayoutState();
@@ -47,6 +55,7 @@ public:
 	bool IsActive() const { return !m_ActiveKey.empty() || m_pRequest != nullptr; }
 	bool HasSyncedLines() const { return !m_vLines.empty(); }
 	int64_t CurrentPositionMs() const;
+	SLineWindow LineWindow() const;
 
 	static float LyricsTextSlotWidth(float Scale, float WidthScale);
 	static bool ParseSyncedLyrics(const char *pSyncedLyrics, std::vector<SLine> &vOut);

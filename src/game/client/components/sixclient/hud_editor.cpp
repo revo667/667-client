@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "hud_editor.h"
 
 #include <base/color.h>

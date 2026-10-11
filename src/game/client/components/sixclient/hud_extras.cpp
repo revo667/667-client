@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "hud_extras.h"
 
 #include "ui_animations.h"

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "ego_tiles_prediction.h"
 
 #include <base/math.h>

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "ego_finished_maps.h"
 
 #include <base/str.h>

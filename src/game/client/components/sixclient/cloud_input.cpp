@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "cloud_input.h"
 
 #include <engine/shared/config.h>

@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "sixclient.h"
 
 #include "chat_qol.h"

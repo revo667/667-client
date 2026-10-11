@@ -1,4 +1,3 @@
-/* Copyright © 2026 BestProject Team */
 #include "analyzer.h"
 
 #include <base/math.h>
