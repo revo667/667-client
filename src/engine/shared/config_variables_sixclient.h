@@ -388,6 +388,10 @@ MACRO_CONFIG_INT(ScKeystrokesMcShowSpace, sc_keystrokes_mc_show_space, 1, 0, 1, 
 MACRO_CONFIG_INT(ScKeystrokesMcPressedOpacity, sc_keystrokes_mc_pressed_opacity, 92, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Pressed key opacity in Minecraft keystrokes")
 
 // Finish prediction
+MACRO_CONFIG_INT(ScRunReport, sc_run_report, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show a report after every race run")
+MACRO_CONFIG_INT(ScRunReportTime, sc_run_report_time, 8, 2, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "How many seconds the run report stays on screen")
+MACRO_CONFIG_INT(ScRunFeedback, sc_run_feedback, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show how early or late your hooks and jumps are compared to your PB ghost")
+MACRO_CONFIG_INT(ScRunStatsSave, sc_run_stats_save, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Keep attempt and finish statistics per map")
 MACRO_CONFIG_INT(ScFinishPrediction, sc_finish_prediction, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable finish prediction")
 MACRO_CONFIG_INT(ScFinishPredictionShowAlways, sc_finish_prediction_show_always, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show finish prediction even before race start")
 MACRO_CONFIG_INT(ScFinishPredictionTimeMode, sc_finish_prediction_time_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Finish prediction time mode (0=remaining, 1=predicted finish time)")

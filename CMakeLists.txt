@@ -3014,6 +3014,8 @@ if(CLIENT)
     components/sixclient/fx/fgf_ki.h
     components/sixclient/fx/fgf_weather.cpp
     components/sixclient/fx/fgf_weather.h
+    components/sixclient/run_analyzer.cpp
+    components/sixclient/run_analyzer.h
     components/sixclient/show_points.cpp
     components/sixclient/show_points.h
     components/sixclient/six_input.cpp

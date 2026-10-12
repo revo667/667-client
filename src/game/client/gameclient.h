@@ -56,6 +56,7 @@
 #include "components/sixclient/automargin.h" // sixclient
 #include "components/sixclient/cloud_input.h" // sixclient
 #include "components/sixclient/fast_input_log.h"
+#include "components/sixclient/run_analyzer.h"
 #include "components/sixclient/six_input.h"
 #include "components/sixclient/chat_media.h" // sixclient
 #include "components/sixclient/cursor_trail.h" // sixclient
@@ -239,6 +240,7 @@ public:
 	CCloudInput m_CloudInput; // 667client
 	CSixInput m_SixInput;
 	CFastInputLog m_FastInputLog;
+	CRunAnalyzer m_RunAnalyzer;
 	bool m_SixInputChanged = false;
 	bool m_SixJumpPressed = false;
 	CFastPractice m_FastPractice; // 667client

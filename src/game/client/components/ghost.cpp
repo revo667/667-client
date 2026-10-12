@@ -165,6 +165,7 @@ void CGhost::AddInfos(const CNetObj_Character *pChar, const CNetObj_DDNetCharact
 	CGhostCharacter GhostChar;
 	GetGhostCharacter(&GhostChar, pChar, pDDnetChar);
 	m_CurGhost.m_Path.Add(GhostChar);
+	GameClient()->m_RunAnalyzer.OnRunTick(GhostChar, pDDnetChar && pDDnetChar->m_FreezeEnd != 0);
 	if(GhostRecorder()->IsRecording())
 		GhostRecorder()->WriteData(GHOSTDATA_TYPE_CHARACTER, &GhostChar, sizeof(CGhostCharacter));
 }
@@ -398,6 +399,7 @@ void CGhost::StartRecord(int Tick)
 	m_Recording = true;
 	m_CurGhost.Reset();
 	m_CurGhost.m_StartTick = Tick;
+	GameClient()->m_RunAnalyzer.OnRunStart(Tick);
 
 	const CGameClient::CClientData *pData = &GameClient()->m_aClients[GameClient()->m_Snap.m_LocalClientId];
 	str_copy(m_CurGhost.m_aPlayer, Client()->PlayerName());
@@ -407,6 +409,8 @@ void CGhost::StartRecord(int Tick)
 
 void CGhost::StopRecord(int Time)
 {
+	if(m_Recording)
+		GameClient()->m_RunAnalyzer.OnRunEnd(Time);
 	m_Recording = false;
 	bool RecordingToFile = GhostRecorder()->IsRecording();
 
@@ -701,4 +705,21 @@ void CGhost::OnMapLoad()
 	UnloadAll();
 	GameClient()->m_Menus.GhostlistPopulate();
 	m_AllowRestart = false;
+}
+
+bool CGhost::CopyOwnGhostPath(std::vector<CGhostCharacter> &vOut, int &StartTick, int &TimeMs)
+{
+	vOut.clear();
+	CMenus::CGhostItem *pOwnGhost = GameClient()->m_Menus.GetOwnGhost();
+	if(!pOwnGhost || !pOwnGhost->Active() || pOwnGhost->m_Slot >= MAX_ACTIVE_GHOSTS)
+		return false;
+	CGhostItem &Ghost = m_aActiveGhosts[pOwnGhost->m_Slot];
+	if(Ghost.Empty())
+		return false;
+	vOut.reserve(Ghost.m_Path.Size());
+	for(int i = 0; i < Ghost.m_Path.Size(); i++)
+		vOut.push_back(*Ghost.m_Path.Get(i));
+	StartTick = Ghost.m_StartTick;
+	TimeMs = pOwnGhost->m_Time;
+	return true;
 }

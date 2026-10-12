@@ -9,6 +9,8 @@
 #include <game/client/components/menus.h>
 #include <game/client/render.h>
 
+#include <vector>
+
 struct CNetObj_Character;
 
 enum
@@ -161,6 +163,7 @@ public:
 	void UnloadAll();
 
 	void SaveGhost(CMenus::CGhostItem *pItem);
+	bool CopyOwnGhostPath(std::vector<CGhostCharacter> &vOut, int &StartTick, int &TimeMs);
 
 	const char *GetGhostDir() const { return ms_pGhostDir; }
 

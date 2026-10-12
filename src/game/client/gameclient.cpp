@@ -187,6 +187,7 @@ void CGameClient::OnConsoleInit()
 					      &m_EgoFinishedMaps, // 667client
 					      &m_ShowPoints, // 667client
 					      &m_Hud,
+					      &m_RunAnalyzer,
 					      &m_SixClient, // 667client
 					      // 667client
 					      &m_Translate, // 667client

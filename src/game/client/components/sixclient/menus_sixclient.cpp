@@ -3632,6 +3632,46 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
+	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
+	{
+		const float RunAnalysisBlockHeight = LineSize + 5.0f * (MarginSmall + LineSize);
+		CUIRect RunAnalysisBlock;
+		RightColumn.HSplitTop(RunAnalysisBlockHeight, &RunAnalysisBlock, &RightColumn);
+		CUIRect RunAnalysisBlockBg = RunAnalysisBlock;
+		RunAnalysisBlockBg.w += BlockPadding;
+		RunAnalysisBlockBg.h += BlockPadding;
+		RunAnalysisBlockBg.x -= BlockPadding * 0.5f;
+		RunAnalysisBlockBg.y -= BlockPadding * 0.5f;
+		SixClientUiTheme::DrawUiBlock(&RunAnalysisBlockBg, IGraphics::CORNER_ALL, 10.0f);
+		SixClientSettingsSearch::DrawBlockHighlight(&g_Config.m_ScRunReport, &RunAnalysisBlockBg);
+
+		CUIRect RunView = RunAnalysisBlock;
+		RunView.HSplitTop(LineSize, &Label, &RunView);
+		Ui()->DoLabel(&Label, ScLocalize("Run Analysis"), HeadlineFontSize, TEXTALIGN_ML);
+
+		RunView.HSplitTop(MarginSmall, nullptr, &RunView);
+		RunView.HSplitTop(LineSize, &Content, &RunView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScRunReport, ScLocalize("Report after every run"), &g_Config.m_ScRunReport, &Content, LineSize);
+
+		RunView.HSplitTop(MarginSmall, nullptr, &RunView);
+		RunView.HSplitTop(LineSize, &Button, &RunView);
+		Ui()->DoScrollbarOption(&g_Config.m_ScRunReportTime, &g_Config.m_ScRunReportTime, &Button, ScLocalize("Report duration"), 2, 30, &CUi::ms_LinearScrollbarScale, 0, "s");
+
+		RunView.HSplitTop(MarginSmall, nullptr, &RunView);
+		RunView.HSplitTop(LineSize, &Content, &RunView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScRunFeedback, ScLocalize("Live hook and jump timing vs PB"), &g_Config.m_ScRunFeedback, &Content, LineSize);
+
+		RunView.HSplitTop(MarginSmall, nullptr, &RunView);
+		RunView.HSplitTop(LineSize, &Content, &RunView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScRunStatsSave, ScLocalize("Save attempt statistics per map"), &g_Config.m_ScRunStatsSave, &Content, LineSize);
+
+		RunView.HSplitTop(MarginSmall, nullptr, &RunView);
+		RunView.HSplitTop(LineSize, &Label, &RunView);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.55f);
+		Ui()->DoLabel(&Label, ScLocalize("Needs race ghosts enabled. Type sc_run_stats for your map stats."), FontSize * 0.8f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	}
+
 	const float LeftColumnEndY = LeftColumn.y;
 	const float RightColumnEndY = RightColumn.y;
 	CUIRect GameplayScrollContentRect;
