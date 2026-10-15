@@ -363,6 +363,7 @@ void CRunAnalyzer::OnRunEnd(int TimeMs)
 		SaveRecord(Record);
 
 	m_Report = Report;
+	m_Report.m_Valid = Report.m_TimeMs >= 60000;
 	m_ReportTime = time_get();
 }
 
