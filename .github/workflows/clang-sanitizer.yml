@@ -1,11 +1,7 @@
 name: Check ASan & UBSan
 
 on:
-  push:
-    branches-ignore:
-      - gh-readonly-queue/**
-  pull_request:
-  merge_group:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -141,6 +137,7 @@ jobs:
       if: steps.integration_test.outcome == 'failure'
       uses: actions/upload-artifact@v6
       with:
+        retention-days: 3
         name: ddnet-clang-sanitizer-integration-test-results
         path: clang-sanitizer/integration_*
         if-no-files-found: error

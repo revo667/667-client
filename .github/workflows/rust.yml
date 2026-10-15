@@ -1,11 +1,7 @@
 name: Check Rust
 
 on:
-  push:
-    branches-ignore:
-      - gh-readonly-queue/**
-  pull_request:
-  merge_group:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

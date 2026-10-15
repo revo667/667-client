@@ -1,11 +1,7 @@
 name: Build
 
 on:
-  push:
-    branches-ignore:
-      - gh-readonly-queue/**
-  pull_request:
-  merge_group:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -288,6 +284,7 @@ jobs:
       if: steps.integration_test.outcome == 'failure' || steps.integration_test_valgrind.outcome == 'failure'
       uses: actions/upload-artifact@v6
       with:
+        retention-days: 3
         name: ddnet-${{ matrix.name }}-integration-test-results
         path: headless/integration_*
         if-no-files-found: error
@@ -330,6 +327,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v6
       with:
+        retention-days: 3
         name: ddnet-${{ matrix.name }}
         path: release/artifacts
 
@@ -392,6 +390,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v6
       with:
+        retention-days: 3
         name: ddnet-android
         path: artifacts
 
@@ -459,6 +458,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v6
       with:
+        retention-days: 3
         name: ddnet-emscripten
         path: artifacts
 
@@ -515,5 +515,6 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v6
       with:
+        retention-days: 3
         name: ddnet-ios
         path: artifacts

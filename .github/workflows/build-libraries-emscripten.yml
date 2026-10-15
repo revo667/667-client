@@ -28,5 +28,6 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v6
       with:
+        retention-days: 3
         name: ddnet-libs-webasm
         path: build-webasm-libs/ddnet-libs
