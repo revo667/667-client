@@ -2,7 +2,13 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "menus_start.h"
 
+#include <base/math.h>
+#include <base/time.h>
+#include <base/vmath.h>
+
 #include <algorithm>
+#include <cmath>
+#include <iterator>
 
 #include <engine/client/updater.h>
 #include <engine/font_icons.h>
@@ -25,6 +31,88 @@
 #if defined(CONF_PLATFORM_ANDROID)
 #include <android/android_main.h>
 #endif
+
+namespace {
+float LogoSheen(float g)
+{
+	static const float s_aStops[][2] = {{0.0f, 0.50f}, {0.16f, 0.89f}, {0.32f, 0.59f}, {0.46f, 1.0f}, {0.62f, 0.55f}, {0.80f, 0.87f}, {1.0f, 0.50f}};
+	g = std::clamp(g, 0.0f, 1.0f);
+	for(int i = 0; i + 1 < (int)std::size(s_aStops); i++)
+	{
+		if(g <= s_aStops[i + 1][0])
+		{
+			const float t = (g - s_aStops[i][0]) / (s_aStops[i + 1][0] - s_aStops[i][0]);
+			return mix(s_aStops[i][1], s_aStops[i + 1][1], t);
+		}
+	}
+	return s_aStops[std::size(s_aStops) - 1][1];
+}
+
+float LogoEaseOut(float u)
+{
+	u = std::clamp(u, 0.0f, 1.0f);
+	const float Inv = 1.0f - u;
+	return 1.0f - Inv * Inv * Inv * Inv * Inv;
+}
+} // namespace
+
+void CMenusStart::RenderTextLogo(float CenterX, float Top, float Height)
+{
+	const int64_t Now = time_get();
+	if(m_LastLogoRender == 0 || Now - m_LastLogoRender > time_freq() / 2)
+		m_LogoTime = 0.0f;
+	else
+		m_LogoTime += std::min(Client()->RenderFrameTime(), 0.1f);
+	m_LastLogoRender = Now;
+
+	float Sheen = std::fmod(m_LogoTime / 9.0f, 2.0f);
+	if(Sheen > 1.0f)
+		Sheen = 2.0f - Sheen;
+	Sheen = Sheen * Sheen * (3.0f - 2.0f * Sheen);
+	const float SheenOffset = Sheen * 2.2f;
+	const vec2 Mouse = Ui()->MousePos();
+
+	const auto DrawSpaced = [&](const char *pText, float Size, float Tracking, float Y, float Delay, float Dark) {
+		const float Progress = LogoEaseOut((m_LogoTime - Delay) / 0.9f);
+		if(Progress <= 0.0f)
+			return;
+		const float Rise = (1.0f - Progress) * 18.0f;
+		const int Len = str_length(pText);
+
+		float aWidths[32];
+		float Total = 0.0f;
+		for(int i = 0; i < Len && i < (int)std::size(aWidths); i++)
+		{
+			const char aGlyph[2] = {pText[i], '\0'};
+			aWidths[i] = TextRender()->TextWidth(Size, aGlyph);
+			Total += aWidths[i] + (i + 1 < Len ? Tracking : 0.0f);
+		}
+
+		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.45f * Progress);
+		float x = CenterX - Total * 0.5f;
+		for(int i = 0; i < Len && i < (int)std::size(aWidths); i++)
+		{
+			const char aGlyph[2] = {pText[i], '\0'};
+			const vec2 GlyphCenter(x + aWidths[i] * 0.5f, Y + Size * 0.5f);
+			const float u = Total > 0.0f ? (GlyphCenter.x - (CenterX - Total * 0.5f)) / Total : 0.5f;
+			float Light = LogoSheen((u + SheenOffset) / 3.2f) * Dark;
+			float Near = std::clamp(1.0f - distance(Mouse, GlyphCenter) / 150.0f, 0.0f, 1.0f);
+			Near *= Near;
+			Light = mix(Light, 1.0f, Near * 0.9f);
+			TextRender()->TextColor(Light * 0.97f, Light * 0.98f, Light, Progress);
+			TextRender()->Text(x, Y + Rise, Size, aGlyph, -1.0f);
+			x += aWidths[i] + Tracking;
+		}
+	};
+
+	const float TitleSize = Height * 0.78f;
+	const float SubSize = Height * 0.15f;
+	DrawSpaced("667", TitleSize, -0.04f * TitleSize, Top - Height * 0.04f, 0.0f, 0.62f);
+	DrawSpaced("CLIENT", SubSize, 0.6f * SubSize, Top + Height * 0.8f, 0.12f, 0.5f);
+
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
+}
 
 void CMenusStart::RenderStartMenu(CUIRect MainView)
 {
@@ -86,6 +174,11 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 
 	const float BlockStartY = MainView.y + (MainView.h - TotalBlockH) / 2.0f - 50.0f;
 
+	if(g_Config.m_ScStartMenuTextLogo)
+	{
+		RenderTextLogo(MainView.x + MainView.w / 2.0f, BlockStartY, LogoH);
+	}
+	else
 	{
 		const float LogoX = MainView.x + MainView.w / 2.0f - LogoW / 2.0f;
 		const IGraphics::CTextureHandle &LogoTexture = GameClient()->m_Menus.ScLogoTexture();

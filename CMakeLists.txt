@@ -3022,6 +3022,10 @@ if(CLIENT)
     components/sixclient/six_input.h
     components/sixclient/spec_pause_radio.cpp
     components/sixclient/spec_pause_radio.h
+    components/sixclient/team_scoreboard.cpp
+    components/sixclient/team_scoreboard.h
+    components/sixclient/menu_rain_background.cpp
+    components/sixclient/menu_rain_background.h
     components/sixclient/chat_bubbles.cpp
     components/sixclient/chat_bubbles.h
     components/sixclient/ui_animations.cpp

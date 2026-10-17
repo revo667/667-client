@@ -205,6 +205,10 @@ MACRO_CONFIG_INT(ScBetterPreview, sc_better_preview, 1, 0, 1, CFGFLAG_CLIENT | C
 
 // Media background
 MACRO_CONFIG_INT(ScMenuMediaBackground, sc_menu_media_background, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable custom media background in offline menus")
+MACRO_CONFIG_INT(ScMenuRainBackground, sc_menu_rain_background, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Animated rain and spotlight background in offline menus")
+MACRO_CONFIG_INT(ScMenuRainTone, sc_menu_rain_tone, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Rain menu background tone (0 = silver, 1 = violet)")
+MACRO_CONFIG_INT(ScStartMenuTextLogo, sc_start_menu_text_logo, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use the dark 667 Client text logo in the start menu instead of the image logo")
+MACRO_CONFIG_INT(ScStartMenuMonoImages, sc_start_menu_mono_images, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show start menu button images in black and white")
 MACRO_CONFIG_INT(ScGameMediaBackground, sc_game_media_background, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable custom media background in game background rendering")
 MACRO_CONFIG_STR(ScMenuMediaBackgroundPath, sc_menu_media_background_path, IO_MAX_PATH_LENGTH, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Path to the custom menu media background file")
 MACRO_CONFIG_INT(ScGameMediaBackgroundOffset, sc_game_media_background_offset, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "How much the custom media background is fixed to the map when rendering the in-game background")
@@ -441,6 +445,12 @@ MACRO_CONFIG_INT(ScCornerIndicatorCustomColors, sc_corner_indicator_custom_color
 MACRO_CONFIG_COL(ScCornerIndicatorColorAlive, sc_corner_indicator_color_alive, 0xFFAAFF80U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Alive corner indicator color")
 MACRO_CONFIG_COL(ScCornerIndicatorColorFrozen, sc_corner_indicator_color_frozen, 0xFF6BFF8AU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Frozen corner indicator color")
 MACRO_CONFIG_COL(ScCornerIndicatorLastTeammateColor, sc_corner_indicator_last_teammate_color, 0xFF6EFF80U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Corner indicator color when indicating the last teammate")
+
+// Team scoreboard overlay
+MACRO_CONFIG_INT(ScTeamScoreboard, sc_team_scoreboard, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show the top-left team scoreboard overlay with per-teammate freezes, saves and deaths")
+MACRO_CONFIG_INT(ScTeamScoreboardOnlyInTeam, sc_team_scoreboard_only_in_team, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Only show the team scoreboard while in a DDRace team")
+MACRO_CONFIG_INT(ScTeamScoreboardSize, sc_team_scoreboard_size, 100, 50, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team scoreboard size (percent)")
+MACRO_CONFIG_INT(ScTeamScoreboardY, sc_team_scoreboard_y, 0, 0, 280, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team scoreboard vertical offset from the top-left corner (HUD units)")
 
 // Hook effects
 MACRO_CONFIG_COL(ScHookFxColor, sc_hook_fx_color, 9371558, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color of the hook, air jump and hammer effects")

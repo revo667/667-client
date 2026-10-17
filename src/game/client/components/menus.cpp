@@ -193,10 +193,14 @@ int CMenus::DoButton_MenuEx(CButtonContainer *pButtonContainer, const char *pTex
 		const CMenuImage *pImage = FindMenuImage(pImageName);
 		if(pImage)
 		{
-			Graphics()->TextureSet((AlwaysColoredImage || Ui()->HotItem() == pButtonContainer) ? pImage->m_OrgTexture : pImage->m_GreyTexture);
+			const bool Hot = Ui()->HotItem() == pButtonContainer;
+			const bool Mono = AlwaysColoredImage && g_Config.m_ScStartMenuMonoImages;
+			const bool Colored = !Mono && (AlwaysColoredImage || Hot);
+			const float Shade = Mono && !Hot ? 0.7f : 1.0f;
+			Graphics()->TextureSet(Colored ? pImage->m_OrgTexture : pImage->m_GreyTexture);
 			Graphics()->WrapClamp();
 			Graphics()->QuadsBegin();
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			Graphics()->SetColor(Shade, Shade, Shade, 1.0f);
 			IGraphics::CQuadItem QuadItem(Image.x, Image.y, Image.w, Image.h);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
@@ -1185,7 +1189,7 @@ void CMenus::Render()
 		CMenuMediaBackground &MediaBackground = GameClient()->m_SixClient.MenuMediaBackground();
 		MediaBackground.SyncFromConfig(g_Config.m_ScMenuMediaBackground, g_Config.m_ScMenuMediaBackgroundPath);
 		MediaBackground.Update();
-		if(!MediaBackground.Render(MediaScreenWidth, MediaScreenHeight) && !GameClient()->m_MenuBackground.Render())
+		if(!MediaBackground.Render(MediaScreenWidth, MediaScreenHeight) && !GameClient()->m_MenuRainBackground.Render() && !GameClient()->m_MenuBackground.Render())
 		{
 			RenderBackground();
 		}

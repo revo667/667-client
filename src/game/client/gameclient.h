@@ -63,6 +63,8 @@
 #include "components/sixclient/ui_animations.h" // sixclient
 #include "components/sixclient/gif_bubbles.h" // sixclient
 #include "components/sixclient/spec_pause_radio.h" // sixclient
+#include "components/sixclient/team_scoreboard.h" // sixclient
+#include "components/sixclient/menu_rain_background.h" // sixclient
 #include "components/sixclient/show_points.h" // sixclient
 // 667client
 #include "components/sixclient/translate.h" // sixclient
@@ -250,6 +252,8 @@ public:
 	CMusicPlayer m_MusicPlayer; // 667client
 	CMusicDock m_MusicDock; // 667client
 	CKogPoints m_KogPoints; // 667client
+	CTeamScoreboard m_TeamScoreboard; // 667client
+	CMenuRainBackground m_MenuRainBackground; // 667client
 	CBrowserUtils m_BrowserUtils; // 667client
 	CEgoFinishedMaps m_EgoFinishedMaps; // 667client
 	CFinishPrediction m_FinishPrediction; // 667client

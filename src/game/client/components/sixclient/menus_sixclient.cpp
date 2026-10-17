@@ -841,6 +841,54 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
+	{
+		const bool TsEnabled = g_Config.m_ScTeamScoreboard != 0;
+		const float TsExpandedTarget = 3.0f * (MarginSmall + LineSize);
+		const float TsExpanded = SC_MODULE_REVEAL(TsEnabled, TsExpandedTarget, Client()->RenderFrameTime());
+		const float TsBlockHeight = LineSize + MarginSmall + LineSize + TsExpanded;
+		CUIRect TsBlock;
+		Column.HSplitTop(TsBlockHeight, &TsBlock, &Column);
+
+		CUIRect TsBlockBg = TsBlock;
+		TsBlockBg.w += BlockPadding;
+		TsBlockBg.h += BlockPadding;
+		TsBlockBg.x -= BlockPadding * 0.5f;
+		TsBlockBg.y -= BlockPadding * 0.5f;
+		SixClientUiTheme::DrawUiBlock(&TsBlockBg, IGraphics::CORNER_ALL, 10.0f);
+		SixClientSettingsSearch::DrawBlockHighlight(&g_Config.m_ScTeamScoreboard, &TsBlockBg);
+
+		CUIRect TsView = TsBlock;
+		CUIRect TsLabel, TsContent, TsButton;
+		TsView.HSplitTop(LineSize, &TsLabel, &TsView);
+		Ui()->DoLabel(&TsLabel, ScLocalize("Team scoreboard"), HeadlineFontSize, TEXTALIGN_ML);
+		TsView.HSplitTop(MarginSmall, nullptr, &TsView);
+		TsView.HSplitTop(LineSize, &TsContent, &TsView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScTeamScoreboard, ScLocalize("Enable team scoreboard"), &g_Config.m_ScTeamScoreboard, &TsContent, LineSize);
+
+		if(TsExpanded > 0.5f)
+		{
+			CUIRect TsVisible = TsView;
+			TsVisible.h = TsExpanded;
+			Ui()->ClipEnable(&TsVisible);
+
+			TsView.HSplitTop(MarginSmall, nullptr, &TsView);
+			TsView.HSplitTop(LineSize, &TsContent, &TsView);
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScTeamScoreboardOnlyInTeam, ScLocalize("Only in team"), &g_Config.m_ScTeamScoreboardOnlyInTeam, &TsContent, LineSize);
+
+			TsView.HSplitTop(MarginSmall, nullptr, &TsView);
+			TsView.HSplitTop(LineSize, &TsButton, &TsView);
+			Ui()->DoScrollbarOption(&g_Config.m_ScTeamScoreboardSize, &g_Config.m_ScTeamScoreboardSize, &TsButton, ScLocalize("Scoreboard size"), 50, 300, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "%");
+
+			TsView.HSplitTop(MarginSmall, nullptr, &TsView);
+			TsView.HSplitTop(LineSize, &TsButton, &TsView);
+			Ui()->DoScrollbarOption(&g_Config.m_ScTeamScoreboardY, &g_Config.m_ScTeamScoreboardY, &TsButton, ScLocalize("Vertical offset"), 0, 280);
+
+			Ui()->ClipDisable();
+		}
+	}
+
+	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
+
 	RenderSettingsSixClientChatMediaBlock(Column);
 
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
@@ -1230,6 +1278,52 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		TextRender()->TextColor(ColorRGBA(0.55f, 1.0f, 0.55f, 1.0f));
 	Ui()->DoLabel(&Button, pMediaStatusText, 11.0f, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
+
+	{
+		const bool RainEnabled = g_Config.m_ScMenuRainBackground != 0;
+		const float RainExpanded = SC_MODULE_REVEAL(RainEnabled, MarginSmall + LineSize, Client()->RenderFrameTime());
+		const float RainBlockHeight = LineSize + MarginSmall + LineSize + RainExpanded + 2.0f * (MarginSmall + LineSize);
+		CUIRect RainBlock;
+		Column.HSplitTop(RainBlockHeight, &RainBlock, &Column);
+
+		CUIRect RainBlockBg = RainBlock;
+		RainBlockBg.w += BlockPadding;
+		RainBlockBg.h += BlockPadding;
+		RainBlockBg.x -= BlockPadding * 0.5f;
+		RainBlockBg.y -= BlockPadding * 0.5f;
+		SixClientUiTheme::DrawUiBlock(&RainBlockBg, IGraphics::CORNER_ALL, 10.0f);
+		SixClientSettingsSearch::DrawBlockHighlight(&g_Config.m_ScMenuRainBackground, &RainBlockBg);
+
+		CUIRect RainView = RainBlock;
+		CUIRect RainLabel, RainContent;
+		RainView.HSplitTop(LineSize, &RainLabel, &RainView);
+		Ui()->DoLabel(&RainLabel, ScLocalize("Main menu"), HeadlineFontSize, TEXTALIGN_ML);
+		RainView.HSplitTop(MarginSmall, nullptr, &RainView);
+		RainView.HSplitTop(LineSize, &RainContent, &RainView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMenuRainBackground, ScLocalize("Rain and spotlight in main menu"), &g_Config.m_ScMenuRainBackground, &RainContent, LineSize);
+
+		if(RainExpanded > 0.5f)
+		{
+			CUIRect RainVisible = RainView;
+			RainVisible.h = RainExpanded;
+			Ui()->ClipEnable(&RainVisible);
+			RainView.HSplitTop(MarginSmall, nullptr, &RainView);
+			RainView.HSplitTop(LineSize, &RainContent, &RainView);
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMenuRainTone, ScLocalize("Violet tone"), &g_Config.m_ScMenuRainTone, &RainContent, LineSize);
+			Ui()->ClipDisable();
+		}
+
+		RainView = RainBlock;
+		RainView.HSplitBottom(2.0f * (MarginSmall + LineSize), nullptr, &RainView);
+		RainView.HSplitTop(MarginSmall, nullptr, &RainView);
+		RainView.HSplitTop(LineSize, &RainContent, &RainView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScStartMenuTextLogo, ScLocalize("667 Client text logo"), &g_Config.m_ScStartMenuTextLogo, &RainContent, LineSize);
+		RainView.HSplitTop(MarginSmall, nullptr, &RainView);
+		RainView.HSplitTop(LineSize, &RainContent, &RainView);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScStartMenuMonoImages, ScLocalize("Black and white menu images"), &g_Config.m_ScStartMenuMonoImages, &RainContent, LineSize);
+	}
 
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 

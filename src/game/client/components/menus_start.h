@@ -6,6 +6,8 @@
 #include <game/client/component.h>
 #include <game/client/ui_rect.h>
 
+#include <cstdint>
+
 class CMenusStart : public CComponentInterfaces
 {
 public:
@@ -13,6 +15,10 @@ public:
 
 private:
 	bool CheckHotKey(int Key) const;
+	void RenderTextLogo(float CenterX, float Top, float Height);
+
+	float m_LogoTime = 0.0f;
+	int64_t m_LastLogoRender = 0;
 };
 
 #endif
