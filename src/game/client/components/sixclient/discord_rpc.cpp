@@ -119,6 +119,28 @@ static FDiscordCreate GetDiscordCreate()
 
 static constexpr DiscordClientId SIXCLIENT_DISCORD_APP_ID = 1513036786325258445;
 
+static void CopyDiscordImage(char *pDst, int DstSize, const char *pSrc, const char *pWhat)
+{
+	pDst[0] = '\0';
+
+	char aTrimmed[128];
+	str_copy(aTrimmed, str_utf8_skip_whitespaces(pSrc));
+	str_utf8_trim_right(aTrimmed);
+	if(aTrimmed[0] == '\0')
+		return;
+
+	const bool IsUrl = str_startswith(aTrimmed, "http://") || str_startswith(aTrimmed, "https://");
+	if(str_length(aTrimmed) >= DstSize)
+	{
+		dbg_msg("discord", "%s is %d bytes, over the %d-byte Discord limit, so it will not display.%s",
+			pWhat, str_length(aTrimmed), DstSize - 1,
+			IsUrl ? " Upload the image as an art asset in the Discord developer portal and use its key instead of a long URL." : "");
+		return;
+	}
+
+	str_copy(pDst, aTrimmed, DstSize);
+}
+
 class CDiscord : public IDiscord
 {
 	DiscordActivity m_Activity;
@@ -185,9 +207,9 @@ class CDiscord : public IDiscord
 		SixClientFormatDiscordText(m_Activity.details, sizeof(m_Activity.details), m_InGame ? g_Config.m_ScDiscordDetails : g_Config.m_ScDiscordMenuDetails, Vars);
 		SixClientFormatDiscordText(m_Activity.state, sizeof(m_Activity.state), m_InGame ? g_Config.m_ScDiscordState : g_Config.m_ScDiscordMenuState, Vars);
 
-		str_copy(m_Activity.assets.large_image, str_utf8_skip_whitespaces(g_Config.m_ScDiscordLargeImage));
+		CopyDiscordImage(m_Activity.assets.large_image, sizeof(m_Activity.assets.large_image), g_Config.m_ScDiscordLargeImage, "sc_discord_large_image");
 		SixClientFormatDiscordText(m_Activity.assets.large_text, sizeof(m_Activity.assets.large_text), g_Config.m_ScDiscordLargeText, Vars);
-		str_copy(m_Activity.assets.small_image, str_utf8_skip_whitespaces(g_Config.m_ScDiscordSmallImage));
+		CopyDiscordImage(m_Activity.assets.small_image, sizeof(m_Activity.assets.small_image), g_Config.m_ScDiscordSmallImage, "sc_discord_small_image");
 		if(m_Activity.assets.small_image[0] != '\0')
 			SixClientFormatDiscordText(m_Activity.assets.small_text, sizeof(m_Activity.assets.small_text), g_Config.m_ScDiscordSmallText, Vars);
 
