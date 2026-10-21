@@ -1,0 +1,20 @@
+#ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_SUBSYSTEM_RUNTIME_H
+#define GAME_CLIENT_COMPONENTS_SIXCLIENT_SUBSYSTEM_RUNTIME_H
+
+#include <base/types.h>
+
+class CSubsystemTicker
+{
+public:
+	static bool ShouldRunPeriodic(int64_t Now, int64_t &LastTick, int64_t Interval, bool Force = false)
+	{
+		if(Force || LastTick == 0 || Now - LastTick >= Interval)
+		{
+			LastTick = Now;
+			return true;
+		}
+		return false;
+	}
+};
+
+#endif

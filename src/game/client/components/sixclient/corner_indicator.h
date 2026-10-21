@@ -1,0 +1,11 @@
+#ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_CORNER_INDICATOR_H
+#define GAME_CLIENT_COMPONENTS_SIXCLIENT_CORNER_INDICATOR_H
+
+class CGameClient;
+
+namespace CornerIndicator
+{
+void Render(CGameClient *pGameClient);
+}
+
+#endif

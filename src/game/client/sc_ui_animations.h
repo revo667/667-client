@@ -1,0 +1,6 @@
+#ifndef GAME_CLIENT_SC_UI_ANIMATIONS_H
+#define GAME_CLIENT_SC_UI_ANIMATIONS_H
+
+#include <game/client/components/sixclient/ui_animations.h>
+
+#endif

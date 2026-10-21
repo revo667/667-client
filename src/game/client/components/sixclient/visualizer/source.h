@@ -1,0 +1,28 @@
+#ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_VISUALIZER_SOURCE_H
+#define GAME_CLIENT_COMPONENTS_SIXCLIENT_VISUALIZER_SOURCE_H
+
+#include "types.h"
+
+#include <memory>
+
+namespace SixClientVisualizer
+{
+
+class IVisualizerSource
+{
+public:
+	virtual ~IVisualizerSource() = default;
+
+	virtual void SetPlaybackHint(const SVisualizerPlaybackHint &Hint) = 0;
+	virtual void SetConfig(const SVisualizerConfig &Config) = 0;
+	virtual bool PollFrame(SVisualizerFrame &OutFrame) = 0;
+};
+
+std::unique_ptr<IVisualizerSource> CreatePulseVisualizerSource();
+std::unique_ptr<IVisualizerSource> CreateWasapiVisualizerSource();
+std::unique_ptr<IVisualizerSource> CreatePassiveVisualizerSource();
+std::unique_ptr<IVisualizerSource> CreateCoreAudioVisualizerSource();
+
+} // namespace SixClientVisualizer
+
+#endif

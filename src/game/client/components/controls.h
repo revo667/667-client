@@ -1,0 +1,91 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#ifndef GAME_CLIENT_COMPONENTS_CONTROLS_H
+#define GAME_CLIENT_COMPONENTS_CONTROLS_H
+
+#include <base/vmath.h>
+
+#include <engine/client.h>
+#include <engine/console.h>
+
+#include <generated/protocol.h>
+
+#include <game/client/component.h>
+
+class CControls : public CComponent
+{
+public:
+	float GetMinMouseDistance() const;
+	float GetMaxMouseDistance() const;
+
+	enum class EMouseInputType
+	{
+		ABSOLUTE,
+		RELATIVE,
+		AUTOMATED,
+	};
+
+	vec2 m_aMousePos[NUM_DUMMIES];
+	vec2 m_aMousePosOnAction[NUM_DUMMIES];
+	vec2 m_aTargetPos[NUM_DUMMIES];
+
+	EMouseInputType m_aMouseInputType[NUM_DUMMIES];
+
+	int m_aAmmoCount[NUM_WEAPONS];
+
+	int64_t m_LastSendTime;
+	CNetObj_PlayerInput m_aInputData[NUM_DUMMIES];
+	CNetObj_PlayerInput m_aLastData[NUM_DUMMIES];
+	int m_aInputDirectionLeft[NUM_DUMMIES];
+	int m_aInputDirectionRight[NUM_DUMMIES];
+	int m_aShowHookColl[NUM_DUMMIES];
+
+	// TClient
+	CNetObj_PlayerInput m_aFastInput[NUM_DUMMIES];
+	bool m_FastInputHookAction = false;
+	bool m_FastInputFireAction = false;
+
+	CControls();
+	int Sizeof() const override { return sizeof(*this); }
+
+	void OnReset() override;
+	void OnRender() override;
+	void OnMessage(int MsgType, void *pRawMsg) override;
+	bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
+	void OnConsoleInit() override;
+	virtual void OnPlayerDeath();
+
+	int SnapInput(int *pData);
+	void ClampMousePos();
+	void ResetInput(int Dummy);
+	bool CheckNewInput();
+
+	// 667client
+	void InputDebounce(int Dummy, int Input);
+	struct CInputDebounceState
+	{
+		int m_Direction = 0;
+		int m_Jump = 0;
+		int m_Hook = 0;
+	};
+	CInputDebounceState m_aInputDebounce[NUM_DUMMIES];
+
+	// 667client
+
+private:
+	// 667client
+	enum
+	{
+		INPUT_LEFT,
+		INPUT_RIGHT,
+		INPUT_JUMP,
+		INPUT_HOOK,
+	};
+	// 667client
+
+	static void ConKeyInputState(IConsole::IResult *pResult, void *pUserData);
+	static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData);
+	static void ConKeyInputSet(IConsole::IResult *pResult, void *pUserData);
+	static void ConKeyInputNextPrevWeapon(IConsole::IResult *pResult, void *pUserData);
+};
+#endif

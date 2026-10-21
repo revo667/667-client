@@ -1,0 +1,72 @@
+# Cross-compiles the MSVC flavoured Windows build on macOS or Linux with clang-cl and lld-link,
+# against the Windows SDK and MSVC runtime downloaded by xwin (https://github.com/Jake-Shadle/xwin):
+#
+#   xwin --accept-license --arch x86_64 --cache-dir /tmp/xwin-cache splat --output ~/.xwin
+#
+# scripts/build_windows_cross.sh sets this up, including the environment cargo needs.
+
+set(CMAKE_SYSTEM_NAME Windows)
+set(CMAKE_SYSTEM_PROCESSOR AMD64)
+
+if(NOT XWIN_DIR)
+  set(XWIN_DIR "$ENV{XWIN_DIR}")
+endif()
+if(NOT XWIN_DIR OR NOT EXISTS "${XWIN_DIR}/sdk/include/um")
+  message(FATAL_ERROR "XWIN_DIR must point to an xwin splat (missing ${XWIN_DIR}/sdk/include/um)")
+endif()
+# Try-compile projects get a fresh cache, hand the path on to them. They link the release runtime:
+# the splat leaves out the debug one.
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES XWIN_DIR)
+set(CMAKE_TRY_COMPILE_CONFIGURATION Release)
+
+# Homebrew installs LLVM keg-only, so look there too.
+set(LLVM_HINTS
+  $ENV{LLVM_BIN}
+  /opt/homebrew/opt/llvm/bin
+  /opt/homebrew/opt/lld/bin
+  /usr/local/opt/llvm/bin
+  /usr/local/opt/lld/bin
+  /usr/lib/llvm-20/bin
+  /usr/lib/llvm-19/bin
+  /usr/lib/llvm-18/bin
+)
+find_program(CMAKE_C_COMPILER clang-cl HINTS ${LLVM_HINTS} REQUIRED)
+find_program(CMAKE_CXX_COMPILER clang-cl HINTS ${LLVM_HINTS} REQUIRED)
+find_program(CMAKE_LINKER lld-link HINTS ${LLVM_HINTS} REQUIRED)
+find_program(CMAKE_AR llvm-lib HINTS ${LLVM_HINTS} REQUIRED)
+find_program(CMAKE_RC_COMPILER llvm-rc HINTS ${LLVM_HINTS} REQUIRED)
+find_program(CMAKE_MT llvm-mt HINTS ${LLVM_HINTS})
+
+set(XWIN_INCLUDES
+  "${XWIN_DIR}/crt/include"
+  "${XWIN_DIR}/sdk/include/ucrt"
+  "${XWIN_DIR}/sdk/include/um"
+  "${XWIN_DIR}/sdk/include/shared"
+  "${XWIN_DIR}/sdk/include/winrt"
+  "${XWIN_DIR}/sdk/include/cppwinrt"
+)
+# SDL2's SDL_endian.h defines _m_prefetch for clang unless this guard is set, newer clang has it as a
+# builtin and refuses the definition.
+set(XWIN_COMPILE_FLAGS "--target=x86_64-pc-windows-msvc /D__PRFCHWINTRIN_H")
+set(XWIN_RC_FLAGS "")
+foreach(dir ${XWIN_INCLUDES})
+  if(EXISTS "${dir}")
+    string(APPEND XWIN_COMPILE_FLAGS " /imsvc\"${dir}\"")
+    string(APPEND XWIN_RC_FLAGS " -I \"${dir}\"")
+  endif()
+endforeach()
+set(CMAKE_C_FLAGS_INIT "${XWIN_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS_INIT "${XWIN_COMPILE_FLAGS}")
+set(CMAKE_RC_FLAGS_INIT "${XWIN_RC_FLAGS}")
+
+set(XWIN_LINK_FLAGS "/libpath:\"${XWIN_DIR}/crt/lib/x86_64\" /libpath:\"${XWIN_DIR}/sdk/lib/um/x86_64\" /libpath:\"${XWIN_DIR}/sdk/lib/ucrt/x86_64\"")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "${XWIN_LINK_FLAGS}")
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "${XWIN_LINK_FLAGS}")
+set(CMAKE_MODULE_LINKER_FLAGS_INIT "${XWIN_LINK_FLAGS}")
+
+set(CMAKE_RUST_COMPILER_TARGET x86_64-pc-windows-msvc)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)

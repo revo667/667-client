@@ -1,0 +1,7 @@
+[submodule "ddnet-libs"]
+	path = ddnet-libs
+	url = https://github.com/ddnet/ddnet-libs
+	shallow = true
+[submodule "private"]
+	path = private
+	url = https://github.com/revo667/cecen-private

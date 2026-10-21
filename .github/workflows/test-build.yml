@@ -1,0 +1,148 @@
+name: Test Build
+
+# Packages a branch for testing without touching player releases: push to a test/** branch and get
+# the packages from the draft release "test-<run number>" of this repository. Workflow artifacts would
+# count against the Actions storage quota. Players never see these drafts: the updater only reads
+# published releases of cecen-client-releases. Same build steps as release.yml, minus signing.
+on:
+  push:
+    branches:
+      - "test/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  TEST_TAG: test-${{ github.run_number }}
+
+jobs:
+  draft:
+    name: Create Draft
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create draft release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh release create "$TEST_TAG" -R "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+          --title "Test build $TEST_TAG ($GITHUB_REF_NAME)" --notes "Test packages of $GITHUB_REF_NAME@${GITHUB_SHA::9}, not for players."
+
+  build-cmake:
+    name: Test Build (${{ matrix.name }})
+    needs: draft
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_HTTP_MULTIPLEXING: false
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - name: linux
+          os: ubuntu-24.04
+          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_BUNDLED_LIBS=ON -DDISCORD_DYNAMIC=ON -DVULKAN=ON
+          package-file: "*-linux_x86_64.tar.xz"
+          asset-name: CecenClient-linux.tar.xz
+        - name: windows
+          os: windows-latest
+          cmake-args: -A x64 -DTOOLS=OFF -DDOWNLOAD_GTEST=OFF -DVULKAN=ON
+          package-file: "*-win64.zip"
+          asset-name: CecenClient-windows.zip
+        - name: macos
+          os: macOS-latest
+          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_BUNDLED_LIBS=ON -DPRECOMPILE_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_SYSTEM_IGNORE_PATH=/usr/lib -DCMAKE_FIND_FRAMEWORK=LAST
+          package-file: "*-macos.dmg"
+          asset-name: CecenClient-macos.dmg
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check out submodules
+      shell: bash
+      env:
+        CECEN_PRIVATE_KEY: ${{ secrets.CECEN_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.ssh
+        printf '%s\n' "$CECEN_PRIVATE_KEY" > ~/.ssh/cecen_private
+        chmod 600 ~/.ssh/cecen_private
+        git -c url."git@github.com:revo667/cecen-private".insteadOf=https://github.com/revo667/cecen-private -c core.sshCommand="ssh -i ~/.ssh/cecen_private -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" submodule update --init --recursive
+
+    # Far above any release, so the auto updater never replaces the build under test.
+    - name: Stamp test version
+      shell: bash
+      run: |
+        perl -pi -e "s/^#define SIXCLIENT_VERSION \".*\"/#define SIXCLIENT_VERSION \"99.0.${{ github.run_number }}\"/" src/game/client/components/sixclient/version.h
+        grep SIXCLIENT_VERSION src/game/client/components/sixclient/version.h
+
+    - name: Prepare Linux
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install pkg-config ninja-build libcurl4-openssl-dev libdbus-1-dev libfreetype6-dev libnotify-dev libogg-dev libopus-dev libopusfile-dev libsdl2-dev libsqlite3-dev libpng-dev libssl-dev libvulkan-dev libglew-dev -y
+
+    - name: Prepare macOS
+      if: contains(matrix.os, 'macOS')
+      run: |
+        brew update
+        brew install pkg-config ninja glew libpng opusfile wavpack x264
+        brew upgrade freetype
+        pip3 install --break-system-packages dmgbuild pyobjc-framework-Quartz
+        echo /Library/Frameworks/Python.framework/Versions/3.12/bin >> "$GITHUB_PATH"
+        python3 -c 'import sysconfig; print(sysconfig.get_path("scripts"))' >> "$GITHUB_PATH"
+        sudo rm -rf /Library/Developer/CommandLineTools
+
+    - name: Add Rust macOS targets
+      if: contains(matrix.os, 'macOS')
+      run: |
+        rustup default stable
+        rustup update
+        rustup target add x86_64-apple-darwin aarch64-apple-darwin
+
+    # The macOS build has no Vulkan backend, it renders with OpenGL.
+    - name: Install Vulkan SDK
+      if: ${{ !contains(matrix.os, 'macOS') }}
+      uses: humbletim/install-vulkan-sdk@v1.2
+      with:
+        version: 1.3.296.0
+        cache: true
+
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: |
+          ./
+
+    - name: Build binaries
+      shell: bash
+      run: |
+        if [[ "${{ matrix.os }}" == windows-latest ]]; then
+          cmake -S . -B build-release ${{ matrix.cmake-args }}
+        elif [[ "${{ matrix.os }}" == "macOS-latest" ]]; then
+          cmake -S . -B build-release ${{ matrix.cmake-args }} -DVULKAN=OFF \
+            -DPNG_LIBRARY="${GITHUB_WORKSPACE}/ddnet-libs/png/mac/libfat/libpng16.16.dylib" \
+            -DPNG_INCLUDEDIR="${GITHUB_WORKSPACE}/ddnet-libs/png/include"
+        else
+          cmake -S . -B build-release ${{ matrix.cmake-args }}
+        fi
+        cmake --build build-release --config Release --target game-client
+        if [[ "${{ matrix.os }}" != "macOS-latest" ]]; then
+          cmake --build build-release --config Release --target sixclient-updater
+        fi
+
+    - name: Package
+      shell: bash
+      run: |
+        cmake --build build-release --config Release --target package_default
+        mkdir -p artifacts
+        PKG=$(ls build-release/${{ matrix.package-file }} | head -n 1)
+        cp "$PKG" "artifacts/${{ matrix.asset-name }}"
+        ls -la artifacts
+
+    - name: Upload packages
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release upload "$TEST_TAG" artifacts/* -R "$GITHUB_REPOSITORY" --clobber

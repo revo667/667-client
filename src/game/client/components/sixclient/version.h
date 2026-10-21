@@ -1,0 +1,7 @@
+#ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_VERSION_H
+#define GAME_CLIENT_COMPONENTS_SIXCLIENT_VERSION_H
+
+#define SIXCLIENT_VERSION "1.0.21"
+#define SIXCLIENT_OWNER "Cecen Client (c) 2026 667.wtf (revo667) - discord.gg/667 - contact@revo667.com"
+
+#endif
