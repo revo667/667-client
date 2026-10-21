@@ -120,6 +120,7 @@
 	{"Show Cecen Client badge next to players", SETTINGS_NAV_LEAF_SOCIAL, "Sharing", &g_Config.m_ScClientIndicator, nullptr},
 	{"Let others see that I use Cecen Client", SETTINGS_NAV_LEAF_SOCIAL, "Sharing", &g_Config.m_ScClientIndicatorShare, nullptr},
 	{"Show what other Cecen players listen to on Spotify", SETTINGS_NAV_LEAF_SOCIAL, "Sharing", &g_Config.m_ScSpotifyIndicator, nullptr},
+	{"Show Spotify badge on nameplates", SETTINGS_NAV_LEAF_SOCIAL, "Sharing", &g_Config.m_ScSpotifyNameplate, nullptr},
 	{"Others can see what I listen to on Spotify", SETTINGS_NAV_LEAF_SOCIAL, "Privacy", &g_Config.m_ScSpotifyShare, nullptr},
 	{"Control Spotify through Spotify Connect (never takes focus)", SETTINGS_NAV_LEAF_SOCIAL, "Connections", &g_Config.m_ScSpotifyConnect, nullptr},
 	{"Discord Rich Presence", SETTINGS_NAV_LEAF_SC_VISUALS, "Visuals", &g_Config.m_ScDiscordRPC, nullptr},

@@ -953,7 +953,7 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	// 667client
 	Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark && GameClient()->m_aClients[pPlayerInfo->m_ClientId].m_Friend;
 	Data.m_ShowClientIndicator = Data.m_ShowName && GameClient()->m_ClientIndicator.IsUserInGame(pPlayerInfo->m_ClientId); // 667client
-	Data.m_ShowSpotify = Data.m_ShowName && GameClient()->m_ClientIndicator.MusicInGame(pPlayerInfo->m_ClientId) != nullptr; // 667client
+	Data.m_ShowSpotify = Data.m_ShowName && g_Config.m_ScSpotifyNameplate && GameClient()->m_ClientIndicator.MusicInGame(pPlayerInfo->m_ClientId) != nullptr; // 667client
 	Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds);
 	Data.m_FontSize = 18.0f + 20.0f * g_Config.m_ClNamePlatesSize / 100.0f;
 
@@ -1132,7 +1132,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 
 	Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark;
 	Data.m_ShowClientIndicator = Data.m_ShowName && g_Config.m_ScClientIndicator; // 667client
-	Data.m_ShowSpotify = Data.m_ShowName && g_Config.m_ScSpotifyIndicator && g_Config.m_ScSpotifyShare; // 667client
+	Data.m_ShowSpotify = Data.m_ShowName && g_Config.m_ScSpotifyIndicator && g_Config.m_ScSpotifyNameplate && g_Config.m_ScSpotifyShare; // 667client
 
 	Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds);
 	Data.m_ClientId = Dummy;

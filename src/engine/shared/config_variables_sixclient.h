@@ -54,6 +54,7 @@ MACRO_CONFIG_INT(ScClientIndicator, sc_client_indicator, 1, 0, 1, CFGFLAG_CLIENT
 MACRO_CONFIG_INT(ScClientIndicatorShare, sc_client_indicator_share, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Let other Cecen Client users see that you use Cecen Client")
 MACRO_CONFIG_STR(ScClientIndicatorUrl, sc_client_indicator_url, 128, "https://api.667.wtf/cecen/v1/presence", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Presence service used for Cecen Client badges")
 MACRO_CONFIG_INT(ScSpotifyIndicator, sc_spotify_indicator, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show a Spotify icon next to Cecen Client players who share the song they listen to")
+MACRO_CONFIG_INT(ScSpotifyNameplate, sc_spotify_nameplate, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show the Spotify badge on the nameplates of Cecen Client players who share their song")
 MACRO_CONFIG_INT(ScSpotifyShare, sc_spotify_share, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Share the Spotify song you listen to with other Cecen Client players")
 MACRO_CONFIG_INT(ScSpotifyConnect, sc_spotify_connect, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Control Spotify through Spotify Connect, so listen along never takes the focus from the game")
 MACRO_CONFIG_INT(ScShowVotePercentage, sc_show_vote_percentage, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show yes/no vote percentages on the vote HUD")
