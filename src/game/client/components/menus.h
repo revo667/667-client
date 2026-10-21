@@ -959,6 +959,8 @@ public:
 	};
 
 	void SetMenuPage(int NewPage);
+	// 667client: Cecen Social > Sharing, with a note that listen along needs Spotify Connect
+	void OpenSpotifySettings();
 	void RefreshBrowserTab(bool Force);
 	void ForceRefreshLanPage();
 	void SetShowStart(bool ShowStart);
