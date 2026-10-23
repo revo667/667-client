@@ -48,6 +48,7 @@ enum
 	SIXCLIENT_TAB_ASSETS,
 	SIXCLIENT_TAB_CONFIGS,
 	SIXCLIENT_TAB_INFO,
+	SIXCLIENT_TAB_ASSETS_MARKET,
 	NUM_SIXCLIENT_TABS,
 };
 
@@ -302,6 +303,7 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		ScLocalize("Assets Editor"),
 		ScLocalize("Configs"),
 		ScLocalize("Info"),
+		ScLocalize("Assets Market"),
 	};
 	const int aTabOrder[NUM_SIXCLIENT_TABS] = {
 		SIXCLIENT_TAB_VISUALS,
@@ -310,6 +312,7 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		SIXCLIENT_TAB_COSMETICS,
 		SIXCLIENT_TAB_SENSITIVITY,
 		SIXCLIENT_TAB_ASSETS,
+		SIXCLIENT_TAB_ASSETS_MARKET,
 		SIXCLIENT_TAB_CONFIGS,
 		SIXCLIENT_TAB_INFO,
 	};
@@ -385,6 +388,8 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 			RenderSettingsSixClientSensitivity(Content);
 		else if(Tab == SIXCLIENT_TAB_ASSETS)
 			RenderSettingsSixClientAssetsEditor(Content);
+		else if(Tab == SIXCLIENT_TAB_ASSETS_MARKET)
+			RenderSettingsSixClientAssetsMarket(Content);
 		else if(Tab == SIXCLIENT_TAB_CONFIGS)
 			RenderSettingsSixClientConfigPresets(Content);
 		else if(Tab == SIXCLIENT_TAB_INFO)
@@ -3298,14 +3303,16 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 	Ui()->DoLabel(&Label, ScLocalize("Hide Settings Tabs"), HeadlineFontSize, TEXTALIGN_ML);
 	RightView.HSplitTop(MarginSmall, nullptr, &RightView);
 
-	const char *apTabNames[] = {
+	const char *apTabNames[NUM_SIXCLIENT_TABS] = {
 		ScLocalize("Visuals"),
 		ScLocalize("Gameplay"),
 		ScLocalize("Others"),
 		ScLocalize("Cosmetics"),
 		ScLocalize("Sensitivity"),
 		ScLocalize("Assets Editor"),
+		ScLocalize("Configs"),
 		ScLocalize("Info"),
+		ScLocalize("Assets Market"),
 	};
 	const int aTabOrder[NUM_SIXCLIENT_TABS] = {
 		SIXCLIENT_TAB_VISUALS,
@@ -3314,6 +3321,8 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 		SIXCLIENT_TAB_COSMETICS,
 		SIXCLIENT_TAB_SENSITIVITY,
 		SIXCLIENT_TAB_ASSETS,
+		SIXCLIENT_TAB_ASSETS_MARKET,
+		SIXCLIENT_TAB_CONFIGS,
 		SIXCLIENT_TAB_INFO,
 	};
 

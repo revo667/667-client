@@ -644,6 +644,7 @@ protected:
 	void RenderSettingsSixClientCursorTrail(CUIRect &Column); // 667client
 	void RenderSettingsSixClientKeystrokes(CUIRect &Column); // 667client
 	void RenderSettingsSixClientCosmetics(CUIRect MainView); // 667client
+	void RenderSettingsSixClientAssetsMarket(CUIRect MainView); // 667client
 	void RenderTClientPet(CUIRect &Column); // 667client
 	void RenderTClientFrozenTeeDisplay(CUIRect &Column); // 667client
 	void RenderTClientTileOutlines(CUIRect &Column); // 667client
@@ -1160,6 +1161,7 @@ public:
 	void RenderSettingsPage(CUIRect MainView);
 	void RenderSettingsPageAt(CUIRect MainView, int SettingsPage, int TClientTab, int SixClientTab);
 	void RenderSettingsContentLegacyStyle(CUIRect MainView);
+	void RefreshCustomAssetList(const char *pTab);
 	// 667client
 };
 #endif

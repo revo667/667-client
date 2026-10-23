@@ -3014,6 +3014,11 @@ if(CLIENT)
     components/sixclient/kog_points.cpp
     components/sixclient/kog_points.h
     components/sixclient/menus_cosmetics.cpp
+    components/sixclient/assets_market.cpp
+    components/sixclient/assets_market.h
+    components/sixclient/menus_assets_market.cpp
+    components/sixclient/teedata_client.cpp
+    components/sixclient/teedata_client.h
     components/sixclient/image_picker.cpp
     components/sixclient/image_picker.h
     components/sixclient/menus_gameskin_editor.cpp
@@ -4169,6 +4174,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     snapshot_test.cpp
     str_test.cpp
     swap_endian_test.cpp
+    teedata_client_test.cpp
     teehistorian_test.cpp
     test.cpp
     test.h
@@ -4194,6 +4200,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/engine/client/sqlite.cpp
     src/game/client/components/censor.cpp
     src/game/client/components/censor.h
+    src/game/client/components/sixclient/teedata_client.cpp
+    src/game/client/components/sixclient/teedata_client.h
     src/game/client/demo_tee_edit.cpp
     src/game/client/demo_tee_edit.h
     # tidy-alphabetical-end
