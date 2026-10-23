@@ -43,6 +43,7 @@
 #include "components/sixclient/music_dock.h" // sixclient
 #include "components/sixclient/music_player.h" // sixclient
 #include "components/sixclient/browser_utils.h" // sixclient
+#include <game/client/components/sixclient/assets_market.h> // sixclient
 #include "components/sixclient/ego_finished_maps.h" // sixclient
 #include "components/sixclient/ego_tiles_prediction.h" // sixclient
 #include "components/sixclient/fast_practice.h" // sixclient
@@ -266,6 +267,7 @@ public:
 	CMenuRainBackground m_MenuRainBackground; // 667client
 	CBrowserUtils m_BrowserUtils; // 667client
 	CEgoFinishedMaps m_EgoFinishedMaps; // 667client
+	CAssetsMarket m_AssetsMarket; // 667client
 	CFinishPrediction m_FinishPrediction; // 667client
 	CKeystrokes m_Keystrokes; // 667client
 	// 667client

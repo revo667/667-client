@@ -272,3 +272,6 @@
 	{"Status Bar", SETTINGS_NAV_LEAF_TC_STATUS_BAR, "TClient", &g_Config.m_TcStatusBar, nullptr},
 	{"Status bar height", SETTINGS_NAV_LEAF_TC_STATUS_BAR, "Status Bar", &g_Config.m_TcStatusBarHeight, nullptr},
 	{"Status bar alpha", SETTINGS_NAV_LEAF_TC_STATUS_BAR, "Status Bar", &g_Config.m_TcStatusBarAlpha, nullptr},
+
+	{"Assets Market", SETTINGS_NAV_LEAF_SC_ASSETS_MARKET, "Cecen Client", &g_Config.m_ScAssetsMarket, nullptr},
+	{"Load from teedata.net", SETTINGS_NAV_LEAF_SC_ASSETS_MARKET, "Assets Market", &g_Config.m_ScAssetsMarket, nullptr},

@@ -76,6 +76,7 @@ static const char *LeafLabel(int Leaf)
 	case SETTINGS_NAV_LEAF_SC_COSMETICS: return ScLocalize("Cosmetics");
 	case SETTINGS_NAV_LEAF_SC_SENSITIVITY: return ScLocalize("Sensitivity");
 	case SETTINGS_NAV_LEAF_SC_ASSETS: return ScLocalize("Assets Editor");
+	case SETTINGS_NAV_LEAF_SC_ASSETS_MARKET: return ScLocalize("Assets Market");
 	case SETTINGS_NAV_LEAF_SC_CONFIGS: return ScLocalize("Configs");
 	case SETTINGS_NAV_LEAF_SC_INFO: return ScLocalize("Info");
 	case SETTINGS_NAV_LEAF_SOCIAL: return Localize("Cecen Social");

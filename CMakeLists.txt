@@ -3302,8 +3302,11 @@ if(CLIENT)
     message(FATAL_ERROR "Cecen Client's private sources are missing: check out the private/ submodule")
   endif()
   set_src(GAME_CLIENT_PRIVATE GLOB_RECURSE private/src/game/client
+    components/sixclient/assets_market.cpp
+    components/sixclient/assets_market.h
     components/sixclient/client_indicator.cpp
     components/sixclient/client_indicator.h
+    components/sixclient/menus_assets_market.cpp
     components/sixclient/menus_cecen_ui.cpp
     components/sixclient/menus_friends.cpp
     components/sixclient/menus_social.cpp
@@ -3313,6 +3316,8 @@ if(CLIENT)
     components/sixclient/social_card.h
     components/sixclient/spotify_connect.cpp
     components/sixclient/spotify_connect.h
+    components/sixclient/teedata_client.cpp
+    components/sixclient/teedata_client.h
     components/sixclient/ui_theme/settings_nav.cpp
     components/sixclient/ui_theme/settings_nav.h
     components/sixclient/ui_theme/style.h
@@ -4169,6 +4174,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     snapshot_test.cpp
     str_test.cpp
     swap_endian_test.cpp
+    teedata_client_test.cpp
     teehistorian_test.cpp
     test.cpp
     test.h
@@ -4183,6 +4189,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   set(TESTS_EXTRA
     # tidy-alphabetical-start
+    private/src/game/client/components/sixclient/teedata_client.cpp
+    private/src/game/client/components/sixclient/teedata_client.h
     src/engine/client/blocklist_driver.cpp
     src/engine/client/blocklist_driver.h
     src/engine/client/serverbrowser.cpp

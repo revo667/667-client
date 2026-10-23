@@ -1017,6 +1017,20 @@ void CMenus::ClearCustomItems(int CurTab)
 	gs_aInitCustomList[CurTab] = true;
 }
 
+// 667client
+void CMenus::RefreshCustomAssetList(const char *pTab)
+{
+	const int Tab = FavoriteAssetTabFromString(pTab);
+	const bool Loaded = (Tab == ASSETS_TAB_ENTITIES && !m_vEntitiesList.empty()) ||
+			    (Tab == ASSETS_TAB_GAME && !m_vGameList.empty()) ||
+			    (Tab == ASSETS_TAB_EMOTICONS && !m_vEmoticonList.empty()) ||
+			    (Tab == ASSETS_TAB_PARTICLES && !m_vParticlesList.empty()) ||
+			    (Tab == ASSETS_TAB_CURSOR && !m_vCursorList.empty());
+	if(Loaded)
+		ClearCustomItems(Tab);
+}
+// 667client
+
 template<typename TName, typename TCaller>
 static void InitAssetList(std::vector<TName> &vAssetList, const char *pAssetPath, const char *pAssetName, FS_LISTDIR_CALLBACK pfnCallback, IGraphics *pGraphics, IStorage *pStorage, TCaller Caller)
 {
