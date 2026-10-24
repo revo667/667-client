@@ -76,7 +76,12 @@ class CTranslate : public CComponent
 	bool IsIgnoredIncomingLanguage(const char *pLanguage) const;
 	bool ShouldTranslateOutgoingChat(const char *pText) const;
 	bool CanStartRequest() const;
-	void TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLanguages);
+	// Force skips the one-request-per-second spacing, for a few lines asked for at once.
+	void TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLanguages, bool Force = false);
+	// Translates the newest player messages: Count of them, or the last one of pName / ClientId.
+	int TranslateRecent(int Count, const char *pName, int ClientId);
+	static void ConTranslate(IConsole::IResult *pResult, void *pUserData);
+	static void ConTranslateId(IConsole::IResult *pResult, void *pUserData);
 
 public:
 	int Sizeof() const override { return sizeof(*this); }
