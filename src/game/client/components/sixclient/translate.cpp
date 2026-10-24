@@ -1039,6 +1039,9 @@ void CTranslate::OnRender()
 				str_copy(Job.m_pTranslateResponse->m_Text, aBuf);
 			}
 		}
+		// The chat box shows the translation under the line; the console gets it too for the command.
+		if(Job.m_Manual && Job.m_pTranslateResponse->m_Text[0])
+			log_info("translate", "%s: %s", Job.m_pLine->m_aName, Job.m_pTranslateResponse->m_Text);
 		Job.m_pLine->m_Time = Now;
 		GameClient()->m_Chat.RebuildChat();
 		return true;
