@@ -152,10 +152,10 @@ void CMenus::RenderSettings(CUIRect MainView)
 	static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 	const int TabCorners = IGraphics::CORNER_R;
 
-	for(int i = 0; i < SETTINGS_LENGTH; i++)
+	// 667client: Assets right after Controls; Cecen Client and Cecen Social always the last two.
+	static const int s_aTabOrder[] = {SETTINGS_GENERAL, SETTINGS_TEE, SETTINGS_APPEARANCE, SETTINGS_CONTROLS, SETTINGS_ASSETS, SETTINGS_GRAPHICS, SETTINGS_SOUND, SETTINGS_DDNET, SETTINGS_TCLIENT, SETTINGS_PROFILES, SETTINGS_CONFIGS, SETTINGS_CREDITS, SETTINGS_SIXCLIENT, SETTINGS_SOCIAL};
+	for(const int i : s_aTabOrder)
 	{
-		if(i == SETTINGS_LANGUAGE || i == SETTINGS_PLAYER) // 667client
-			continue; // 667client
 		TabBar.HSplitTop(10.0f, nullptr, &TabBar);
 		TabBar.HSplitTop(26.0f, &Button, &TabBar);
 		// 667client

@@ -1874,9 +1874,6 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
 
-	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
-	RenderSettingsSixClientDiscord(RightColumn);
-
 	const float RightColumnEndY = RightColumn.y;
 	CUIRect VisualsScrollContentRect;
 	VisualsScrollContentRect.x = VisualsScrollContentX;
