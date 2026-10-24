@@ -1946,7 +1946,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const int InputsMode = g_Config.m_ScInputs;
 	const bool InputsEnabled = InputsMode != SC_INPUTS_OFF;
 	const float SixInputLines = 8.0f + (GameClient()->m_FastInputLog.Result().m_Valid ? 4.0f : 0.0f);
-	const float InputsModeFieldsHeight = (InputsMode == SC_INPUTS_SIX ? SixInputLines : 2.0f) * (MarginSmall + LineSize);
+	const float InputsModeFieldsHeight = (InputsMode == SC_INPUTS_SIX ? SixInputLines : (InputsMode == SC_INPUTS_BEST ? 5.0f : 2.0f)) * (MarginSmall + LineSize);
 	const float InputsExpandedTargetHeight = (MarginSmall + LineSize) + InputsModeFieldsHeight;
 	const float InputsExpandedHeight = SC_MODULE_REVEAL(InputsEnabled, InputsExpandedTargetHeight, Client()->RenderFrameTime());
 	const float InputsHeaderHeight = LineSize + MarginSmall + LineSize;
@@ -1987,43 +1987,30 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 		InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 		{
-			static CButtonContainer s_InputsSix, s_InputsFast, s_InputsSaiko, s_InputsCloud, s_InputsMeow;
-			CUIRect ButtonsRect = Button;
-			const float Spacing = 2.0f;
-			const float InputButtonWidth = (ButtonsRect.w - Spacing * 4.0f) / 5.0f;
-
-			CUIRect SixButton, FastButton, SaikoButton, CloudButton, MeowButton;
-			ButtonsRect.VSplitLeft(InputButtonWidth, &SixButton, &ButtonsRect);
-			ButtonsRect.VSplitLeft(Spacing, nullptr, &ButtonsRect);
-			ButtonsRect.VSplitLeft(InputButtonWidth, &FastButton, &ButtonsRect);
-			ButtonsRect.VSplitLeft(Spacing, nullptr, &ButtonsRect);
-			ButtonsRect.VSplitLeft(InputButtonWidth, &SaikoButton, &ButtonsRect);
-			ButtonsRect.VSplitLeft(Spacing, nullptr, &ButtonsRect);
-			ButtonsRect.VSplitLeft(InputButtonWidth, &CloudButton, &ButtonsRect);
-			ButtonsRect.VSplitLeft(Spacing, nullptr, &ButtonsRect);
-			MeowButton = ButtonsRect;
-
-			SixButton.HMargin(2.0f, &SixButton);
-			FastButton.HMargin(2.0f, &FastButton);
-			SaikoButton.HMargin(2.0f, &SaikoButton);
-			CloudButton.HMargin(2.0f, &CloudButton);
-			MeowButton.HMargin(2.0f, &MeowButton);
-
-			if(DoButton_Menu(&s_InputsSix, "667", InputsMode == SC_INPUTS_SIX, &SixButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
-				g_Config.m_ScInputs = SC_INPUTS_SIX;
-			if(DoButton_Menu(&s_InputsFast, ScLocalize("Fast"), InputsMode == SC_INPUTS_FAST, &FastButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_NONE))
-				g_Config.m_ScInputs = SC_INPUTS_FAST;
-			if(DoButton_Menu(&s_InputsSaiko, ScLocalize("Saiko"), InputsMode == SC_INPUTS_SAIKO, &SaikoButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_NONE))
-				g_Config.m_ScInputs = SC_INPUTS_SAIKO;
-			if(DoButton_Menu(&s_InputsCloud, ScLocalize("Cloud"), InputsMode == SC_INPUTS_CLOUD, &CloudButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_NONE))
-				g_Config.m_ScInputs = SC_INPUTS_CLOUD;
-			if(DoButton_Menu(&s_InputsMeow, ScLocalize("Meow"), InputsMode == SC_INPUTS_MEOW, &MeowButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
-				g_Config.m_ScInputs = SC_INPUTS_MEOW;
-			GameClient()->m_Tooltips.DoToolTip(&s_InputsSix, &SixButton, ScLocalize("667 input: predicts your own tee ahead by an amount that follows your connection, up to the max offset. Inputs are sent the moment they change and server corrections are blended out."));
-			GameClient()->m_Tooltips.DoToolTip(&s_InputsFast, &FastButton, ScLocalize("Fast input (TClient): predicts your movement a fixed number of milliseconds ahead so it feels more instant."));
-			GameClient()->m_Tooltips.DoToolTip(&s_InputsSaiko, &SaikoButton, ScLocalize("Saiko input: sends your input as soon as a key changes instead of waiting for the next tick, and predicts your tee ahead by the offset."));
-			GameClient()->m_Tooltips.DoToolTip(&s_InputsCloud, &CloudButton, ScLocalize("Cloud input: keeps its own copy of your input and repredicts every frame from it. Other players are shown at most one tick ahead."));
-			GameClient()->m_Tooltips.DoToolTip(&s_InputsMeow, &MeowButton, ScLocalize("Meow input (MeowClient): keeps its own copy of your input, repredicts as soon as it changes and shows your tee ahead by the offset."));
+			// The modes in a drop-down, like TClient and Aether.
+			static const int s_aModes[] = {SC_INPUTS_SIX, SC_INPUTS_FAST, SC_INPUTS_BEST, SC_INPUTS_SAIKO, SC_INPUTS_CLOUD, SC_INPUTS_MEOW};
+			const char *apModeNames[] = {"667 Input", ScLocalize("Fast Input"), ScLocalize("Best Input"), ScLocalize("Saiko Input"), ScLocalize("Cloud Input"), ScLocalize("Meow Input")};
+			const char *apModeTips[] = {
+				ScLocalize("667 input: predicts your own tee ahead by an amount that follows your connection, up to the max offset. Inputs are sent the moment they change and server corrections are blended out."),
+				ScLocalize("Fast input (TClient): predicts your movement a fixed number of milliseconds ahead so it feels more instant."),
+				ScLocalize("Best input (BestClient): predicts your tee ahead by the offset, with smoothing, latency compensation and a choice of how positions are interpolated."),
+				ScLocalize("Saiko input: sends your input as soon as a key changes instead of waiting for the next tick, and predicts your tee ahead by the offset."),
+				ScLocalize("Cloud input: keeps its own copy of your input and repredicts every frame from it. Other players are shown at most one tick ahead."),
+				ScLocalize("Meow input (MeowClient): keeps its own copy of your input, repredicts as soon as it changes and shows your tee ahead by the offset.")};
+			int Selected = 0;
+			for(int i = 0; i < (int)std::size(s_aModes); i++)
+				if(s_aModes[i] == InputsMode)
+					Selected = i;
+			CUIRect ModeLabel, ModeSelect;
+			Button.VSplitMid(&ModeLabel, &ModeSelect, MarginSmall);
+			Ui()->DoLabel(&ModeLabel, ScLocalize("Fast input mode"), FontSize, TEXTALIGN_ML);
+			static CUi::SDropDownState s_InputsModeState;
+			static CScrollRegion s_InputsModeScrollRegion;
+			s_InputsModeState.m_SelectionPopupContext.m_pScrollRegion = &s_InputsModeScrollRegion;
+			const int NewSelected = Ui()->DoDropDown(&ModeSelect, Selected, apModeNames, (int)std::size(apModeNames), s_InputsModeState);
+			if(NewSelected != Selected && NewSelected >= 0 && NewSelected < (int)std::size(s_aModes))
+				g_Config.m_ScInputs = s_aModes[NewSelected];
+			GameClient()->m_Tooltips.DoToolTip(&s_InputsModeState.m_ButtonContainer, &ModeSelect, apModeTips[Selected]);
 		}
 
 		if(InputsMode == SC_INPUTS_SIX)
@@ -2135,6 +2122,43 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
 			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_TcFastInputOthers, &Content, ScLocalize("Also predicts other players ahead by the same amount."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInputOthers, ScLocalize("Fast Input others"), &g_Config.m_TcFastInputOthers, &Content, LineSize);
+		}
+		else if(InputsMode == SC_INPUTS_BEST)
+		{
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+			DoTickAmountSlider(&g_Config.m_ScBestInputAmount, &Button, ScLocalize("Prediction offset"), 0, 1000);
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBestInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+			Ui()->DoScrollbarOption(&g_Config.m_ScBestInputSmoothing, &g_Config.m_ScBestInputSmoothing, &Button, ScLocalize("Smoothing"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBestInputSmoothing, &Button, ScLocalize("Lowers the offset for a calmer tee: 100% halves it."));
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+			Ui()->DoScrollbarOption(&g_Config.m_ScBestInputLatencyComp, &g_Config.m_ScBestInputLatencyComp, &Button, ScLocalize("Latency compensation"), 0, 50, &CUi::ms_LinearScrollbarScale, 0, "%");
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBestInputLatencyComp, &Button, ScLocalize("Raises the offset by this much to make up for a slow connection."));
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+			{
+				CUIRect InterpolationLabel, InterpolationSelect;
+				Button.VSplitMid(&InterpolationLabel, &InterpolationSelect, MarginSmall);
+				Ui()->DoLabel(&InterpolationLabel, ScLocalize("Interpolation"), FontSize, TEXTALIGN_ML);
+				const char *apInterpolation[] = {ScLocalize("Linear"), ScLocalize("Cubic"), ScLocalize("Smooth")};
+				static CUi::SDropDownState s_BestInterpolationState;
+				static CScrollRegion s_BestInterpolationScrollRegion;
+				s_BestInterpolationState.m_SelectionPopupContext.m_pScrollRegion = &s_BestInterpolationScrollRegion;
+				const int Current = std::clamp(g_Config.m_ScBestInputInterpolation, 1, 3) - 1;
+				g_Config.m_ScBestInputInterpolation = Ui()->DoDropDown(&InterpolationSelect, Current, apInterpolation, (int)std::size(apInterpolation), s_BestInterpolationState) + 1;
+				GameClient()->m_Tooltips.DoToolTip(&s_BestInterpolationState.m_ButtonContainer, &InterpolationSelect, ScLocalize("How the tee moves between ticks: linear, cubic (eases in and out), or smooth (cubic only when moving fast)."));
+			}
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
+			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBestInputOthers, &Content, ScLocalize("Also predicts other players ahead with Best input."));
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScBestInputOthers, ScLocalize("Best input others"), &g_Config.m_ScBestInputOthers, &Content, LineSize);
 		}
 		else if(InputsMode == SC_INPUTS_SAIKO)
 		{

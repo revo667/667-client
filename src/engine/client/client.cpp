@@ -3089,6 +3089,7 @@ void CClient::Update()
 				// 667client
 				const bool HasFastInput =
 					(g_Config.m_ScInputs == SC_INPUTS_FAST && g_Config.m_TcFastInputAmount > 0) ||
+					(g_Config.m_ScInputs == SC_INPUTS_BEST && g_Config.m_ScBestInputAmount > 0) ||
 					(g_Config.m_ScInputs == SC_INPUTS_SAIKO && g_Config.m_ScSaikoInputAmount > 0) ||
 					(g_Config.m_ScInputs == SC_INPUTS_CLOUD && g_Config.m_ScCloudInputAmount > 0) ||
 					(g_Config.m_ScInputs == SC_INPUTS_SIX && g_Config.m_ScSixInputAmount > 0) ||

@@ -65,7 +65,7 @@ enum
 {
 	SC_INPUTS_OFF = 0,
 	SC_INPUTS_FAST,
-	SC_INPUTS_REMOVED_BEST, // 667client: removed, kept so saved values keep their meaning
+	SC_INPUTS_BEST, // 667client: Best input, from BestClient
 	SC_INPUTS_SAIKO,
 	SC_INPUTS_REMOVED_DELTA, // 667client: removed
 	SC_INPUTS_REMOVED_F, // 667client: removed

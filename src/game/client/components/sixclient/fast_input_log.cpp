@@ -41,6 +41,7 @@ namespace
 		switch(Mode)
 		{
 		case SC_INPUTS_FAST: return "fast";
+		case SC_INPUTS_BEST: return "best";
 		case SC_INPUTS_SAIKO: return "saiko";
 		case SC_INPUTS_CLOUD: return "cloud";
 		case SC_INPUTS_SIX: return "667";
@@ -54,7 +55,7 @@ void CFastInputLog::OnConsoleInit()
 {
 	Console()->Register("sc_input_log", "", CFGFLAG_CLIENT, ConToggle, this, "Start or stop recording a fast input log");
 	Console()->Register("sc_input_log_mark", "", CFGFLAG_CLIENT, ConMark, this, "Mark the current moment in the fast input log");
-	// 667client: the best, delta and f modes were removed; saved configs fall back to fast input.
+	// 667client: the delta and f modes were removed; saved configs fall back to fast input.
 	Console()->Chain("sc_inputs", ConchainInputs, this);
 	Console()->Register("sc_input_calibrate", "", CFGFLAG_CLIENT, ConCalibrate, this, "Play for two minutes to find the best 667 input settings for you");
 }
@@ -62,7 +63,7 @@ void CFastInputLog::OnConsoleInit()
 void CFastInputLog::ConchainInputs(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
-	if(g_Config.m_ScInputs == SC_INPUTS_REMOVED_BEST || g_Config.m_ScInputs == SC_INPUTS_REMOVED_DELTA || g_Config.m_ScInputs == SC_INPUTS_REMOVED_F)
+	if(g_Config.m_ScInputs == SC_INPUTS_REMOVED_DELTA || g_Config.m_ScInputs == SC_INPUTS_REMOVED_F)
 		g_Config.m_ScInputs = SC_INPUTS_FAST;
 }
 

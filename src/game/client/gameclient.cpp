@@ -4842,9 +4842,9 @@ void CGameClient::UpdateRenderedCharacters()
 					m_aClients[i].m_aPredTick[(PredTick - 1) % 200] == PredTick - 1 &&
 					m_aClients[i].m_aPredTick[PredTick % 200] == PredTick)
 				{
-					Pos = mix(m_aClients[i].m_aPredPos[(PredTick - 1) % 200],
+					Pos = ScInputs::BestInterpolate(m_aClients[i].m_aPredPos[(PredTick - 1) % 200],
 						m_aClients[i].m_aPredPos[PredTick % 200],
-						PredIntraTick);
+						PredIntraTick, g_Config.m_ScInputs == SC_INPUTS_BEST && FastInputTicks > 0);
 				}
 			}
 			// 667client
@@ -5142,7 +5142,8 @@ vec2 CGameClient::GetSmoothPos(int ClientId)
 				if(SmoothTick > 0 && SmoothTick <= MaxTick &&
 					m_aClients[ClientId].m_aPredTick[(SmoothTick - 1) % 200] == SmoothTick - 1 &&
 					m_aClients[ClientId].m_aPredTick[SmoothTick % 200] == SmoothTick)
-					Pos[i] = mix(m_aClients[ClientId].m_aPredPos[(SmoothTick - 1) % 200][i], m_aClients[ClientId].m_aPredPos[SmoothTick % 200][i], SmoothIntra);
+					Pos[i] = ScInputs::BestInterpolate(m_aClients[ClientId].m_aPredPos[(SmoothTick - 1) % 200][i], m_aClients[ClientId].m_aPredPos[SmoothTick % 200][i], SmoothIntra,
+						g_Config.m_ScInputs == SC_INPUTS_BEST && FastInputTicksClient > 0 && (ClientId == m_Snap.m_LocalClientId || FastInputOthers));
 			}
 		}
 	}
@@ -5192,7 +5193,8 @@ vec2 CGameClient::GetFastInputPos(int ClientId)
 		m_aClients[ClientId].m_aPredTick[(PredTick - 1) % 200] == PredTick - 1 &&
 		m_aClients[ClientId].m_aPredTick[PredTick % 200] == PredTick)
 	{
-		Pos = mix(m_aClients[ClientId].m_aPredPos[(PredTick - 1) % 200], m_aClients[ClientId].m_aPredPos[PredTick % 200], PredIntraTick);
+		Pos = ScInputs::BestInterpolate(m_aClients[ClientId].m_aPredPos[(PredTick - 1) % 200], m_aClients[ClientId].m_aPredPos[PredTick % 200], PredIntraTick,
+			g_Config.m_ScInputs == SC_INPUTS_BEST && FastInputTicks > 0);
 	}
 
 	return Pos;
@@ -5336,7 +5338,8 @@ vec2 CGameClient::GetFreezePos(int ClientId)
 		m_aClients[ClientId].m_aPredTick[(SmoothTick - 1) % 200] == SmoothTick - 1 &&
 		m_aClients[ClientId].m_aPredTick[SmoothTick % 200] == SmoothTick)
 	{
-		Pos = mix(m_aClients[ClientId].m_aPredPos[(SmoothTick - 1) % 200], m_aClients[ClientId].m_aPredPos[SmoothTick % 200], SmoothIntra);
+		Pos = ScInputs::BestInterpolate(m_aClients[ClientId].m_aPredPos[(SmoothTick - 1) % 200], m_aClients[ClientId].m_aPredPos[SmoothTick % 200], SmoothIntra,
+			g_Config.m_ScInputs == SC_INPUTS_BEST && (ApplyFastInputLocal || ApplyFastInputOthers));
 	}
 
 	return Pos;

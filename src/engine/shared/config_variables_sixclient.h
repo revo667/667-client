@@ -123,7 +123,12 @@ MACRO_CONFIG_INT(ScToggleSmallSens, sc_toggle_small_sens, 0, 0, 1, CFGFLAG_CLIEN
 
 // Inputs
 MACRO_CONFIG_INT(ScInputDebounce, sc_input_debounce, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Preserve button presses shorter than one simulation tick")
-MACRO_CONFIG_INT(ScInputs, sc_inputs, 0, 0, 8, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input prediction mode (0 = off, 1 = fast, 3 = saiko, 6 = cloud, 7 = 667, 8 = meow; 2, 4 and 5 were removed)")
+MACRO_CONFIG_INT(ScInputs, sc_inputs, 0, 0, 8, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input prediction mode (0 = off, 1 = fast, 2 = best, 3 = saiko, 6 = cloud, 7 = 667, 8 = meow; 4 and 5 were removed)")
+MACRO_CONFIG_INT(ScBestInputAmount, sc_best_input_amount, 100, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input prediction amount in 0.01 ticks")
+MACRO_CONFIG_INT(ScBestInputSmoothing, sc_best_input_smoothing, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input smoothing amount (0-100%)")
+MACRO_CONFIG_INT(ScBestInputLatencyComp, sc_best_input_latency_comp, 0, 0, 50, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input latency compensation (0-50%)")
+MACRO_CONFIG_INT(ScBestInputInterpolation, sc_best_input_interpolation, 1, 1, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input interpolation mode (1 = linear, 2 = cubic, 3 = smooth)")
+MACRO_CONFIG_INT(ScBestInputOthers, sc_best_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply best input to other tees")
 MACRO_CONFIG_INT(ScSaikoInputAmount, sc_saiko_input_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Saiko input amount in 0.01 ticks")
 MACRO_CONFIG_INT(ScSaikoInputOthers, sc_saiko_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply Saiko input to other tees")
 MACRO_CONFIG_INT(ScCloudInputAmount, sc_cloud_input_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cloud input amount in 0.01 ticks")
