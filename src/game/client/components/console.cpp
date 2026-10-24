@@ -85,6 +85,8 @@ enum class EArgumentCompletionType
 	TUNE,
 	SETTING,
 	KEY,
+	PLAYER, // 667client
+	LANGUAGE, // 667client
 };
 
 class CArgumentCompletionEntry
@@ -109,6 +111,8 @@ static const CArgumentCompletionEntry gs_aArgumentCompletionEntries[] = {
 	{EArgumentCompletionType::KEY, "bind", 0},
 	{EArgumentCompletionType::KEY, "binds", 0},
 	{EArgumentCompletionType::KEY, "unbind", 0},
+	{EArgumentCompletionType::PLAYER, "translate", 0}, // 667client
+	{EArgumentCompletionType::LANGUAGE, "translate_to_language", 0}, // 667client
 };
 
 static std::pair<EArgumentCompletionType, int> ArgumentCompletion(const char *pStr)
@@ -151,6 +155,35 @@ static std::pair<EArgumentCompletionType, int> ArgumentCompletion(const char *pS
 		}
 	}
 	return {EArgumentCompletionType::NONE, -1};
+}
+
+// 667client: names of the players on the server, matched from the start ("rai" for "rain cakir").
+static int PossiblePlayers(const char *pStr, CGameClient *pGameClient, IConsole::FPossibleCallback pfnCallback = IConsole::EmptyPossibleCommandCallback, void *pUser = nullptr)
+{
+	int Index = 0;
+	for(const auto &Client : pGameClient->m_aClients)
+	{
+		if(Client.m_Active && Client.m_aName[0] && str_startswith_nocase(Client.m_aName, pStr))
+		{
+			pfnCallback(Index, Client.m_aName, pUser);
+			Index++;
+		}
+	}
+	return Index;
+}
+
+static int PossibleLanguages(const char *pStr, IConsole::FPossibleCallback pfnCallback = IConsole::EmptyPossibleCommandCallback, void *pUser = nullptr)
+{
+	int Index = 0;
+	for(const char *pLanguage : {"TR", "EN"})
+	{
+		if(str_startswith_nocase(pLanguage, pStr))
+		{
+			pfnCallback(Index, pLanguage, pUser);
+			Index++;
+		}
+	}
+	return Index;
 }
 
 static int PossibleTunings(const char *pStr, IConsole::FPossibleCallback pfnCallback = IConsole::EmptyPossibleCommandCallback, void *pUser = nullptr)
@@ -390,6 +423,10 @@ void CGameConsole::CInstance::UpdateCompletionSuggestions()
 			m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBufferArgument, m_CompletionFlagmask, UseTempCommands, CollectPossibleCommandsCallback, &m_vpArgumentSuggestions);
 		else if(CompletionType == EArgumentCompletionType::KEY)
 			PossibleKeys(m_aCompletionBufferArgument, m_pGameConsole->Input(), CollectPossibleCommandsCallback, &m_vpArgumentSuggestions);
+		else if(CompletionType == EArgumentCompletionType::PLAYER) // 667client
+			PossiblePlayers(m_aCompletionBufferArgument, m_pGameConsole->GameClient(), CollectPossibleCommandsCallback, &m_vpArgumentSuggestions);
+		else if(CompletionType == EArgumentCompletionType::LANGUAGE) // 667client
+			PossibleLanguages(m_aCompletionBufferArgument, CollectPossibleCommandsCallback, &m_vpArgumentSuggestions);
 		SortCompletions(m_vpArgumentSuggestions, m_aCompletionBufferArgument);
 	}
 

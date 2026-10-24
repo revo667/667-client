@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 class ITranslateBackend
@@ -62,11 +63,13 @@ class CTranslate : public CComponent
 		char m_aTextToTranslate[MAX_CHAT_LENGTH] = "";
 		char m_aOutgoingPrefix[MAX_CHAT_LENGTH] = "";
 		bool m_RespectIgnoredIncomingLanguages = false;
+		bool m_Manual = false; // asked for with the translate command
 		int64_t m_Deadline = 0;
 	};
 
 	std::vector<CTranslateJob> m_vJobs;
 	int64_t m_NextRequestTime = 0;
+	int m_ManualAlreadyInTarget = 0; // translate command lines that were already in the target language
 
 	std::unique_ptr<ITranslateBackend> CreateBackend(const char *pText, const char *pSourceLanguage, const char *pTargetLanguage) const;
 	const char *IncomingSourceLanguage() const;
@@ -77,11 +80,14 @@ class CTranslate : public CComponent
 	bool ShouldTranslateOutgoingChat(const char *pText) const;
 	bool CanStartRequest() const;
 	// Force skips the one-request-per-second spacing, for a few lines asked for at once.
-	void TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLanguages, bool Force = false);
+	void TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLanguages, bool Force = false, bool Manual = false);
 	// Translates the newest player messages: Count of them, or the last one of pName / ClientId.
-	int TranslateRecent(int Count, const char *pName, int ClientId);
+	// pMatchedName gets the full name of the player whose lines were picked.
+	int TranslateRecent(int Count, const char *pName, int ClientId, std::string *pMatchedName = nullptr);
+	void EchoTranslated(int Translated, const std::string &Name);
 	static void ConTranslate(IConsole::IResult *pResult, void *pUserData);
 	static void ConTranslateId(IConsole::IResult *pResult, void *pUserData);
+	static void ConTranslateToLanguage(IConsole::IResult *pResult, void *pUserData);
 
 public:
 	int Sizeof() const override { return sizeof(*this); }

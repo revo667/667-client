@@ -710,7 +710,7 @@ bool CTranslate::CanStartRequest() const
 	return ActiveRequests < 2;
 }
 
-void CTranslate::TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLanguages, bool Force)
+void CTranslate::TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLanguages, bool Force, bool Manual)
 {
 	if(m_vJobs.size() >= 16 || (!Force && !CanStartRequest()))
 		return;
@@ -723,6 +723,7 @@ void CTranslate::TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLa
 	Job.m_pLine = &Line;
 	Job.m_pTranslateResponse = std::make_shared<CTranslateResponse>();
 	Job.m_RespectIgnoredIncomingLanguages = RespectIgnoredIncomingLanguages;
+	Job.m_Manual = Manual;
 	Job.m_pBackend = std::move(pBackend);
 	Job.m_Deadline = time() + time_freq() * TRANSLATE_TIMEOUT;
 	Line.m_pTranslateResponse = Job.m_pTranslateResponse;
@@ -744,24 +745,46 @@ void CTranslate::OnConsoleInit()
 	}
 	if(g_Config.m_ScTranslateOutgoingTarget[0] == '\0' || (str_comp(g_Config.m_ScTranslateOutgoingTarget, "en") == 0 && str_comp(g_Config.m_TcTranslateOutgoingTarget, "en") != 0))
 		str_copy(g_Config.m_ScTranslateOutgoingTarget, g_Config.m_TcTranslateOutgoingTarget);
-	Console()->Register("translate", "?r[count|name]", CFGFLAG_CLIENT, ConTranslate, this, "Translate the last chat message, the last count messages (up to 10), or a player's last message");
+	Console()->Register("translate", "?r[count|player name]", CFGFLAG_CLIENT, ConTranslate, this, "Translate the last chat messages of players (a count up to 10), or a player's last messages (name, then an optional count)");
 	Console()->Register("translate_id", "i[id] ?i[count]", CFGFLAG_CLIENT, ConTranslateId, this, "Translate the last chat message of the player with this client id");
+	Console()->Register("translate_to_language", "s[TR|EN]", CFGFLAG_CLIENT, ConTranslateToLanguage, this, "Language the translate command translates into");
 }
 
-int CTranslate::TranslateRecent(int Count, const char *pName, int ClientId)
+int CTranslate::TranslateRecent(int Count, const char *pName, int ClientId, std::string *pMatchedName)
 {
 	CChat &Chat = GameClient()->m_Chat;
+	auto &&LineAt = [&](int i) -> CChat::CLine & {
+		return Chat.m_aLines[((Chat.m_CurrentLine - i) % CChat::MAX_LINES + CChat::MAX_LINES) % CChat::MAX_LINES];
+	};
+	auto &&IsPlayerLine = [&](const CChat::CLine &Line) {
+		if(!Line.m_Initialized || Line.m_ClientId < 0 || Line.m_aName[0] == '\0' || Line.m_aText[0] == '\0')
+			return false;
+		for(const int LocalId : GameClient()->m_aLocalIds)
+			if(LocalId >= 0 && LocalId == Line.m_ClientId)
+				return false;
+		return true;
+	};
+	// A name matches exactly, or as the start of a name when nobody has it exactly ("rai" for "rain cakir").
+	bool Prefix = false;
+	if(pName && pName[0])
+	{
+		bool Exact = false;
+		for(int i = 0; i < CChat::MAX_LINES && !Exact; i++)
+			Exact = IsPlayerLine(LineAt(i)) && str_comp_nocase(LineAt(i).m_aName, pName) == 0;
+		Prefix = !Exact;
+	}
 	int Started = 0;
 	for(int i = 0; i < CChat::MAX_LINES && Started < Count; i++)
 	{
-		CChat::CLine &Line = Chat.m_aLines[((Chat.m_CurrentLine - i) % CChat::MAX_LINES + CChat::MAX_LINES) % CChat::MAX_LINES];
-		if(Line.m_Time == 0 || Line.m_ClientId < 0 || Line.m_aName[0] == '\0' || Line.m_aText[0] == '\0')
+		CChat::CLine &Line = LineAt(i);
+		if(!IsPlayerLine(Line))
 			continue;
-		bool Own = false;
-		for(const int LocalId : GameClient()->m_aLocalIds)
-			Own |= LocalId >= 0 && LocalId == Line.m_ClientId;
-		if(Own || (pName && pName[0] && str_comp_nocase(Line.m_aName, pName) != 0) || (ClientId >= 0 && Line.m_ClientId != ClientId))
+		if(pName && pName[0] && (Prefix ? !str_startswith_nocase(Line.m_aName, pName) : str_comp_nocase(Line.m_aName, pName) != 0))
 			continue;
+		if(ClientId >= 0 && Line.m_ClientId != ClientId)
+			continue;
+		if(pMatchedName && pMatchedName->empty())
+			*pMatchedName = Line.m_aName;
 		Started++;
 		if(Line.m_pTranslateResponse && Line.m_pTranslateResponse->m_Text[0])
 		{
@@ -769,7 +792,7 @@ int CTranslate::TranslateRecent(int Count, const char *pName, int ClientId)
 			Line.m_Time = time();
 			continue;
 		}
-		TranslateLine(Line, false, true);
+		TranslateLine(Line, false, true, true);
 	}
 	if(Started > 0)
 		Chat.RebuildChat();
@@ -779,26 +802,80 @@ int CTranslate::TranslateRecent(int Count, const char *pName, int ClientId)
 void CTranslate::ConTranslate(IConsole::IResult *pResult, void *pUserData)
 {
 	CTranslate *pSelf = static_cast<CTranslate *>(pUserData);
-	const char *pArg = pResult->NumArguments() > 0 ? pResult->GetString(0) : "";
+	char aArg[128];
+	str_copy(aArg, pResult->NumArguments() > 0 ? pResult->GetString(0) : "");
+	str_utf8_trim_right(aArg);
 	int Count = 1;
 	const char *pName = nullptr;
-	if(pArg[0])
+	if(aArg[0])
 	{
-		if(str_isallnum(pArg))
-			Count = std::clamp(str_toint(pArg), 1, 10);
+		if(str_isallnum(aArg))
+			Count = std::clamp(str_toint(aArg), 1, 10);
 		else
-			pName = pArg;
+		{
+			// "translate rain cakir 3": the player's last 3 messages; without a number their last 5.
+			Count = 5;
+			bool WholeIsName = false;
+			for(const auto &Client : pSelf->GameClient()->m_aClients)
+				WholeIsName |= Client.m_Active && str_comp_nocase(Client.m_aName, aArg) == 0;
+			char *pLastSpace = (char *)str_rchr(aArg, ' ');
+			if(!WholeIsName && pLastSpace && pLastSpace[1] && str_isallnum(pLastSpace + 1))
+			{
+				Count = std::clamp(str_toint(pLastSpace + 1), 1, 10);
+				*pLastSpace = '\0';
+			}
+			pName = aArg;
+		}
 	}
-	if(pSelf->TranslateRecent(Count, pName, -1) == 0)
+	std::string Matched;
+	const int Translated = pSelf->TranslateRecent(Count, pName, -1, &Matched);
+	if(Translated == 0)
 		pSelf->GameClient()->m_Chat.Echo(pName ? Localize("No message from that player to translate") : Localize("No message to translate"));
+	else
+		pSelf->EchoTranslated(Translated, pName ? Matched : std::string());
+}
+
+void CTranslate::EchoTranslated(int Translated, const std::string &Name)
+{
+	char aBuf[256];
+	if(!Name.empty())
+	{
+		if(Translated == 1)
+			str_format(aBuf, sizeof(aBuf), Localize("Translated %s's last message"), Name.c_str());
+		else
+			str_format(aBuf, sizeof(aBuf), Localize("Translated %s's last %d messages"), Name.c_str(), Translated);
+	}
+	else if(Translated == 1)
+		str_copy(aBuf, Localize("Translated the last message"));
+	else
+		str_format(aBuf, sizeof(aBuf), Localize("Translated the last %d messages"), Translated);
+	GameClient()->m_Chat.Echo(aBuf);
 }
 
 void CTranslate::ConTranslateId(IConsole::IResult *pResult, void *pUserData)
 {
 	CTranslate *pSelf = static_cast<CTranslate *>(pUserData);
 	const int Count = pResult->NumArguments() > 1 ? std::clamp(pResult->GetInteger(1), 1, 10) : 1;
-	if(pSelf->TranslateRecent(Count, nullptr, pResult->GetInteger(0)) == 0)
+	std::string Matched;
+	const int Translated = pSelf->TranslateRecent(Count, nullptr, pResult->GetInteger(0), &Matched);
+	if(Translated == 0)
 		pSelf->GameClient()->m_Chat.Echo(Localize("No message from that player to translate"));
+	else
+		pSelf->EchoTranslated(Translated, Matched);
+}
+
+void CTranslate::ConTranslateToLanguage(IConsole::IResult *pResult, void *pUserData)
+{
+	CTranslate *pSelf = static_cast<CTranslate *>(pUserData);
+	const char *pLanguage = pResult->GetString(0);
+	const char *pCode = str_comp_nocase(pLanguage, "tr") == 0 ? "tr" : (str_comp_nocase(pLanguage, "en") == 0 ? "en" : nullptr);
+	if(!pCode)
+	{
+		pSelf->GameClient()->m_Chat.Echo(Localize("Use translate_to_language TR or translate_to_language EN"));
+		return;
+	}
+	str_copy(g_Config.m_TcTranslateTarget, pCode);
+	pSelf->GameClient()->m_Chat.Echo(str_comp(pCode, "tr") == 0 ? "Messages are translated into Turkish" : "Messages are translated into English");
 }
 
 void CTranslate::AutoTranslate(CChat::CLine &Line)
@@ -948,7 +1025,11 @@ void CTranslate::OnRender()
 				if(Job.m_RespectIgnoredIncomingLanguages && IsIgnoredIncomingLanguage(Job.m_pTranslateResponse->m_Language))
 					Job.m_pTranslateResponse->m_Text[0] = '\0';
 				if(str_comp_nocase(Job.m_pLine->m_aText, Job.m_pTranslateResponse->m_Text) == 0)
+				{
 					Job.m_pTranslateResponse->m_Text[0] = '\0';
+					if(Job.m_Manual)
+						m_ManualAlreadyInTarget++;
+				}
 			}
 			else
 			{
@@ -963,4 +1044,16 @@ void CTranslate::OnRender()
 		return true;
 	};
 	m_vJobs.erase(std::remove_if(m_vJobs.begin(), m_vJobs.end(), ForEach), m_vJobs.end());
+
+	// Once the command's lines are done, say why nothing showed up for some of them.
+	if(m_ManualAlreadyInTarget > 0 && std::none_of(m_vJobs.begin(), m_vJobs.end(), [](const CTranslateJob &Job) { return Job.m_Manual; }))
+	{
+		char aBuf[128];
+		if(m_ManualAlreadyInTarget == 1)
+			str_format(aBuf, sizeof(aBuf), Localize("That message is already in %s"), str_comp_nocase(IncomingTargetLanguage(), "tr") == 0 ? "Turkish" : (str_comp_nocase(IncomingTargetLanguage(), "en") == 0 ? "English" : IncomingTargetLanguage()));
+		else
+			str_format(aBuf, sizeof(aBuf), Localize("%d messages are already in %s"), m_ManualAlreadyInTarget, str_comp_nocase(IncomingTargetLanguage(), "tr") == 0 ? "Turkish" : (str_comp_nocase(IncomingTargetLanguage(), "en") == 0 ? "English" : IncomingTargetLanguage()));
+		GameClient()->m_Chat.Echo(aBuf);
+		m_ManualAlreadyInTarget = 0;
+	}
 }
