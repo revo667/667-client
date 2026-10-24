@@ -263,7 +263,7 @@ protected:
 
 	void CreateHttpRequest(IHttp &Http, const char *pUrl)
 	{
-		char aUrl[256];
+		char aUrl[4096];
 		NormalizeEndpointUrl(pUrl, aUrl, sizeof(aUrl));
 		auto pRequest = HttpGet(aUrl);
 		pRequest->LogProgress(HTTPLOG::FAILURE);
@@ -276,7 +276,7 @@ protected:
 
 	void CreateHttpRequestPost(IHttp &Http, const char *pUrl, const char *pBody)
 	{
-		char aUrl[256];
+		char aUrl[4096];
 		NormalizeEndpointUrl(pUrl, aUrl, sizeof(aUrl));
 		auto pRequest = HttpGet(aUrl);
 		pRequest->LogProgress(HTTPLOG::FAILURE);
@@ -592,6 +592,78 @@ public:
 	}
 };
 
+// Google Translate itself; MyMemory above answers from a crowd memory and often sends back a
+// lightly edited copy of English lines. Where Google is blocked, MyMemory takes over.
+class CTranslateBackendGoogleTranslate : public ITranslateBackendHttp
+{
+	IHttp &m_Http;
+	std::string m_Text;
+	std::string m_Source;
+	std::string m_Target;
+	std::string m_Name;
+	std::unique_ptr<CTranslateBackendGoogle> m_pFallback;
+
+	bool ParseResponse(CTranslateResponse &Out) override
+	{
+		json_value *pRoot = m_pHttpRequest->ResultJson();
+		if(!pRoot || pRoot->type != json_array || pRoot->u.array.length < 1)
+		{
+			json_value_free(pRoot);
+			return false;
+		}
+		std::string Text;
+		const json_value *pSentences = pRoot->u.array.values[0];
+		if(pSentences->type == json_array)
+			for(unsigned i = 0; i < pSentences->u.array.length; i++)
+			{
+				const json_value *pSentence = pSentences->u.array.values[i];
+				if(pSentence->type == json_array && pSentence->u.array.length > 0 && pSentence->u.array.values[0]->type == json_string)
+					Text += pSentence->u.array.values[0]->u.string.ptr;
+			}
+		if(pRoot->u.array.length > 2 && pRoot->u.array.values[2]->type == json_string)
+		{
+			char aDetected[16] = "";
+			NormalizeLanguageCode(pRoot->u.array.values[2]->u.string.ptr, aDetected, sizeof(aDetected));
+			str_copy(Out.m_Language, aDetected);
+		}
+		json_value_free(pRoot);
+		if(Text.empty())
+			return false;
+		str_copy(Out.m_Text, Text.c_str());
+		NormalizeTranslatedText(Out.m_Text, sizeof(Out.m_Text));
+		return true;
+	}
+
+public:
+	CTranslateBackendGoogleTranslate(IHttp &Http, const char *pText, const char *pSource, const char *pTarget, const char *pName) :
+		ITranslateBackendHttp(pName),
+		m_Http(Http),
+		m_Text(pText),
+		m_Source(pSource ? pSource : ""),
+		m_Target(pTarget ? pTarget : ""),
+		m_Name(pName ? pName : "")
+	{
+		char aEncoded[2048];
+		UrlEncode(pText, aEncoded, sizeof(aEncoded));
+		char aUrl[2560];
+		str_format(aUrl, sizeof(aUrl), "https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=%s&tl=%s&q=%s", IsAutoLanguage(pSource) ? "auto" : pSource, pTarget, aEncoded);
+		CreateHttpRequest(Http, aUrl);
+	}
+
+	std::optional<bool> Update(CTranslateResponse &Out) override
+	{
+		if(m_pFallback)
+			return m_pFallback->Update(Out);
+		const std::optional<bool> Result = ITranslateBackendHttp::Update(Out);
+		if(!Result.has_value() || *Result)
+			return Result;
+		log_info("translate", "Google Translate didn't answer, using MyMemory");
+		Out = CTranslateResponse();
+		m_pFallback = std::make_unique<CTranslateBackendGoogle>(m_Http, m_Text.c_str(), m_Source.c_str(), m_Target.c_str(), m_Name.c_str());
+		return std::nullopt;
+	}
+};
+
 static const std::vector<STranslateLanguage> s_vGoogleLanguages = {
 	{"Arabic", "ar"}, {"Bulgarian", "bg"}, {"Chinese (Simplified)", "zh"}, {"Chinese (Traditional)", "zh-TW"},
 	{"Croatian", "hr"}, {"Czech", "cs"}, {"Danish", "da"}, {"Dutch", "nl"}, {"English", "en"},
@@ -646,7 +718,7 @@ std::unique_ptr<ITranslateBackend> CTranslate::CreateBackend(const char *pText, 
 		if(str_comp_nocase(g_Config.m_TcTranslateBackend, Backend.m_pValue) != 0)
 			continue;
 		if(str_comp_nocase(Backend.m_pValue, "google") == 0)
-			return std::make_unique<CTranslateBackendGoogle>(*Http(), pText, pSourceLanguage, pTargetLanguage, Backend.m_pName);
+			return std::make_unique<CTranslateBackendGoogleTranslate>(*Http(), pText, pSourceLanguage, pTargetLanguage, Backend.m_pName);
 		if(str_comp_nocase(Backend.m_pValue, "deepl") == 0)
 			return std::make_unique<CTranslateBackendDeepL>(*Http(), pText, pSourceLanguage, pTargetLanguage, Backend.m_pName);
 		if(str_comp_nocase(Backend.m_pValue, "libretranslate") == 0)
