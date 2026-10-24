@@ -5245,42 +5245,53 @@ vec2 CGameClient::GetFreezePos(int ClientId)
 
 	if(IsMeowInputMode())
 	{
-		// MeowClient only shifts here inside the antiping smoothing window, which never opens for
-		// our own tee, so it drew the tee from PredGameTick/PredIntraGameTick at ceil(amount) ticks.
-		// That pair can disagree for a frame and made the camera shake, so use the smooth freeze
-		// tick like the other input modes and always apply the meow offset.
 		vec2 Pos = mix(m_aClients[ClientId].m_PrevPredicted.m_Pos, m_aClients[ClientId].m_Predicted.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
 		CCharacter *pChar = m_PredictedWorld.GetCharacterById(m_Snap.m_LocalClientId);
 		CCharacter *pExtraChar = m_ExtraPredictedWorld.GetCharacterById(m_Snap.m_LocalClientId);
 
-		int AdjustTicks = 0;
-		int FreezeTime = 0;
-		if(pExtraChar && pChar)
+		int64_t Now = time_get();
+		for(int i = 0; i < 2; i++)
 		{
-			AdjustTicks = pChar->m_FreezeAccumulation;
-			if(pExtraChar->m_AliveAccumulation > 0)
-				AdjustTicks -= pExtraChar->m_AliveAccumulation;
+			int64_t Len = std::clamp(m_aClients[ClientId].m_aSmoothLen[i], (int64_t)1, time_freq());
+			int64_t TimePassed = Now - m_aClients[ClientId].m_aSmoothStart[i];
+			if(!in_range(TimePassed, (int64_t)0, Len - 1))
+				continue;
 
-			AdjustTicks = std::max(AdjustTicks, 0);
-			FreezeTime = pChar->m_FreezeTime;
+			int AdjustTicks = 0;
+			int FreezeTime = 0;
+			if(pExtraChar && pChar)
+			{
+				AdjustTicks = pChar->m_FreezeAccumulation;
+				if(pExtraChar->m_AliveAccumulation > 0)
+					AdjustTicks -= pExtraChar->m_AliveAccumulation;
 
-			AdjustTicks = std::min(FreezeTime, AdjustTicks);
+				AdjustTicks = std::max(AdjustTicks, 0);
+				FreezeTime = pChar->m_FreezeTime;
+
+				AdjustTicks = std::min(FreezeTime, AdjustTicks);
+			}
+			float MixAmount;
+			if(g_Config.m_TcRemoveAnti && pChar && AdjustTicks > 0 && FreezeTime > 0)
+				MixAmount = mix(0.0f, 1.0f, 1.0f - AdjustTicks / (float)g_Config.m_TcUnfreezeLagDelayTicks);
+			else
+				MixAmount = 1.f;
+
+			int SmoothTick;
+			float SmoothIntra;
+			Client()->GetSmoothFreezeTick(&SmoothTick, &SmoothIntra, MixAmount);
+
+			// trails read the unshifted x axis tick
+			if(i == 0)
+			{
+				m_SmoothTick = SmoothTick;
+				m_SmoothIntraTick = SmoothIntra;
+			}
+
+			m_MeowInput.AdjustTick(*this, ClientId, SmoothTick, SmoothIntra);
+			vec2 SmoothPos;
+			if(m_MeowInput.GetPos(*this, ClientId, SmoothTick, SmoothIntra, SmoothPos))
+				Pos[i] = SmoothPos[i];
 		}
-		float MixAmount;
-		if(g_Config.m_TcRemoveAnti && pChar && AdjustTicks > 0 && FreezeTime > 0)
-			MixAmount = mix(0.0f, 1.0f, 1.0f - AdjustTicks / (float)g_Config.m_TcUnfreezeLagDelayTicks);
-		else
-			MixAmount = 1.f;
-
-		int SmoothTick;
-		float SmoothIntra;
-		Client()->GetSmoothFreezeTick(&SmoothTick, &SmoothIntra, MixAmount);
-
-		m_SmoothTick = SmoothTick;
-		m_SmoothIntraTick = SmoothIntra;
-
-		m_MeowInput.AdjustTick(*this, ClientId, SmoothTick, SmoothIntra);
-		m_MeowInput.GetPos(*this, ClientId, SmoothTick, SmoothIntra, Pos);
 		return Pos;
 	}
 
