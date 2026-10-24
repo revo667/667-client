@@ -94,6 +94,7 @@ class CChat : public CComponent
 	int m_PrevHudLayoutScale = -1;
 	bool m_PrevHudLayoutEnabled = true;
 	bool m_PrevModeActive = false;
+	bool m_PrevModernStyle = false;
 	// 667client
 
 	CLine m_aLines[MAX_LINES];
@@ -277,13 +278,19 @@ public:
 	{
 		return std::clamp(HudLayout::Get(HudLayout::MODULE_CHAT, HudLayout::CANVAS_WIDTH, HudLayout::CANVAS_HEIGHT).m_Scale / 100.0f, 0.25f, 3.0f);
 	}
-	float FontSize() const { return (g_Config.m_ClChatFontSize / 10.0f) * LayoutScaleFactor(); }
+	bool ModernStyle() const { return g_Config.m_ScChatModernStyle && !g_Config.m_ClChatOld; }
+	float FontSize() const { return (g_Config.m_ClChatFontSize / 10.0f) * LayoutScaleFactor() * (ModernStyle() ? 1.2f : 1.0f); }
 	float ChatWidth() const { return g_Config.m_ClChatWidth * LayoutScaleFactor(); }
+	float MessageGap() const { return ModernStyle() ? FontSize() * 0.3f : 0.0f; }
+	float MessageAccentWidth() const { return FontSize() * 0.22f; }
+	float MessageAccentOffset() const { return ModernStyle() ? MessageAccentWidth() + FontSize() * 0.3f : 0.0f; }
+	ColorRGBA MessageAccentColor(const CLine &Line) const;
+	void SetMessageFont(bool Modern);
 	// 667client
 	float MessagePaddingX() const { return FontSize() * (5 / 6.f); }
-	float MessagePaddingY() const { return FontSize() * (1 / 6.f); }
-	float MessageTeeSize() const { return FontSize() * (7 / 6.f); }
-	float MessageRounding() const { return FontSize() * (1 / 2.f); }
+	float MessagePaddingY() const { return FontSize() * (ModernStyle() ? 3 / 6.f : 1 / 6.f); } // 667client
+	float MessageTeeSize() const { return FontSize() * (ModernStyle() ? 1.5f : 7 / 6.f); } // 667client
+	float MessageRounding() const { return FontSize() * (ModernStyle() ? 1 / 3.f : 1 / 2.f); } // 667client
 
 	// ----- send functions -----
 

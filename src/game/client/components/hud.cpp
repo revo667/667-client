@@ -163,7 +163,7 @@ void CHud::OnInit()
 void CHud::RenderGameTimer()
 {
 	// 667client
-	const bool MusicPlayerOccupiesTimerSlot = g_Config.m_ScMusicPlayer != 0 && !(g_Config.m_ClFocusMode && g_Config.m_ClFocusModeHideSongPlayer);
+	const bool MusicPlayerOccupiesTimerSlot = g_Config.m_ScMusicPlayer != 0 && g_Config.m_ScMusicPlayerStyle == 0 && !(g_Config.m_ClFocusMode && g_Config.m_ClFocusModeHideSongPlayer);
 	if(MusicPlayerOccupiesTimerSlot)
 		return;
 	// 667client

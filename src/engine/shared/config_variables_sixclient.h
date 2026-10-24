@@ -18,6 +18,7 @@ MACRO_CONFIG_INT(ScSixClientSettingsTabs, sc_sixclient_settings_tabs, 0, 0, 6553
 MACRO_CONFIG_INT(ScSilentTyping, sc_silent_typing, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide PLAYERFLAG_CHATTING from others while typing")
 MACRO_CONFIG_INT(ScChatAltCommandLayout, sc_chat_alt_command_layout, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interpret slash chat commands typed in the Russian keyboard layout")
 MACRO_CONFIG_INT(ScChatMessageActions, sc_chat_message_actions, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable reply/copy message menu on chat messages")
+MACRO_CONFIG_INT(ScChatModernStyle, sc_chat_modern_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat lines in separate rounded backgrounds with a colored accent bar")
 MACRO_CONFIG_INT(ScNotifySavesOnMap, sc_notify_saves_on_map, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify in chat when the current map has team saves")
 
 // Chat Filter
@@ -410,6 +411,7 @@ MACRO_CONFIG_INT(ScFinishPredictionConsiderFreezeWalls, sc_finish_prediction_con
 // Music Player
 MACRO_CONFIG_INT(ScMusicDock, sc_music_dock, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Open a dock with the player, lyrics and quick actions when the free cursor reaches the music player")
 MACRO_CONFIG_INT(ScMusicPlayer, sc_music_player, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Music Player HUD element")
+MACRO_CONFIG_INT(ScMusicPlayerStyle, sc_music_player_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player style (0=normal, 1=card in the top right corner)")
 MACRO_CONFIG_INT(ScMusicPlayerVisualizerMode, sc_music_player_visualizer_mode, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player visualizer mode (0=bottom, 1=center, 2=up)")
 MACRO_CONFIG_INT(ScMusicPlayerVisualizerRounding, sc_music_player_visualizer_rounding, 0, 0, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player visualizer rounding (0=cube, 200=soft)")
 MACRO_CONFIG_INT(ScMusicPlayerVisualizerColumns, sc_music_player_visualizer_columns, 5, 5, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Music player visualizer bar count")

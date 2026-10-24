@@ -717,6 +717,17 @@ public:
 		return {m_DefaultFace, m_SelectedFace, m_VariantFace, reinterpret_cast<const void *>(m_vFallbackFaces.size())};
 	}
 
+	// 667client
+	bool SetSelectedFaceByName(const char *pFamilyName)
+	{
+		FT_Face Face = GetFaceByName(pFamilyName);
+		if(!Face)
+			return false;
+		m_SelectedFace = Face;
+		return true;
+	}
+	// 667client
+
 	void SetFontPreset(EFontPreset FontPreset)
 	{
 		switch(FontPreset)
@@ -1467,6 +1478,13 @@ public:
 	{
 		m_pGlyphMap->SetFontPreset(FontPreset);
 	}
+
+	// 667client
+	bool SetSelectedFace(const char *pFace) override
+	{
+		return m_pGlyphMap->SetSelectedFaceByName(pFace);
+	}
+	// 667client
 
 	void SetFontLanguageVariant(const char *pLanguageFile) override
 	{

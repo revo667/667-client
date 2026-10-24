@@ -200,6 +200,7 @@ class ITextRender : public IInterface
 public:
 	virtual std::vector<std::string> *GetCustomFaces() = 0; // TClient
 	virtual void SetCustomFace(const char *pFace) = 0; // TClient
+	virtual bool SetSelectedFace(const char *pFace) = 0; // 667client
 
 	virtual bool LoadFonts() = 0;
 	virtual void SetFontPreset(EFontPreset FontPreset) = 0;

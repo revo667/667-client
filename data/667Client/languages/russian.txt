@@ -1139,6 +1139,22 @@ Notify about saves on map
 == Уведомлять о сейвах на карте
 
 [667Client]
+Chat style
+== Стиль чата
+
+[667Client]
+Old chat
+== Старый чат
+
+[667Client]
+Modern chat
+== Современный чат
+
+[667Client]
+Every chat line gets its own rounded background with a colored bar on the left: green for server messages, white for players
+== Каждая строка чата получает свой скруглённый фон и цветную полоску слева: зелёную для сообщений сервера, белую для игроков
+
+[667Client]
 Twitch Chat
 == Твич-чат
 
@@ -2173,3 +2189,23 @@ Others
 [Gradient]
 All
 == Все
+
+[667Client]
+Style
+== Стиль
+
+[667Client]
+Normal
+== Обычный
+
+[667Client]
+Card
+== Карточка
+
+[667Client]
+Music player style
+== Стиль музыкального плеера
+
+[667Client]
+A card with the cover, title, artist and progress in the top right corner
+== Карточка с обложкой, названием, исполнителем и прогрессом в правом верхнем углу

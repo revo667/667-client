@@ -104,6 +104,7 @@ private:
 	std::string m_SpotifyHelperPath;
 
 	void RenderMusicPlayer(bool ForcePreview);
+	void RenderMusicPlayerCard(bool ForcePreview);
 	void EnsureImpl();
 	void UpdateSpotifyConnect();
 };

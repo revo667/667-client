@@ -316,7 +316,7 @@ void CChatScroll::MeasureHeights(CChat &Chat, float TextBegin, float FontSize, f
 				pTextRender->TextEx(&MeasureCursor, "♥ ");
 		}
 		pTextRender->TextEx(&MeasureCursor, aClientId);
-		pTextRender->TextEx(&MeasureCursor, Line.m_aName);
+		pTextRender->TextEx(&MeasureCursor, Chat.ModernStyle() && Line.m_ClientId == CChat::SERVER_MSG ? "" : Line.m_aName);
 		if(Line.m_TimesRepeated > 0)
 			pTextRender->TextEx(&MeasureCursor, aCount);
 		if(Line.m_ClientId >= 0 && Line.m_aName[0] != '\0')

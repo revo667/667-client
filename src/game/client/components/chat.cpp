@@ -1359,6 +1359,29 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 	GameClient()->m_Translate.AutoTranslate(CurrentLine);
 }
 
+// 667client
+ColorRGBA CChat::MessageAccentColor(const CLine &Line) const
+{
+	if(Line.m_ClientId == SERVER_MSG)
+		return ColorRGBA(0.4f, 0.85f, 0.45f, 1.0f);
+	if(Line.m_ClientId == CLIENT_MSG)
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
+	if(Line.m_Whisper)
+		return ColorRGBA(0.8f, 0.55f, 1.0f, 1.0f);
+	if(Line.m_Highlighted)
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
+	if(Line.m_Team)
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
+	return ColorRGBA(0.95f, 0.95f, 0.95f, 1.0f);
+}
+
+void CChat::SetMessageFont(bool Modern)
+{
+	if(!Modern || !TextRender()->SetSelectedFace("Inter 24pt SemiBold"))
+		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+}
+// 667client
+
 void CChat::OnPrepareLines(float y)
 {
 	// 667client
@@ -1378,7 +1401,7 @@ void CChat::OnPrepareLines(float y)
 	const auto Layout = HudLayout::Get(HudLayout::MODULE_CHAT, Width, Height);
 	const bool LayoutEnabled = HudLayout::IsEnabled(HudLayout::MODULE_CHAT);
 	const float LayoutScale = std::clamp(Layout.m_Scale / 100.0f, 0.25f, 3.0f);
-	float x = Layout.m_X;
+	float x = Layout.m_X + MessageAccentOffset();
 	float FontSize = this->FontSize();
 	const bool IsScoreBoardOpen = GameClient()->m_Scoreboard.IsShown() && (Graphics()->ScreenAspect() > 1.7f); // only assume scoreboard when screen ratio is widescreen(something around 16:9)
 	const bool EditorPreview = GameClient()->m_HudEditor.IsActive();
@@ -1409,7 +1432,7 @@ void CChat::OnPrepareLines(float y)
 
 	int64_t Now = time();
 	// 667client
-	float LineWidth = (IsScoreBoardOpen ? std::max(85.0f * LayoutScale, FontSize * 85.0f / 6.0f) : ChatWidth()) - (RealMsgPaddingX * 1.5f) - RealMsgPaddingTee;
+	float LineWidth = (IsScoreBoardOpen ? std::max(85.0f * LayoutScale, FontSize * 85.0f / 6.0f) : ChatWidth()) - (RealMsgPaddingX * 1.5f) - RealMsgPaddingTee - MessageAccentOffset();
 	// 667client
 
 	// 667client
@@ -1429,6 +1452,7 @@ void CChat::OnPrepareLines(float y)
 
 	float LineY = y + m_BacklogScrollOffset;
 	bool AllowTopClip = true;
+	SetMessageFont(ModernStyle()); // 667client
 	for(int i = 0; i < MAX_LINES; i++) // 667client
 	{
 		CLine &Line = m_aLines[((m_CurrentLine - i) + MAX_LINES) % MAX_LINES];
@@ -1541,7 +1565,7 @@ void CChat::OnPrepareLines(float y)
 
 			if(Line.m_Friend && g_Config.m_ClMessageFriend)
 			{
-				TextRender()->TextColor(color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor)).WithAlpha(1.0f));
+				TextRender()->TextColor(ModernStyle() ? ColorRGBA(1.0f, 0.3f, 0.35f, 1.0f) : color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor)).WithAlpha(1.0f)); // 667client
 				TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, "♥ ");
 			}
 		}
@@ -1550,6 +1574,8 @@ void CChat::OnPrepareLines(float y)
 		ColorRGBA NameColor;
 		if(Line.m_CustomColor)
 			NameColor = *Line.m_CustomColor;
+		else if(Line.m_ClientId == SERVER_MSG && ModernStyle()) // 667client
+			NameColor = MessageAccentColor(Line);
 		else if(Line.m_ClientId == SERVER_MSG)
 			NameColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
 		else if(Line.m_ClientId == CLIENT_MSG)
@@ -1566,12 +1592,14 @@ void CChat::OnPrepareLines(float y)
 			NameColor = ColorRGBA(0.75f, 0.5f, 0.75f, 1.0f);
 		else if(Line.m_ClientId >= 0 && g_Config.m_ClChatTeamColors && GameClient()->m_Teams.Team(Line.m_ClientId))
 			NameColor = GameClient()->GetDDTeamColor(GameClient()->m_Teams.Team(Line.m_ClientId), 0.75f);
+		else if(ModernStyle()) // 667client
+			NameColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		else
 			NameColor = ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f);
 
 		TextRender()->TextColor(NameColor);
 		TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, aClientId);
-		TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, Line.m_aName);
+		TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, ModernStyle() && Line.m_ClientId == SERVER_MSG ? "" : Line.m_aName); // 667client
 
 		if(Line.m_TimesRepeated > 0)
 		{
@@ -1588,6 +1616,8 @@ void CChat::OnPrepareLines(float y)
 		ColorRGBA Color;
 		if(Line.m_CustomColor)
 			Color = *Line.m_CustomColor;
+		else if(Line.m_ClientId == SERVER_MSG && ModernStyle()) // 667client
+			Color = MessageAccentColor(Line);
 		else if(Line.m_ClientId == SERVER_MSG)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
 		else if(Line.m_ClientId == CLIENT_MSG)
@@ -1596,6 +1626,8 @@ void CChat::OnPrepareLines(float y)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
 		else if(Line.m_Team)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
+		else if(ModernStyle()) // 667client
+			Color = ColorRGBA(0.95f, 0.95f, 0.95f, 1.0f);
 		else // regular message
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageColor));
 		TextRender()->TextColor(Color);
@@ -1647,7 +1679,7 @@ void CChat::OnPrepareLines(float y)
 				FullWidth += std::max(LineCursor.m_LongestLineWidth, AppendCursor.m_LongestLineWidth);
 			}
 			Graphics()->SetColor(1, 1, 1, 1);
-			Line.m_QuadContainerIndex = Graphics()->CreateRectQuadContainer(Begin, LineY, FullWidth, Line.m_aYOffset[OffsetType], MessageRounding(), IGraphics::CORNER_ALL);
+			Line.m_QuadContainerIndex = Graphics()->CreateRectQuadContainer(Begin, LineY, FullWidth, Line.m_aYOffset[OffsetType] - MessageGap(), MessageRounding(), IGraphics::CORNER_ALL); // 667client
 		}
 
 		TextRender()->SetRenderFlags(CurRenderFlags);
@@ -1655,6 +1687,7 @@ void CChat::OnPrepareLines(float y)
 			TextRender()->UploadTextContainer(Line.m_TextContainerIndex);
 	}
 
+	SetMessageFont(false); // 667client
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 }
 
@@ -1665,6 +1698,11 @@ void CChat::OnRender()
 
 	// 667client
 	GameClient()->m_ChatMedia.Update(*this);
+	if(ModernStyle() != m_PrevModernStyle)
+	{
+		m_PrevModernStyle = ModernStyle();
+		RebuildChat();
+	}
 	// 667client
 
 	// send pending chat messages
@@ -1830,6 +1868,7 @@ void CChat::OnRender()
 	y -= ScaledFontSize;
 
 	// 667client
+	x += MessageAccentOffset();
 	bool IsScoreBoardOpen = GameClient()->m_Scoreboard.IsShown() && (Graphics()->ScreenAspect() > 1.7f);
 	const bool ShowLargeArea = EditorPreview || m_Show || (m_Mode != MODE_NONE && g_Config.m_ClShowChat == 1) || g_Config.m_ClShowChat == 2;
 	int64_t Now = time();
@@ -1857,13 +1896,15 @@ void CChat::OnRender()
 		RealMsgPaddingTee = 0;
 	}
 	const float MeasureFontSize = FontSize();
-	const float LineWidth = (IsScoreBoardOpen ? std::max(85.0f * LayoutScale, MeasureFontSize * 85.0f / 6.0f) : ChatWidth()) - (RealMsgPaddingX * 1.5f) - RealMsgPaddingTee;
+	const float LineWidth = (IsScoreBoardOpen ? std::max(85.0f * LayoutScale, MeasureFontSize * 85.0f / 6.0f) : ChatWidth()) - (RealMsgPaddingX * 1.5f) - RealMsgPaddingTee - MessageAccentOffset();
 	const float TextBegin = x + RealMsgPaddingX / 2.0f;
 	const bool ModeActive = m_Mode != MODE_NONE;
 	const bool LayoutEnabled = HudLayout::IsEnabled(HudLayout::MODULE_CHAT);
 	const bool LayoutChanged = ChatLayout.m_X != m_PrevHudLayoutX || ChatLayout.m_Y != m_PrevHudLayoutY || ChatLayout.m_Scale != m_PrevHudLayoutScale || LayoutEnabled != m_PrevHudLayoutEnabled;
 	const bool ForceRecreate = IsScoreBoardOpen != m_PrevScoreBoardShowed || ShowLargeArea != m_PrevShowChat || ModeActive != m_PrevModeActive || LayoutChanged;
-	CChatScroll::MeasureHeights(*this, TextBegin, MeasureFontSize, LineWidth, RealMsgPaddingY, RealMsgPaddingTee, OffsetType, IsScoreBoardOpen, ForceRecreate);
+	SetMessageFont(ModernStyle());
+	CChatScroll::MeasureHeights(*this, TextBegin, MeasureFontSize, LineWidth, RealMsgPaddingY + MessageGap(), RealMsgPaddingTee, OffsetType, IsScoreBoardOpen, ForceRecreate);
+	SetMessageFont(false);
 	CChatScroll::UpdateScrollbar(*this, x, y, Width, Height, HeightLimit, OffsetType, MeasureFontSize, RealMsgPaddingY, ChatInteractionActive);
 	// 667client
 
@@ -1942,9 +1983,19 @@ void CChat::OnRender()
 			Graphics()->TextureClear();
 			if(Line.m_QuadContainerIndex != -1)
 			{
-				Graphics()->SetColor(color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClChatBackgroundColor, true)).WithMultipliedAlpha(Blend * ModuleAlpha));
+				// 667client
+				const ColorRGBA BackgroundColor = ModernStyle() ? ColorRGBA(0.1f, 0.1f, 0.12f, 0.6f) : color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClChatBackgroundColor, true));
+				Graphics()->SetColor(BackgroundColor.WithMultipliedAlpha(Blend * ModuleAlpha));
+				// 667client
 				Graphics()->RenderQuadContainerEx(Line.m_QuadContainerIndex, 0, -1, 0, ((LineRenderY + RealMsgPaddingY / 2.0f) - Line.m_TextYOffset));
 			}
+			// 667client
+			if(ModernStyle() && (Line.m_aText[0] != '\0' || Line.m_aName[0] != '\0'))
+			{
+				const float AccentWidth = MessageAccentWidth();
+				Graphics()->DrawRect(x - MessageAccentOffset(), LineRenderY, AccentWidth, LineH - MessageGap(), MessageAccentColor(Line).WithMultipliedAlpha(Blend * ModuleAlpha), IGraphics::CORNER_ALL, AccentWidth / 2.0f);
+			}
+			// 667client
 		}
 
 		// 667client
@@ -1972,7 +2023,7 @@ void CChat::OnRender()
 			}
 
 			const ColorRGBA TextColor = TextRender()->DefaultTextColor().WithMultipliedAlpha(Blend * ModuleAlpha);
-			const ColorRGBA TextOutlineColor = TextRender()->DefaultTextOutlineColor().WithMultipliedAlpha(Blend * ModuleAlpha);
+			const ColorRGBA TextOutlineColor = TextRender()->DefaultTextOutlineColor().WithMultipliedAlpha(Blend * ModuleAlpha * (ModernStyle() ? 0.35f : 1.0f)); // 667client
 			TextRender()->RenderTextContainer(Line.m_TextContainerIndex, TextColor, TextOutlineColor, 0, (LineRenderY + RealMsgPaddingY / 2.0f) - Line.m_TextYOffset);
 		}
 

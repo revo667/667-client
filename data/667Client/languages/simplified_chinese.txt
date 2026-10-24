@@ -1135,6 +1135,22 @@ Notify about saves on map
 == 地图存档通知
 
 [667Client]
+Chat style
+== 聊天样式
+
+[667Client]
+Old chat
+== 旧版聊天
+
+[667Client]
+Modern chat
+== 现代聊天
+
+[667Client]
+Every chat line gets its own rounded background with a colored bar on the left: green for server messages, white for players
+== 每条聊天消息都有独立的圆角背景，左侧带彩色条：服务器消息为绿色，玩家消息为白色
+
+[667Client]
 Twitch Chat
 == Twitch 聊天
 
@@ -2169,3 +2185,23 @@ Others
 [Gradient]
 All
 == 全部
+
+[667Client]
+Style
+== 样式
+
+[667Client]
+Normal
+== 普通
+
+[667Client]
+Card
+== 卡片
+
+[667Client]
+Music player style
+== 音乐播放器样式
+
+[667Client]
+A card with the cover, title, artist and progress in the top right corner
+== 右上角显示封面、标题、艺术家和进度的卡片

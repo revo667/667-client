@@ -73,6 +73,7 @@
 	{"Main menu speed", SETTINGS_NAV_LEAF_SC_VISUALS, "Animations", &g_Config.m_ScMainMenuAnimationSpeed, &g_Config.m_ScAnimations},
 
 	{"Music Player", SETTINGS_NAV_LEAF_SC_VISUALS, "Visuals", &g_Config.m_ScMusicPlayer, nullptr},
+	{"Music player style", SETTINGS_NAV_LEAF_SC_VISUALS, "Music Player", &g_Config.m_ScMusicPlayerStyle, &g_Config.m_ScMusicPlayer},
 	{"Show song lyrics", SETTINGS_NAV_LEAF_SC_VISUALS, "Music Player", &g_Config.m_ScMusicPlayerShowLyrics, &g_Config.m_ScMusicPlayer},
 	{"Show current time", SETTINGS_NAV_LEAF_SC_VISUALS, "Music Player", &g_Config.m_ScMusicPlayerShowCurrentTime, &g_Config.m_ScMusicPlayer},
 	{"Open dock on hover", SETTINGS_NAV_LEAF_SC_VISUALS, "Music Player", &g_Config.m_ScMusicDock, &g_Config.m_ScMusicPlayer},
@@ -208,6 +209,7 @@
 	{"Commands in other layout", SETTINGS_NAV_LEAF_SC_OTHERS, "Chat QoL", &g_Config.m_ScChatAltCommandLayout, nullptr},
 	{"Reply/copy message menu", SETTINGS_NAV_LEAF_SC_OTHERS, "Chat QoL", &g_Config.m_ScChatMessageActions, nullptr},
 	{"Notify about saves on map", SETTINGS_NAV_LEAF_SC_OTHERS, "Chat QoL", &g_Config.m_ScNotifySavesOnMap, nullptr},
+	{"Chat style", SETTINGS_NAV_LEAF_SC_OTHERS, "Chat QoL", &g_Config.m_ScChatModernStyle, nullptr},
 	{"Send crash, freeze and stutter reports", SETTINGS_NAV_LEAF_SC_OTHERS, "Beta", &g_Config.m_ScBetaReports, nullptr},
 
 

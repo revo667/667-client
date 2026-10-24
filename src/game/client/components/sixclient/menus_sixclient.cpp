@@ -1524,7 +1524,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const bool MusicPlayerEnabled = g_Config.m_ScMusicPlayer != 0;
 	const bool MusicPlayerShowStaticColor = MusicPlayerEnabled && g_Config.m_ScMusicPlayerColorMode == 0;
 	const bool MusicPlayerShowLyrics = MusicPlayerEnabled && g_Config.m_ScMusicPlayerShowLyrics != 0;
-	const float MusicPlayerBaseRows = 7.0f;
+	const float MusicPlayerBaseRows = 8.0f;
 	const float MusicPlayerLyricsTargetHeight = MarginSmall + LineSize;
 	const float MusicPlayerLyricsExpandedHeight = SC_MODULE_REVEAL(MusicPlayerShowLyrics, MusicPlayerLyricsTargetHeight, Client()->RenderFrameTime());
 	const float MusicPlayerExpandedTargetHeight =
@@ -1555,6 +1555,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	static CButtonContainer s_MusicPlayerResetButton;
 	if(Ui()->DoButton_FontIcon(&s_MusicPlayerResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &MusicPlayerResetButton, BUTTONFLAG_LEFT))
 	{
+		g_Config.m_ScMusicPlayerStyle = DefaultConfig::ScMusicPlayerStyle;
 		g_Config.m_ScMusicPlayerColorMode = DefaultConfig::ScMusicPlayerColorMode;
 		g_Config.m_ScMusicPlayerStaticColor = DefaultConfig::ScMusicPlayerStaticColor;
 		g_Config.m_ScMusicPlayerTextScale = DefaultConfig::ScMusicPlayerTextScale;
@@ -1591,6 +1592,22 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		Ui()->ClipEnable(&Visible);
 
 		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+
+		{
+			MainView.HSplitTop(LineSize, &Button, &MainView);
+			CUIRect MusicPlayerStyleLabel, MusicPlayerNormalButton, MusicPlayerCardButton;
+			Button.VSplitLeft(150.0f, &MusicPlayerStyleLabel, &Button);
+			Ui()->DoLabel(&MusicPlayerStyleLabel, ScLocalize("Style"), 14.0f, TEXTALIGN_ML);
+			Button.VSplitMid(&MusicPlayerNormalButton, &MusicPlayerCardButton, 2.0f);
+			static CButtonContainer s_MusicPlayerStyleNormal;
+			static CButtonContainer s_MusicPlayerStyleCard;
+			if(DoButton_Menu(&s_MusicPlayerStyleNormal, ScLocalize("Normal"), g_Config.m_ScMusicPlayerStyle == 0, &MusicPlayerNormalButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
+				g_Config.m_ScMusicPlayerStyle = 0;
+			if(DoButton_Menu(&s_MusicPlayerStyleCard, ScLocalize("Card"), g_Config.m_ScMusicPlayerStyle == 1, &MusicPlayerCardButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
+				g_Config.m_ScMusicPlayerStyle = 1;
+			GameClient()->m_Tooltips.DoToolTip(&s_MusicPlayerStyleCard, &MusicPlayerCardButton, ScLocalize("A card with the cover, title, artist and progress in the top right corner"));
+			MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+		}
 
 		MainView.HSplitTop(LineSize, &Button, &MainView);
 		CUIRect MusicPlayerColorModeLabel, MusicPlayerColorModeSelect;
@@ -3052,7 +3069,7 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 	}
 	// 667client
 
-	const float ChatQoLBlockHeight = LineSize + MarginSmall + 5.0f * LineSize;
+	const float ChatQoLBlockHeight = LineSize + MarginSmall + 6.0f * LineSize;
 	CUIRect ChatQoLBlock;
 	Column.HSplitTop(ChatQoLBlockHeight, &ChatQoLBlock, &Column);
 
@@ -3085,6 +3102,22 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 		CUIRect NotifySavesRow;
 		ChatQoLBlock.HSplitTop(LineSize, &NotifySavesRow, &ChatQoLBlock);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScNotifySavesOnMap, ScLocalize("Notify about saves on map"), &g_Config.m_ScNotifySavesOnMap, &NotifySavesRow, LineSize);
+	}
+	{
+		CUIRect ChatStyleRow, ChatStyleLabel, OldChatButton, ModernChatButton;
+		ChatQoLBlock.HSplitTop(LineSize, &ChatStyleRow, &ChatQoLBlock);
+		ChatStyleRow.VSplitMid(&ChatStyleLabel, &ChatStyleRow, 2.0f);
+		Ui()->DoLabel(&ChatStyleLabel, ScLocalize("Chat style"), 14.0f, TEXTALIGN_ML);
+		ChatStyleRow.VSplitMid(&OldChatButton, &ModernChatButton, 2.0f);
+		OldChatButton.HMargin(2.0f, &OldChatButton);
+		ModernChatButton.HMargin(2.0f, &ModernChatButton);
+		static CButtonContainer s_OldChatButton;
+		static CButtonContainer s_ModernChatButton;
+		if(DoButton_Menu(&s_OldChatButton, ScLocalize("Old chat"), g_Config.m_ScChatModernStyle == 0, &OldChatButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
+			g_Config.m_ScChatModernStyle = 0;
+		if(DoButton_Menu(&s_ModernChatButton, ScLocalize("Modern chat"), g_Config.m_ScChatModernStyle == 1, &ModernChatButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
+			g_Config.m_ScChatModernStyle = 1;
+		GameClient()->m_Tooltips.DoToolTip(&s_ModernChatButton, &ModernChatButton, ScLocalize("Every chat line gets its own rounded background with a colored bar on the left: green for server messages, white for players"));
 	}
 
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);

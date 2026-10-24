@@ -3033,6 +3033,37 @@ namespace
 		return ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f);
 	}
 
+	static bool MusicPlayerCardStyle()
+	{
+		return g_Config.m_ScMusicPlayerStyle == 1;
+	}
+
+	static CUIRect MusicPlayerCardRect(float Width, float Height)
+	{
+		const auto Layout = HudLayout::Get(HudLayout::MODULE_MUSIC_PLAYER, Width, Height);
+		const float Scale = std::clamp(Layout.m_Scale / 100.0f, 0.25f, 3.0f);
+		const float CardW = std::min(112.0f * Scale, Width * 0.5f);
+		const float CardH = 24.0f * Scale;
+		const float Margin = 4.0f;
+		return {Width - CardW - Margin, Margin, CardW, CardH};
+	}
+
+	static SNowPlayingSnapshot MusicPlayerPreviewSnapshot()
+	{
+		SNowPlayingSnapshot Snapshot;
+		Snapshot.m_Valid = true;
+		Snapshot.m_Title = "Blinding Lights";
+		Snapshot.m_Artist = "The Weeknd";
+		Snapshot.m_Album = "After Hours";
+		Snapshot.m_DurationMs = 200000;
+		Snapshot.m_PositionMs = 101000;
+		Snapshot.m_PlaybackState = EMusicPlaybackState::PLAYING;
+		Snapshot.m_CanPrev = true;
+		Snapshot.m_CanPlayPause = true;
+		Snapshot.m_CanNext = true;
+		return Snapshot;
+	}
+
 	static ColorRGBA DesaturateColor(const ColorRGBA &Color, float Amount)
 	{
 		const float Gray = RelativeLuminance(Color);
@@ -4612,6 +4643,20 @@ public:
 
 		const float Height = HudLayout::CANVAS_HEIGHT;
 		const float Width = Height * pOwner->Graphics()->ScreenAspect();
+		if(MusicPlayerCardStyle())
+		{
+			m_ExpandAnim = 0.0f;
+			m_HoverAnim = 0.0f;
+			m_HudReservation = CMusicPlayer::SHudReservation();
+			if(m_Snapshot.m_Valid)
+			{
+				m_HudReservation.m_Rect = MusicPlayerCardRect(Width, Height);
+				m_HudReservation.m_Visible = true;
+				m_HudReservation.m_Active = true;
+				m_HudReservation.m_PushAmount = 1.0f;
+			}
+			return;
+		}
 		const auto Layout = HudLayout::Get(HudLayout::MODULE_MUSIC_PLAYER, Width, Height);
 		const SGameTimerDisplay GameTimer = BuildGameTimerDisplay(pOwner->GameClient()->m_Snap.m_pGameInfoObj, pOwner->Client()->GameTick(g_Config.m_ClDummy), pOwner->Client()->GameTickSpeed(), false);
 		const float TextScale = MusicPlayerTextScale();
@@ -5031,6 +5076,8 @@ CUIRect CMusicPlayer::GetHudEditorRect(bool ForcePreview) const
 
 	const float Height = HudLayout::CANVAS_HEIGHT;
 	const float Width = Height * Graphics()->ScreenAspect();
+	if(MusicPlayerCardStyle())
+		return MusicPlayerCardRect(Width, Height);
 	const CScreenRect PreviousScreen = Graphics()->GetScreen();
 	Graphics()->MapScreenToSize(Width, Height);
 	const auto Layout = HudLayout::Get(HudLayout::MODULE_MUSIC_PLAYER, Width, Height);
@@ -5224,21 +5271,15 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 	if(!ForcePreview && g_Config.m_ClFocusMode && g_Config.m_ClFocusModeHideSongPlayer)
 		return;
 
+	if(MusicPlayerCardStyle())
+	{
+		RenderMusicPlayerCard(ForcePreview);
+		return;
+	}
+
 	SNowPlayingSnapshot Snapshot = m_pImpl->m_Snapshot;
 	if(ForcePreview)
-	{
-		Snapshot = SNowPlayingSnapshot();
-		Snapshot.m_Valid = true;
-		Snapshot.m_Title = "Blinding Lights";
-		Snapshot.m_Artist = "The Weeknd";
-		Snapshot.m_Album = "After Hours";
-		Snapshot.m_DurationMs = 200000;
-		Snapshot.m_PositionMs = 101000;
-		Snapshot.m_PlaybackState = EMusicPlaybackState::PLAYING;
-		Snapshot.m_CanPrev = true;
-		Snapshot.m_CanPlayPause = true;
-		Snapshot.m_CanNext = true;
-	}
+		Snapshot = MusicPlayerPreviewSnapshot();
 
 	const float Height = HudLayout::CANVAS_HEIGHT;
 	const float Width = Height * Graphics()->ScreenAspect();
@@ -5679,6 +5720,102 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 	Graphics()->MapScreenToSize(Width, Height);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+}
+
+void CMusicPlayer::RenderMusicPlayerCard(bool ForcePreview)
+{
+	const SNowPlayingSnapshot Snapshot = ForcePreview ? MusicPlayerPreviewSnapshot() : m_pImpl->m_Snapshot;
+	if(!Snapshot.m_Valid)
+		return;
+
+	const float Height = HudLayout::CANVAS_HEIGHT;
+	const float Width = Height * Graphics()->ScreenAspect();
+	Graphics()->MapScreenToSize(Width, Height);
+	const float ModuleAlpha = HudLayout::AlphaFactor(HudLayout::MODULE_MUSIC_PLAYER);
+	const float Delta = std::clamp(Client()->RenderFrameTime(), 0.0f, 0.1f);
+	const CUIRect Card = MusicPlayerCardRect(Width, Height);
+	const float Scale = Card.h / 24.0f;
+	const float Pad = 3.0f * Scale;
+	const CUIRect UiScreen = *Ui()->Screen();
+	const float UiFontScale = UiScreen.h / std::max(Height, 1.0f);
+
+	Graphics()->DrawRect(Card.x, Card.y, Card.w, Card.h, ColorRGBA(0.09f, 0.09f, 0.11f, 0.88f * ModuleAlpha), IGraphics::CORNER_ALL, 4.0f * Scale);
+
+	const CUIRect ArtRect = {Card.x + Pad, Card.y + Pad, Card.h - Pad * 2.0f, Card.h - Pad * 2.0f};
+	const float ArtRounding = 2.5f * Scale;
+	const SMusicPlayerPalette Palette = ForcePreview ? BuildPaletteFromAccent(DefaultPreviewAccentForColorMode(g_Config.m_ScMusicPlayerColorMode)) : m_pImpl->m_Palette;
+	IGraphics::CTextureHandle ArtTexture;
+	if(!m_pImpl->m_vArtFrames.empty() &&
+		MediaDecoder::GetCurrentFrameTexture(m_pImpl->m_vArtFrames, m_pImpl->m_ArtAnimated, m_pImpl->m_ArtAnimationStart, ArtTexture) &&
+		ArtTexture.IsValid())
+	{
+		DrawRoundedTexture(Graphics(), ArtTexture, ArtRect, ArtRounding, m_pImpl->m_ArtWidth, m_pImpl->m_ArtHeight, MusicArtCropProfile(Snapshot.m_ServiceId));
+	}
+	else
+	{
+		Graphics()->DrawRect(ArtRect.x, ArtRect.y, ArtRect.w, ArtRect.h, MixColor(Palette.m_Mid, Palette.m_Dark, 0.42f).WithAlpha(0.5f * ModuleAlpha), IGraphics::CORNER_ALL, ArtRounding);
+		m_pImpl->EnsureLogoTexture(Graphics());
+		DrawRoundedFallbackArt(Graphics(), m_pImpl->m_LogoTexture, ArtRect, Palette, 0.0f, Scale, ArtRounding);
+	}
+
+	const int NumBars = MusicPlayerVisualizerColumns();
+	const float PositionMs = ForcePreview ? (float)Snapshot.m_PositionMs : m_pImpl->VisualPositionMs(Delta);
+	m_pImpl->SubmitVisualizerLevels(Snapshot, (int64_t)PositionMs, NumBars);
+	const bool UseCoverColor = IsCoverVisualizerColorMode() && (m_pImpl->m_HasCoverTint || m_pImpl->m_HasCoverBarTint);
+	const std::array<ColorRGBA, COVER_BAR_TINT_CELLS> &aBarColors = m_pImpl->UpdateVisualizerBarColors(NumBars, Delta, UseCoverColor);
+	auto BarColor = [&](int Index) {
+		return ResolveVisualizerBarColor(UseCoverColor, IsStaticVisualizerColorMode(), m_pImpl->m_HasCoverBarTint, m_pImpl->m_HasCoverTint, aBarColors, Index, 1.0f);
+	};
+
+	const float VisualW = 13.0f * Scale;
+	const float VisualH = 8.0f * Scale;
+	const CUIRect VisualRect = {Card.x + Card.w - Pad - 1.0f * Scale - VisualW, Card.y + Pad + 1.0f * Scale, VisualW, VisualH};
+	const std::array<float, CImpl::VISUALIZER_BARS> aLevels = m_pImpl->VisualizerLevels();
+	const float BarGap = 1.0f * Scale;
+	const float BarW = std::max(0.5f, (VisualRect.w - BarGap * (NumBars - 1)) / std::max(1, NumBars));
+	const float BarRounding = IsSoftVisualizerRounding() ? BarW * 0.5f : 0.0f;
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+	for(int i = 0; i < NumBars; ++i)
+	{
+		const float Activity = std::clamp(aLevels[i], 0.0f, 1.0f);
+		const float BarH = std::max(BarW, VisualRect.h * (0.18f + 0.82f * Activity));
+		Graphics()->SetColor(BarColor(i).WithMultipliedAlpha(ModuleAlpha));
+		Graphics()->DrawRectExt(VisualRect.x + i * (BarW + BarGap), VisualRect.y + VisualRect.h - BarH, BarW, BarH, BarRounding, IGraphics::CORNER_ALL);
+	}
+	Graphics()->QuadsEnd();
+
+	const float TextX = ArtRect.x + ArtRect.w + 3.0f * Scale;
+	const float ProgressH = 1.3f * Scale;
+	const CUIRect ProgressRect = {TextX, Card.y + Card.h - Pad - 1.5f * Scale - ProgressH, Card.x + Card.w - Pad - 1.0f * Scale - TextX, ProgressH};
+	const float Progress = Snapshot.m_DurationMs > 0 ? std::clamp(PositionMs / (float)Snapshot.m_DurationMs, 0.0f, 1.0f) : 0.0f;
+	Graphics()->DrawRect(ProgressRect.x, ProgressRect.y, ProgressRect.w, ProgressRect.h, ColorRGBA(1.0f, 1.0f, 1.0f, 0.14f * ModuleAlpha), IGraphics::CORNER_ALL, ProgressH * 0.5f);
+	if(Progress > 0.0f)
+		Graphics()->DrawRect(ProgressRect.x, ProgressRect.y, std::max(ProgressH, ProgressRect.w * Progress), ProgressRect.h, BarColor(0).WithAlpha(ModuleAlpha), IGraphics::CORNER_ALL, ProgressH * 0.5f);
+
+	const float TitleFont = 5.0f * Scale;
+	const float ArtistFont = 3.5f * Scale;
+	const CUIRect TitleRect = {TextX, Card.y + Pad + 0.6f * Scale, VisualRect.x - 2.0f * Scale - TextX, TitleFont + 1.0f * Scale};
+	const CUIRect ArtistRect = {TextX, TitleRect.y + TitleRect.h + 0.6f * Scale, TitleRect.w, ArtistFont + 1.0f * Scale};
+	const CUIRect UiTitleRect = HudToUiRect(TitleRect, UiScreen, Width, Height);
+	const CUIRect UiArtistRect = HudToUiRect(ArtistRect, UiScreen, Width, Height);
+	const std::string Title = MusicPlayerPrimaryText(Snapshot);
+	const std::string Artist = Snapshot.m_Artist.empty() ? Localize("Unknown artist") : Snapshot.m_Artist;
+
+	Ui()->MapScreen();
+	SLabelProperties Props;
+	Props.m_EllipsisAtEnd = true;
+	Props.m_MaxWidth = UiTitleRect.w;
+	TextRender()->SetSelectedFace("Inter 24pt SemiBold");
+	TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.98f * ModuleAlpha));
+	Ui()->DoLabel(&UiTitleRect, Title.c_str(), TitleFont * UiFontScale, TEXTALIGN_ML, Props);
+	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	Props.m_MaxWidth = UiArtistRect.w;
+	TextRender()->TextColor(ColorRGBA(0.72f, 0.74f, 0.78f, 0.9f * ModuleAlpha));
+	Ui()->DoLabel(&UiArtistRect, Artist.c_str(), ArtistFont * UiFontScale, TEXTALIGN_ML, Props);
+
+	Graphics()->MapScreenToSize(Width, Height);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
 }
 
 float MusicPlayerLegacyHudAnchorOffsetCanvasX(ITextRender *pTextRender, int LayoutScale, float HudWidth, float TextScale, bool *pOutReady)
