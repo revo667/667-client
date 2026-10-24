@@ -350,6 +350,14 @@ public:
 		int64_t m_Snapshot = 0;
 	};
 	std::vector<SComponentTime> m_vComponentTimes;
+	int64_t m_PerfMeasureBegin = 0;
+	int64_t m_PerfMeasureEnd = 0;
+	int64_t m_PerfMeasureStarted = 0;
+	int64_t m_PerfFrames = 0;
+	std::vector<SComponentTime> m_vPerfTimes;
+	std::vector<int64_t> m_vPerfPartStart;
+	void UpdatePerfMeasure();
+	static void ConPerfMeasure(IConsole::IResult *pResult, void *pUserData);
 	// Which components are timed: the features added since 1.0.22, set by the beta reporter. The
 	// others are not, so the measuring itself costs next to nothing.
 	std::vector<char> m_vTimedComponents;

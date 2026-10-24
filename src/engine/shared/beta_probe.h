@@ -73,6 +73,13 @@ enum EPart
 
 const char *PartName(int Part);
 extern int64_t g_aPartTicks[NUM_PARTS];
+extern int64_t g_aPartTicksTotal[NUM_PARTS];
+
+inline void AddPartTicks(int Part, int64_t Ticks)
+{
+	g_aPartTicks[Part] += Ticks;
+	g_aPartTicksTotal[Part] += Ticks;
+}
 
 class CPartScope
 {
@@ -82,7 +89,7 @@ class CPartScope
 public:
 	explicit CPartScope(int Part) :
 		m_Part(Part), m_Start(time_get_impl()) {}
-	~CPartScope() { g_aPartTicks[m_Part] += time_get_impl() - m_Start; }
+	~CPartScope() { AddPartTicks(m_Part, time_get_impl() - m_Start); }
 	CPartScope(const CPartScope &) = delete;
 	CPartScope &operator=(const CPartScope &) = delete;
 };

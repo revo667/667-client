@@ -17,9 +17,11 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <limits>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -710,6 +712,11 @@ public:
 		return true;
 	}
 
+	std::array<const void *, 4> FaceState() const
+	{
+		return {m_DefaultFace, m_SelectedFace, m_VariantFace, reinterpret_cast<const void *>(m_vFallbackFaces.size())};
+	}
+
 	void SetFontPreset(EFontPreset FontPreset)
 	{
 		switch(FontPreset)
@@ -999,6 +1006,8 @@ class CTextRender : public IEngineTextRender
 
 	std::vector<SFontLanguageVariant> m_vVariants;
 
+	std::unordered_map<std::string, float> m_TextWidthCache;
+	std::string m_TextWidthKey;
 	unsigned m_RenderFlags;
 
 	ColorRGBA m_Color;
@@ -1296,6 +1305,7 @@ public:
 
 	bool LoadFonts() override
 	{
+		m_TextWidthCache.clear();
 		// read file data into buffer
 		const char *pFilename = "fonts/index.json";
 		void *pFileData;
@@ -1482,6 +1492,35 @@ public:
 
 	float TextWidth(float FontSize, const char *pText, int StrLength = -1, float LineWidth = -1.0f, int Flags = 0, const STextSizeProperties &TextSizeProps = {}) override
 	{
+		const bool Cacheable = pText != nullptr && (Flags & TEXTFLAG_RENDER) == 0 &&
+				       TextSizeProps.m_pHeight == nullptr && TextSizeProps.m_pAlignedFontSize == nullptr &&
+				       TextSizeProps.m_pMaxCharacterHeightInLine == nullptr && TextSizeProps.m_pLineCount == nullptr;
+		if(Cacheable)
+		{
+			const vec2 ScreenRectSize = Graphics()->GetScreen().Size();
+			const vec2 ScreenSize = Graphics()->ScreenSize();
+			const std::array<const void *, 4> Faces = m_pGlyphMap->FaceState();
+			const unsigned RenderFlags = m_RenderFlags;
+			m_TextWidthKey.clear();
+			const auto Append = [&](const auto &Value) { m_TextWidthKey.append(reinterpret_cast<const char *>(&Value), sizeof(Value)); };
+			Append(FontSize);
+			Append(LineWidth);
+			Append(Flags);
+			Append(RenderFlags);
+			Append(ScreenRectSize.x);
+			Append(ScreenRectSize.y);
+			Append(ScreenSize.x);
+			Append(ScreenSize.y);
+			Append(Faces);
+			size_t Length = 0;
+			while((StrLength < 0 || (int)Length < StrLength) && pText[Length] != '\0')
+				Length++;
+			m_TextWidthKey.append(pText, Length);
+			const auto It = m_TextWidthCache.find(m_TextWidthKey);
+			if(It != m_TextWidthCache.end())
+				return It->second;
+		}
+
 		CTextCursor Cursor;
 		Cursor.m_FontSize = FontSize;
 		Cursor.m_Flags = Flags;
@@ -1495,6 +1534,12 @@ public:
 			*TextSizeProps.m_pMaxCharacterHeightInLine = Cursor.m_MaxCharacterHeight;
 		if(TextSizeProps.m_pLineCount != nullptr)
 			*TextSizeProps.m_pLineCount = Cursor.m_LineCount;
+		if(Cacheable)
+		{
+			if(m_TextWidthCache.size() >= 4096)
+				m_TextWidthCache.clear();
+			m_TextWidthCache.emplace(m_TextWidthKey, Cursor.m_LongestLineWidth);
+		}
 		return Cursor.m_LongestLineWidth;
 	}
 
@@ -2475,6 +2520,7 @@ public:
 
 	void OnWindowResize() override
 	{
+		m_TextWidthCache.clear();
 		bool HasNonEmptyTextContainer = false;
 		for(auto *pTextContainer : m_vpTextContainers)
 		{

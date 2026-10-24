@@ -65,6 +65,7 @@
 #include <engine/map.h>
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
+#include <engine/shared/beta_probe.h>
 #include <engine/shared/csv.h>
 #include <engine/sound.h>
 #include <engine/storage.h>
@@ -83,9 +84,11 @@
 #include <game/teamscore.h>
 #include <game/version.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <limits>
+#include <typeinfo>
 
 using namespace std::chrono_literals;
 
@@ -265,6 +268,7 @@ void CGameClient::OnConsoleInit()
 	// add basic console commands
 	Console()->Register("team", "i[team-id]", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself to restart");
+	Console()->Register("perf_measure", "?i[seconds] ?i[delay]", CFGFLAG_CLIENT, ConPerfMeasure, this, "Time every component for some seconds (after a delay) and print the cost per frame");
 	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange7, this, "Change ready state (0.7 only)");
 
 	// register game commands to allow the client prediction to load settings from the map
@@ -586,13 +590,22 @@ void CGameClient::OnUpdate()
 	// 667client: timed for the beta reporter
 	m_vComponentTimes.resize(m_vpAll.size());
 	const bool TimeComponents = g_Config.m_ScBetaReports != 0 && m_vTimedComponents.size() == m_vpAll.size();
+	const bool Perf = m_PerfMeasureStarted != 0;
+	if(Perf)
+		m_vPerfTimes.resize(m_vpAll.size());
 	for(size_t i = 0; i < m_vpAll.size(); i++)
 	{
 		const bool Timed = TimeComponents && m_vTimedComponents[i];
-		const int64_t Start = Timed ? time_get_impl() : 0;
+		const int64_t Start = Timed || Perf ? time_get_impl() : 0;
 		m_vpAll[i]->OnUpdate();
-		if(Timed)
-			m_vComponentTimes[i].m_Update += time_get_impl() - Start;
+		if(Timed || Perf)
+		{
+			const int64_t Spent = time_get_impl() - Start;
+			if(Timed)
+				m_vComponentTimes[i].m_Update += Spent;
+			if(Perf)
+				m_vPerfTimes[i].m_Update += Spent;
+		}
 	}
 }
 
@@ -951,15 +964,27 @@ void CGameClient::OnRender()
 	// 667client: timed for the beta reporter
 	m_vComponentTimes.resize(m_vpAll.size());
 	const bool TimeComponents = g_Config.m_ScBetaReports != 0 && m_vTimedComponents.size() == m_vpAll.size();
+	UpdatePerfMeasure();
+	const bool Perf = m_PerfMeasureStarted != 0;
+	if(Perf)
+		m_vPerfTimes.resize(m_vpAll.size());
 	for(size_t i = 0; i < m_vpAll.size(); i++)
 	{
 		m_AspectRatio.PrepareComponent(m_vpAll[i]);
 		const bool Timed = TimeComponents && m_vTimedComponents[i];
-		const int64_t Start = Timed ? time_get_impl() : 0;
+		const int64_t Start = Timed || Perf ? time_get_impl() : 0;
 		m_vpAll[i]->OnRender();
-		if(Timed)
-			m_vComponentTimes[i].m_Render += time_get_impl() - Start;
+		if(Timed || Perf)
+		{
+			const int64_t Spent = time_get_impl() - Start;
+			if(Timed)
+				m_vComponentTimes[i].m_Render += Spent;
+			if(Perf)
+				m_vPerfTimes[i].m_Render += Spent;
+		}
 	}
+	if(Perf)
+		m_PerfFrames++;
 
 	// 667client
 	m_AspectRatio.BeforeFogRect();
@@ -6530,4 +6555,65 @@ void CGameClient::SetConnectInfo(const NETADDR *pAddress)
 	m_ConnectServerInfo = pEntry->m_Info;
 	const CNetObj_GameInfoEx GameInfoEx = {.m_Version = 0};
 	m_GameInfo = GetGameInfo(&GameInfoEx, 0, &*m_ConnectServerInfo);
+}
+
+// 667client
+void CGameClient::ConPerfMeasure(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameClient *pSelf = static_cast<CGameClient *>(pUserData);
+	const int Seconds = std::clamp(pResult->NumArguments() > 0 ? pResult->GetInteger(0) : 10, 1, 120);
+	const int Delay = std::clamp(pResult->NumArguments() > 1 ? pResult->GetInteger(1) : 0, 0, 120);
+	pSelf->m_PerfMeasureBegin = time_get_impl() + time_freq() * Delay;
+	pSelf->m_PerfMeasureEnd = pSelf->m_PerfMeasureBegin + time_freq() * Seconds;
+	pSelf->m_PerfMeasureStarted = 0;
+	log_info("perf", "measuring for %d s in %d s", Seconds, Delay);
+}
+
+void CGameClient::UpdatePerfMeasure()
+{
+	if(m_PerfMeasureEnd == 0)
+		return;
+	const int64_t Now = time_get_impl();
+	if(m_PerfMeasureStarted == 0)
+	{
+		if(Now < m_PerfMeasureBegin)
+			return;
+		m_PerfMeasureStarted = Now;
+		m_PerfFrames = 0;
+		m_vPerfTimes.assign(m_vpAll.size(), SComponentTime());
+		m_vPerfPartStart.assign(BetaProbe::g_aPartTicksTotal, BetaProbe::g_aPartTicksTotal + BetaProbe::NUM_PARTS);
+		return;
+	}
+	if(Now < m_PerfMeasureEnd || m_PerfFrames == 0)
+		return;
+
+	const double Frames = (double)m_PerfFrames;
+	const double UsPerTick = 1000000.0 / (double)time_freq();
+	const double FrameUs = (Now - m_PerfMeasureStarted) * UsPerTick / Frames;
+	log_info("perf", "%lld frames, %.1f us per frame (%.0f fps), state %d", (long long)m_PerfFrames, FrameUs, 1000000.0 / FrameUs, (int)Client()->State());
+	std::vector<std::pair<double, size_t>> vCosts;
+	double Total = 0.0;
+	for(size_t i = 0; i < m_vPerfTimes.size() && i < m_vpAll.size(); i++)
+	{
+		const double Cost = (m_vPerfTimes[i].m_Update + m_vPerfTimes[i].m_Render) * UsPerTick / Frames;
+		Total += Cost;
+		vCosts.emplace_back(Cost, i);
+	}
+	std::sort(vCosts.begin(), vCosts.end(), [](const auto &A, const auto &B) { return A.first > B.first; });
+	log_info("perf", "components: %.1f us per frame in total", Total);
+	for(size_t i = 0; i < vCosts.size() && i < 20; i++)
+	{
+		const char *pName = typeid(*m_vpAll[vCosts[i].second]).name();
+		while(*pName >= '0' && *pName <= '9')
+			pName++;
+		log_info("perf", "  %8.1f us  %s", vCosts[i].first, pName);
+	}
+	for(int Part = 0; Part < BetaProbe::NUM_PARTS && Part < (int)m_vPerfPartStart.size(); Part++)
+	{
+		const double Cost = (BetaProbe::g_aPartTicksTotal[Part] - m_vPerfPartStart[Part]) * UsPerTick / Frames;
+		if(Cost >= 0.05)
+			log_info("perf", "  part %8.1f us  %s", Cost, BetaProbe::PartName(Part));
+	}
+	m_PerfMeasureEnd = 0;
+	m_PerfMeasureStarted = 0;
 }

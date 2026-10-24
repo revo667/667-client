@@ -3847,6 +3847,12 @@ public:
 	bool m_VisualizerBarColorsInitialized = false;
 	int m_LastAppliedColorMode = -1;
 	unsigned m_LastAppliedStaticColor = 0;
+	float m_LayoutHudWidth = -1.0f;
+	int m_LayoutWindowWidth = -1;
+	float m_LayoutTextScale = -1.0f;
+	HudLayout::SModuleLayout m_LayoutResolved{};
+	bool m_LayoutHadOverride = false;
+	int64_t m_LayoutTick = 0;
 	bool m_DebugLastProviderValid = false;
 	std::string m_DebugLastProviderTrackKey;
 	EMusicPlaybackState m_DebugLastProviderPlaybackState = EMusicPlaybackState::STOPPED;
@@ -5077,6 +5083,29 @@ void CMusicPlayer::OnUpdate()
 	const int64_t LayoutStart = time_get_impl(); // 667client: PART_MUSIC_LAYOUT
 	const float HudHeight = HudLayout::CANVAS_HEIGHT;
 	const float HudWidth = HudHeight * Graphics()->ScreenAspect();
+	const bool HasOverride = HudLayout::HasPositionOverride(HudLayout::MODULE_MUSIC_PLAYER);
+	const auto Layout = HudLayout::Get(HudLayout::MODULE_MUSIC_PLAYER, HudWidth, HudHeight);
+	const float TextScale = MusicPlayerTextScale();
+	const int64_t LayoutNow = time_get();
+	const bool LayoutChanged = g_Config.m_ScHudMusicPlayerLayoutMigrated < 5 ||
+				   m_pImpl->m_LayoutHudWidth != HudWidth ||
+				   m_pImpl->m_LayoutWindowWidth != Graphics()->WindowWidth() ||
+				   m_pImpl->m_LayoutTextScale != TextScale ||
+				   m_pImpl->m_LayoutHadOverride != HasOverride ||
+				   m_pImpl->m_LayoutResolved.m_X != Layout.m_X ||
+				   m_pImpl->m_LayoutResolved.m_Y != Layout.m_Y ||
+				   m_pImpl->m_LayoutResolved.m_Scale != Layout.m_Scale ||
+				   m_pImpl->m_LayoutResolved.m_Mode != Layout.m_Mode ||
+				   LayoutNow - m_pImpl->m_LayoutTick >= time_freq();
+	if(LayoutChanged)
+	{
+		m_pImpl->m_LayoutHudWidth = HudWidth;
+		m_pImpl->m_LayoutWindowWidth = Graphics()->WindowWidth();
+		m_pImpl->m_LayoutTextScale = TextScale;
+		m_pImpl->m_LayoutHadOverride = HasOverride;
+		m_pImpl->m_LayoutResolved = Layout;
+		m_pImpl->m_LayoutTick = LayoutNow;
+	}
 	struct SHudScreenScope
 	{
 		IGraphics *m_pGraphics;
@@ -5092,11 +5121,10 @@ void CMusicPlayer::OnUpdate()
 			m_pGraphics->MapScreen(m_Previous);
 		}
 	} HudScreen(Graphics(), HudWidth, HudHeight);
-	HudLayout::TryApplyMusicPlayerLegacyPositionFix(HudWidth, HudHeight, TextRender());
-	if(!HudLayout::HasPositionOverride(HudLayout::MODULE_MUSIC_PLAYER))
+	if(LayoutChanged)
+		HudLayout::TryApplyMusicPlayerLegacyPositionFix(HudWidth, HudHeight, TextRender());
+	if(LayoutChanged && !HudLayout::HasPositionOverride(HudLayout::MODULE_MUSIC_PLAYER))
 	{
-		const auto Layout = HudLayout::Get(HudLayout::MODULE_MUSIC_PLAYER, HudWidth, HudHeight);
-		const float TextScale = MusicPlayerTextScale();
 		const float LayoutScale = std::clamp(Layout.m_Scale / 100.0f, 0.25f, 3.0f);
 		const float LayoutWidthScale = HudWidth / std::max(HudLayout::CANVAS_WIDTH, 0.001f);
 		const float MiniTitleFont = 6.0f * LayoutScale * TextScale;
@@ -5105,7 +5133,7 @@ void CMusicPlayer::OnUpdate()
 		const float Nudge = 2.5f * HudWidth / std::max(1.0f, (float)Graphics()->WindowWidth());
 		HudLayout::SetMusicPlayerResolvedDefaultX((HudWidth - Metrics.m_ExpandedW) * 0.5f + Nudge, HudWidth);
 	}
-	BetaProbe::g_aPartTicks[BetaProbe::PART_MUSIC_LAYOUT] += time_get_impl() - LayoutStart; // 667client
+	BetaProbe::AddPartTicks(BetaProbe::PART_MUSIC_LAYOUT, time_get_impl() - LayoutStart); // 667client
 	g_Config.m_ScMusicPlayerColorMode = std::clamp(g_Config.m_ScMusicPlayerColorMode, 0, 1);
 	if(m_pImpl->m_LastAppliedColorMode != g_Config.m_ScMusicPlayerColorMode ||
 		m_pImpl->m_LastAppliedStaticColor != g_Config.m_ScMusicPlayerStaticColor)

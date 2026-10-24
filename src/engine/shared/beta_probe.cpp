@@ -29,6 +29,7 @@ static const char *const gs_apPhaseNames[NUM_PHASES] = {
 };
 
 int64_t g_aPartTicks[NUM_PARTS] = {};
+int64_t g_aPartTicksTotal[NUM_PARTS] = {};
 
 static const char *const gs_apPartNames[NUM_PARTS] = {
 	"spotify_connect",

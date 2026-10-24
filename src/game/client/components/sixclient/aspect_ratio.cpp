@@ -50,13 +50,23 @@ bool CAspectRatio::IsBlockedByFng() const
 	const int State = Client()->State();
 	if(State != IClient::STATE_ONLINE && State != IClient::STATE_DEMOPLAYBACK)
 		return false;
+	const int64_t Now = time_get();
+	if(State != m_BlockedByFngState || Now - m_BlockedByFngTick >= time_freq() / 4)
+	{
+		m_BlockedByFng = CheckBlockedByFng();
+		m_BlockedByFngState = State;
+		m_BlockedByFngTick = Now;
+	}
+	return m_BlockedByFng;
+}
 
+bool CAspectRatio::CheckBlockedByFng() const
+{
 	auto ContainsFng = [](const char *pText) -> bool {
 		return pText != nullptr && pText[0] != '\0' && str_find_nocase(pText, "fng") != nullptr;
 	};
 
-	CServerInfo ServerInfo = Client()->ServerInfo();
-	const CServerInfo *apInfos[3] = {&ServerInfo, nullptr, nullptr};
+	const CServerInfo *apInfos[3] = {&Client()->ServerInfo(), nullptr, nullptr};
 	int NumInfos = 1;
 	if(GameClient()->m_ConnectServerInfo.has_value())
 		apInfos[NumInfos++] = &*GameClient()->m_ConnectServerInfo;
@@ -89,7 +99,7 @@ bool CAspectRatio::UseGameNoHudAspect() const
 {
 	const int State = Client()->State();
 	const bool IsActiveGameplay = State == IClient::STATE_ONLINE || State == IClient::STATE_DEMOPLAYBACK;
-	return IsActiveGameplay && !IsBlockedByFng() && g_Config.m_ScCustomAspectRatioApplyMode == 2;
+	return IsActiveGameplay && g_Config.m_ScCustomAspectRatioApplyMode == 2 && !IsBlockedByFng();
 }
 
 bool CAspectRatio::ShouldApplyCustomAspect(bool IsActiveGameplay) const

@@ -31,6 +31,9 @@ class CAspectRatio : public CComponent
 	bool m_HudAspectDisabled = false;
 	bool m_MusicPlayerAspectDisabled = false;
 	bool m_MenuRestoreGraphicsAspect = true;
+	mutable bool m_BlockedByFng = false;
+	mutable int m_BlockedByFngState = -1;
+	mutable int64_t m_BlockedByFngTick = 0;
 
 	static SConfig ReadConfig();
 	static bool ConfirmNeeded(const SConfig &Cfg);
@@ -40,6 +43,7 @@ public:
 	int Sizeof() const override { return sizeof(*this); }
 
 	bool IsBlockedByFng() const;
+	bool CheckBlockedByFng() const;
 	bool UseGameNoHudAspect() const;
 	bool ShouldApplyCustomAspect(bool IsActiveGameplay) const;
 
