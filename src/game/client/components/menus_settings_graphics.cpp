@@ -224,6 +224,17 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		g_Config.m_ClShowfps ^= 1;
 	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ClShowfps, &Button, Localize("Renders your frame rate in the top right"));
 
+	// 667client
+	if(g_Config.m_ClShowfps)
+	{
+		MainView.HSplitTop(20.0f, &Button, &MainView);
+		Button.VSplitLeft(20.0f, nullptr, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ScDisplayMaxFps, Localize("Show max FPS"), g_Config.m_ScDisplayMaxFps, &Button))
+			g_Config.m_ScDisplayMaxFps ^= 1;
+		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScDisplayMaxFps, &Button, Localize("Shows the fastest frame of every half second instead of the average frame rate"));
+	}
+	// 667client
+
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	str_copy(aBuf, " ");
 	str_append(aBuf, Localize("Hz", "Hertz"));

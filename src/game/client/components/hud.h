@@ -54,6 +54,10 @@ class CHud : public CComponent
 	int m_HudQuadContainerIndex;
 	SScoreInfo m_aScoreInfo[2];
 	STextContainerIndex m_FPSTextContainerIndex;
+	float m_MaxFpsShortest = 1.0f;
+	float m_MaxFpsWindow = 0.0f;
+	int m_MaxFps = 0;
+	int FramesPerSecond();
 	STextContainerIndex m_DDRaceEffectsTextContainerIndex;
 	STextContainerIndex m_PlayerAngleTextContainerIndex;
 	float m_PlayerPrevAngle;

@@ -309,6 +309,7 @@ MACRO_CONFIG_INT(ScShowFinishedMapOnEgo, sc_show_finished_map_on_ego, 1, 0, 1, C
 MACRO_CONFIG_INT(ScServerMapPreview, sc_server_map_preview, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show a live map preview under the selected server")
 
 // Optimizer
+MACRO_CONFIG_INT(ScDisplayMaxFps, sc_display_max_fps, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show the fastest frame of every half second in the FPS counter instead of the average")
 MACRO_CONFIG_INT(ScOptimizer, sc_optimizer, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable optimizer features")
 MACRO_CONFIG_INT(ScOptimizerDisableParticles, sc_optimizer_disable_particles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Disable rendering/updating all particles")
 MACRO_CONFIG_INT(ScOptimizerDisableQuads, sc_optimizer_disable_quads, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Disable rendering map quad layers")

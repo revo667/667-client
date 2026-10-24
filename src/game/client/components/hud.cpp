@@ -524,6 +524,25 @@ void CHud::RenderWarmupTimer()
 	TextRender()->Text(150.0f * Graphics()->ScreenAspect() - TextWidth / 2.0f, 75.0f, FontSize, aWarmupTime);
 }
 
+int CHud::FramesPerSecond()
+{
+	if(!g_Config.m_ScDisplayMaxFps)
+	{
+		m_MaxFps = 0;
+		return round_to_int(1.0f / Client()->FrameTimeAverage());
+	}
+	const float FrameTime = std::max(Client()->RenderFrameTime(), 0.000001f);
+	m_MaxFpsShortest = std::min(m_MaxFpsShortest, FrameTime);
+	m_MaxFpsWindow += FrameTime;
+	if(m_MaxFps == 0 || m_MaxFpsWindow >= 0.5f)
+	{
+		m_MaxFps = std::clamp(round_to_int(1.0f / m_MaxFpsShortest), 1, 99999);
+		m_MaxFpsWindow = 0.0f;
+		m_MaxFpsShortest = 1.0f;
+	}
+	return m_MaxFps;
+}
+
 void CHud::RenderTextInfo()
 {
 	int Showfps = g_Config.m_ClShowfps;
@@ -534,7 +553,7 @@ void CHud::RenderTextInfo()
 	if(Showfps)
 	{
 		char aBuf[16];
-		const int FramesPerSecond = round_to_int(1.0f / Client()->FrameTimeAverage());
+		const int FramesPerSecond = this->FramesPerSecond();
 		str_format(aBuf, sizeof(aBuf), "%d", FramesPerSecond);
 
 		static float s_TextWidth0 = TextRender()->TextWidth(12.f, "0", -1, -1.0f);
