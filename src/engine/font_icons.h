@@ -90,9 +90,11 @@ namespace FontIcon
 	inline const char *const POWER_OFF = "\uF011";
 	inline const char *const QUESTION = "?";
 	inline const char *const REDO = "\uF2F9";
+	inline const char *const REPEAT = "\uF363"; // 667client
 	inline const char *const RIGHT_FROM_BRACKET = "\uF2F5";
 	inline const char *const RIGHT_TO_BRACKET = "\uF2F6";
 	inline const char *const SHIRT = "\uF553"; // 667client
+	inline const char *const SHUFFLE = "\uF074"; // 667client
 	inline const char *const SKULL = "\uF54C";
 	inline const char *const SLASH = "\uF715";
 	inline const char *const SORT_DOWN = "\uF0DD";
