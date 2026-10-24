@@ -268,6 +268,7 @@ void CGameClient::OnConsoleInit()
 	// add basic console commands
 	Console()->Register("team", "i[team-id]", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself to restart");
+	Console()->Register("find_distance", "?i[seconds]", CFGFLAG_CLIENT, ConFindDistance, this, "Measure the max mouse distance of the spectated player");
 	Console()->Register("perf_measure", "?i[seconds] ?i[delay]", CFGFLAG_CLIENT, ConPerfMeasure, this, "Time every component for some seconds (after a delay) and print the cost per frame");
 	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange7, this, "Change ready state (0.7 only)");
 
@@ -965,6 +966,7 @@ void CGameClient::OnRender()
 	m_vComponentTimes.resize(m_vpAll.size());
 	const bool TimeComponents = g_Config.m_ScBetaReports != 0 && m_vTimedComponents.size() == m_vpAll.size();
 	UpdatePerfMeasure();
+	UpdateFindDistance();
 	const bool Perf = m_PerfMeasureStarted != 0;
 	if(Perf)
 		m_vPerfTimes.resize(m_vpAll.size());
@@ -2649,19 +2651,20 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 		m_aShowOthers[g_Config.m_ClDummy] = g_Config.m_ClShowOthers;
 	}
 
-	if(m_aEnableSpectatorCount[0] == -1 || m_aEnableSpectatorCount[0] != g_Config.m_ClShowhudSpectatorCount)
+	const int EnableSpectatorCount = g_Config.m_ClShowhudSpectatorCount || g_Config.m_ScShowSpectatorNames; // 667client
+	if(m_aEnableSpectatorCount[0] == -1 || m_aEnableSpectatorCount[0] != EnableSpectatorCount)
 	{
 		CNetMsg_Cl_EnableSpectatorCount Msg;
-		Msg.m_Enable = g_Config.m_ClShowhudSpectatorCount;
+		Msg.m_Enable = EnableSpectatorCount;
 		Client()->SendPackMsg(0, &Msg, MSGFLAG_VITAL);
-		m_aEnableSpectatorCount[0] = g_Config.m_ClShowhudSpectatorCount;
+		m_aEnableSpectatorCount[0] = EnableSpectatorCount;
 	}
-	if(Client()->DummyConnected() && (m_aEnableSpectatorCount[1] == -1 || m_aEnableSpectatorCount[1] != g_Config.m_ClShowhudSpectatorCount))
+	if(Client()->DummyConnected() && (m_aEnableSpectatorCount[1] == -1 || m_aEnableSpectatorCount[1] != EnableSpectatorCount))
 	{
 		CNetMsg_Cl_EnableSpectatorCount Msg;
-		Msg.m_Enable = g_Config.m_ClShowhudSpectatorCount;
+		Msg.m_Enable = EnableSpectatorCount;
 		Client()->SendPackMsg(1, &Msg, MSGFLAG_VITAL);
-		m_aEnableSpectatorCount[1] = g_Config.m_ClShowhudSpectatorCount;
+		m_aEnableSpectatorCount[1] = EnableSpectatorCount;
 	}
 
 	if(DummySwapped)
@@ -6616,4 +6619,55 @@ void CGameClient::UpdatePerfMeasure()
 	}
 	m_PerfMeasureEnd = 0;
 	m_PerfMeasureStarted = 0;
+}
+
+void CGameClient::ConFindDistance(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameClient *pSelf = static_cast<CGameClient *>(pUserData);
+	const int Seconds = std::clamp(pResult->NumArguments() > 0 ? pResult->GetInteger(0) : 5, 1, 60);
+	int SpectatorId = pSelf->m_Snap.m_SpecInfo.m_Active ? pSelf->m_Snap.m_SpecInfo.m_SpectatorId : -1;
+	if(SpectatorId < 0 && pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		SpectatorId = pSelf->m_Snap.m_LocalClientId;
+	if(SpectatorId < 0 || SpectatorId >= MAX_CLIENTS || !pSelf->m_aClients[SpectatorId].m_Active)
+	{
+		pSelf->m_Chat.Echo(Localize("Spectate a player first, then use find_distance"));
+		return;
+	}
+	pSelf->m_FindDistanceId = SpectatorId;
+	pSelf->m_FindDistanceEnd = time_get() + time_freq() * Seconds;
+	pSelf->m_FindDistanceMax = 0.0f;
+	pSelf->m_FindDistanceSamples = 0;
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), Localize("Measuring %s's mouse distance for %d seconds, keep spectating them"), pSelf->m_aClients[SpectatorId].m_aName, Seconds);
+	pSelf->m_Chat.Echo(aBuf);
+}
+
+void CGameClient::UpdateFindDistance()
+{
+	if(m_FindDistanceId < 0)
+		return;
+	const int Id = m_FindDistanceId;
+	char aBuf[256];
+	if(!m_aClients[Id].m_Active || (Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK))
+	{
+		m_FindDistanceId = -1;
+		m_Chat.Echo(Localize("find_distance stopped, the player is gone"));
+		return;
+	}
+	const CSnapState::CCharacterInfo &Character = m_Snap.m_aCharacters[Id];
+	if(Character.m_Active && Character.m_HasExtendedData)
+	{
+		const float Distance = length(vec2(Character.m_ExtendedData.m_TargetX, Character.m_ExtendedData.m_TargetY));
+		m_FindDistanceMax = std::max(m_FindDistanceMax, Distance);
+		m_FindDistanceSamples++;
+	}
+	if(time_get() < m_FindDistanceEnd)
+		return;
+	m_FindDistanceId = -1;
+	if(m_FindDistanceSamples == 0)
+		str_format(aBuf, sizeof(aBuf), Localize("Couldn't see %s's cursor, this server doesn't send it"), m_aClients[Id].m_aName);
+	else
+		str_format(aBuf, sizeof(aBuf), Localize("%s's max mouse distance: %d"), m_aClients[Id].m_aName, round_to_int(m_FindDistanceMax));
+	m_Chat.Echo(aBuf);
+	log_info("find_distance", "%s", aBuf);
 }

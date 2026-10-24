@@ -81,7 +81,7 @@ bool HudExtras::GetSpectatorCountState(CGameClient *pGameClient, IClient *pClien
 		}
 		return true;
 	}
-	if(!g_Config.m_ClShowhudSpectatorCount)
+	if(!g_Config.m_ClShowhudSpectatorCount && !g_Config.m_ScShowSpectatorNames)
 		return false;
 
 	int aSpectatorIds[MAX_CLIENTS];

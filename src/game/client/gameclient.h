@@ -357,6 +357,12 @@ public:
 	std::vector<SComponentTime> m_vPerfTimes;
 	std::vector<int64_t> m_vPerfPartStart;
 	void UpdatePerfMeasure();
+	int m_FindDistanceId = -1;
+	int64_t m_FindDistanceEnd = 0;
+	float m_FindDistanceMax = 0.0f;
+	int m_FindDistanceSamples = 0;
+	void UpdateFindDistance();
+	static void ConFindDistance(IConsole::IResult *pResult, void *pUserData);
 	static void ConPerfMeasure(IConsole::IResult *pResult, void *pUserData);
 	// Which components are timed: the features added since 1.0.22, set by the beta reporter. The
 	// others are not, so the measuring itself costs next to nothing.
