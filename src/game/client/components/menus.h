@@ -804,6 +804,7 @@ public:
 		PAGE_SETTINGS,
 		PAGE_NETWORK,
 		PAGE_GHOST,
+		PAGE_SPOTIFY, // 667client
 
 		PAGE_LENGTH,
 	};
@@ -1016,6 +1017,7 @@ private:
 	// 667client
 	void RenderSettingsSixClientFriends(CUIRect MainView); // 667client
 	void RenderSettingsCecenSocial(CUIRect MainView); // 667client
+	void RenderSpotify(CUIRect MainView); // 667client
 	void RenderSettingsCecenUi(CUIRect MainView); // 667client
 	void RenderSettingsRestartBar(CUIRect RestartBar); // 667client
 	void OpenSocialProfile(const char *pName); // 667client

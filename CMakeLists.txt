@@ -3310,6 +3310,7 @@ if(CLIENT)
     components/sixclient/menus_cecen_ui.cpp
     components/sixclient/menus_friends.cpp
     components/sixclient/menus_social.cpp
+    components/sixclient/menus_spotify.cpp
     components/sixclient/meow_input.cpp
     components/sixclient/meow_input.h
     components/sixclient/social_card.cpp

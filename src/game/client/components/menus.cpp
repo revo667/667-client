@@ -803,6 +803,13 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				NewPage = PAGE_GHOST;
 		}
 
+		// 667client
+		Box.VSplitLeft(100.0f, &Button, &Box);
+		static CButtonContainer s_SpotifyButton;
+		if(DoButton_MenuTab(&s_SpotifyButton, "Spotify", ActivePage == PAGE_SPOTIFY, &Button, IGraphics::CORNER_NONE))
+			NewPage = PAGE_SPOTIFY;
+		// 667client
+
 		Box.VSplitLeft(100.0f, &Button, &Box);
 		Box.VSplitLeft(4.0f, nullptr, &Box);
 		static CButtonContainer s_CallVoteButton;
@@ -1316,6 +1323,10 @@ void CMenus::Render()
 			else if(m_GamePage == PAGE_CALLVOTE)
 			{
 				RenderServerControl(MainView);
+			}
+			else if(m_GamePage == PAGE_SPOTIFY) // 667client
+			{
+				RenderSpotify(MainView);
 			}
 			else if(m_GamePage == PAGE_DEMOS)
 			{
