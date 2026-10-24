@@ -786,7 +786,8 @@ void CTranslate::TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLa
 {
 	if(m_vJobs.size() >= 16 || (!Force && !CanStartRequest()))
 		return;
-	auto pBackend = CreateBackend(Line.m_aText, IncomingSourceLanguage(), IncomingTargetLanguage());
+	// The translate command detects the language itself, whatever the auto translation assumes.
+	auto pBackend = CreateBackend(Line.m_aText, Manual ? "auto" : IncomingSourceLanguage(), IncomingTargetLanguage());
 	if(!pBackend)
 		return;
 
