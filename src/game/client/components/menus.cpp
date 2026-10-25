@@ -811,15 +811,24 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				NewPage = PAGE_GHOST;
 		}
 
+		Box.VSplitLeft(100.0f * TabScale, &Button, &Box);
+		static CButtonContainer s_CallVoteButton;
+		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), ActivePage == PAGE_CALLVOTE, &Button, IGraphics::CORNER_NONE)) // 667client
+		{
+			NewPage = PAGE_CALLVOTE;
+			m_ControlPageOpening = true;
+		}
+
 		// 667client
 		Box.VSplitLeft(SpotifyWidth * TabScale, &Button, &Box);
+		Box.VSplitLeft(4.0f * TabScale, nullptr, &Box);
 		static CButtonContainer s_SpotifyButton;
 		if(SpotifyIcon)
 		{
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 		}
-		if(DoButton_MenuTab(&s_SpotifyButton, SpotifyIcon ? FontIcon::MUSIC : "Spotify", ActivePage == PAGE_SPOTIFY, &Button, IGraphics::CORNER_NONE))
+		if(DoButton_MenuTab(&s_SpotifyButton, SpotifyIcon ? FontIcon::MUSIC : "Spotify", ActivePage == PAGE_SPOTIFY, &Button, IGraphics::CORNER_TR))
 			NewPage = PAGE_SPOTIFY;
 		if(SpotifyIcon)
 		{
@@ -828,15 +837,6 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			GameClient()->m_Tooltips.DoToolTip(&s_SpotifyButton, &Button, "Spotify");
 		}
 		// 667client
-
-		Box.VSplitLeft(100.0f * TabScale, &Button, &Box);
-		Box.VSplitLeft(4.0f * TabScale, nullptr, &Box);
-		static CButtonContainer s_CallVoteButton;
-		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), ActivePage == PAGE_CALLVOTE, &Button, IGraphics::CORNER_TR))
-		{
-			NewPage = PAGE_CALLVOTE;
-			m_ControlPageOpening = true;
-		}
 
 		if(Box.w >= 10.0f + 33.0f + 10.0f)
 		{
