@@ -2209,3 +2209,43 @@ Music player style
 [667Client]
 A card with the cover, title, artist and progress in the top right corner
 == Карточка с обложкой, названием, исполнителем и прогрессом в правом верхнем углу
+
+[667Client]
+Chat
+== Чат
+
+[667Client]
+Modern chat size
+== Размер современного чата
+
+[667Client]
+Modern chat colors
+== Цвета современного чата
+
+[667Client]
+Message text
+== Текст сообщений
+
+[667Client]
+Player names
+== Ники игроков
+
+[667Client]
+Background
+== Фон
+
+[667Client]
+Left bar
+== Полоска слева
+
+[667Client]
+Server messages
+== Сообщения сервера
+
+[667Client]
+Mentions
+== Упоминания
+
+[667Client]
+Friend heart
+== Сердечко друзей

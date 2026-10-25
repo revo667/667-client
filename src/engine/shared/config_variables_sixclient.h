@@ -19,6 +19,14 @@ MACRO_CONFIG_INT(ScSilentTyping, sc_silent_typing, 0, 0, 1, CFGFLAG_CLIENT | CFG
 MACRO_CONFIG_INT(ScChatAltCommandLayout, sc_chat_alt_command_layout, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interpret slash chat commands typed in the Russian keyboard layout")
 MACRO_CONFIG_INT(ScChatMessageActions, sc_chat_message_actions, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable reply/copy message menu on chat messages")
 MACRO_CONFIG_INT(ScChatModernStyle, sc_chat_modern_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat lines in separate rounded backgrounds with a colored accent bar")
+MACRO_CONFIG_INT(ScChatModernSize, sc_chat_modern_size, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Modern chat size (in %)")
+MACRO_CONFIG_COL(ScChatModernTextColor, sc_chat_modern_text_color, 0xF2U, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Modern chat message text color")
+MACRO_CONFIG_COL(ScChatModernNameColor, sc_chat_modern_name_color, 0xFFU, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Modern chat player name color")
+MACRO_CONFIG_COL(ScChatModernBgColor, sc_chat_modern_bg_color, 0x99AA171CU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Modern chat line background color")
+MACRO_CONFIG_COL(ScChatModernBarColor, sc_chat_modern_bar_color, 0xF2U, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Modern chat left bar color for player messages")
+MACRO_CONFIG_COL(ScChatModernServerColor, sc_chat_modern_server_color, 0x5A999FU, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Modern chat server message and bar color")
+MACRO_CONFIG_COL(ScChatModernMentionColor, sc_chat_modern_mention_color, 0xFFBFU, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Modern chat mention text and bar color")
+MACRO_CONFIG_COL(ScChatModernHeartColor, sc_chat_modern_heart_color, 0xFCFFA6U, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Modern chat friend heart color")
 MACRO_CONFIG_INT(ScNotifySavesOnMap, sc_notify_saves_on_map, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify in chat when the current map has team saves")
 
 // Chat Filter

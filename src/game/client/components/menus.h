@@ -1027,6 +1027,7 @@ private:
 	void RenderSixClientGameSkinEditor(CUIRect MainView);
 	void RenderSettingsSixClientConfigPresets(CUIRect MainView); // 667client
 	void RenderSettingsSixClientInfo(CUIRect MainView); // 667client
+	void RenderSettingsSixClientChatBlock(CUIRect &Column); // 667client
 	void RenderSettingsSixClientChatMediaBlock(CUIRect &Column); // 667client
 	// 667client
 	void OpenSixClientFun();

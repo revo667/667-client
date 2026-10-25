@@ -21,6 +21,7 @@
 #include <game/client/ui_rect.h> // sixclient
 
 #include <algorithm> // sixclient
+#include <array> // 667client
 
 #include <vector>
 
@@ -95,6 +96,7 @@ class CChat : public CComponent
 	bool m_PrevHudLayoutEnabled = true;
 	bool m_PrevModeActive = false;
 	bool m_PrevModernStyle = false;
+	std::array<unsigned, 7> m_aPrevModernStyleConfig = {};
 	// 667client
 
 	CLine m_aLines[MAX_LINES];
@@ -279,7 +281,7 @@ public:
 		return std::clamp(HudLayout::Get(HudLayout::MODULE_CHAT, HudLayout::CANVAS_WIDTH, HudLayout::CANVAS_HEIGHT).m_Scale / 100.0f, 0.25f, 3.0f);
 	}
 	bool ModernStyle() const { return g_Config.m_ScChatModernStyle && !g_Config.m_ClChatOld; }
-	float FontSize() const { return (g_Config.m_ClChatFontSize / 10.0f) * LayoutScaleFactor() * (ModernStyle() ? 1.2f : 1.0f); }
+	float FontSize() const { return (g_Config.m_ClChatFontSize / 10.0f) * LayoutScaleFactor() * (ModernStyle() ? 1.2f * g_Config.m_ScChatModernSize / 100.0f : 1.0f); }
 	float ChatWidth() const { return g_Config.m_ClChatWidth * LayoutScaleFactor(); }
 	float MessageGap() const { return ModernStyle() ? FontSize() * 0.3f : 0.0f; }
 	float MessageAccentWidth() const { return FontSize() * 0.22f; }

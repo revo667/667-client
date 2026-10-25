@@ -182,6 +182,134 @@ static bool ScUiThemeImportFromText(const char *pText)
 	return true;
 }
 
+void CMenus::RenderSettingsSixClientChatBlock(CUIRect &Column)
+{
+	const float LineSize = 20.0f;
+	const float MarginSmall = 5.0f;
+	const float HeadlineFontSize = 20.0f;
+	const float MarginBetweenViews = 30.0f;
+	const float BlockPadding = MarginBetweenViews * 0.6666f;
+	const float ColorPickerLineSize = 25.0f;
+	const float ColorPickerSpacing = 5.0f;
+
+	const bool ModernExpanded = g_Config.m_ScChatModernStyle != 0;
+	const float ModernExpandedTargetHeight = MarginSmall + LineSize + MarginSmall + LineSize + 7.0f * (ColorPickerSpacing + ColorPickerLineSize);
+	const float ModernExpandedHeight = SC_MODULE_REVEAL(ModernExpanded, ModernExpandedTargetHeight, Client()->RenderFrameTime());
+	const float BlockHeight = LineSize + MarginSmall + LineSize + 7.0f * (MarginSmall + LineSize) + ModernExpandedHeight;
+
+	CUIRect Block;
+	Column.HSplitTop(BlockHeight, &Block, &Column);
+	CUIRect BlockBg = Block;
+	BlockBg.w += BlockPadding;
+	BlockBg.h += BlockPadding;
+	BlockBg.x -= BlockPadding * 0.5f;
+	BlockBg.y -= BlockPadding * 0.5f;
+	SixClientUiTheme::DrawUiBlock(&BlockBg, IGraphics::CORNER_ALL, 10.0f);
+	SixClientSettingsSearch::DrawBlockHighlight(&g_Config.m_ScChatModernStyle, &BlockBg);
+
+	CUIRect Content, Label, Button;
+	Block.HSplitTop(LineSize, &Label, &Block);
+	CUIRect TitleLabel, ResetButton;
+	Label.VSplitRight(LineSize + 8.0f, &TitleLabel, &ResetButton);
+	static CButtonContainer s_ChatResetButton;
+	const bool ResetClicked = Ui()->DoButton_FontIcon(&s_ChatResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &ResetButton, BUTTONFLAG_LEFT);
+	GameClient()->m_Tooltips.DoToolTip(&s_ChatResetButton, &ResetButton, ScLocalize("Reset to defaults"));
+	if(ResetClicked)
+	{
+		g_Config.m_ScSilentTyping = DefaultConfig::ScSilentTyping;
+		g_Config.m_ScChatModernStyle = DefaultConfig::ScChatModernStyle;
+		g_Config.m_ScChatModernSize = DefaultConfig::ScChatModernSize;
+		g_Config.m_ScChatModernTextColor = DefaultConfig::ScChatModernTextColor;
+		g_Config.m_ScChatModernNameColor = DefaultConfig::ScChatModernNameColor;
+		g_Config.m_ScChatModernBgColor = DefaultConfig::ScChatModernBgColor;
+		g_Config.m_ScChatModernBarColor = DefaultConfig::ScChatModernBarColor;
+		g_Config.m_ScChatModernServerColor = DefaultConfig::ScChatModernServerColor;
+		g_Config.m_ScChatModernMentionColor = DefaultConfig::ScChatModernMentionColor;
+		g_Config.m_ScChatModernHeartColor = DefaultConfig::ScChatModernHeartColor;
+		g_Config.m_ScChatAnimation = DefaultConfig::ScChatAnimation;
+		g_Config.m_ScChatAnimationMs = DefaultConfig::ScChatAnimationMs;
+		g_Config.m_ScChatOpenAnimation = DefaultConfig::ScChatOpenAnimation;
+		g_Config.m_ScChatOpenAnimationMs = DefaultConfig::ScChatOpenAnimationMs;
+		g_Config.m_ScChatTypingAnimation = DefaultConfig::ScChatTypingAnimation;
+		g_Config.m_ScChatTypingAnimationMs = DefaultConfig::ScChatTypingAnimationMs;
+	}
+	TitleLabel.VSplitRight(MarginSmall, &TitleLabel, nullptr);
+	Ui()->DoLabel(&TitleLabel, ScLocalize("Chat"), HeadlineFontSize, TEXTALIGN_ML);
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+
+	Block.HSplitTop(LineSize, &Content, &Block);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSilentTyping, ScLocalize("Silent typing"), &g_Config.m_ScSilentTyping, &Content, LineSize);
+
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Content, &Block);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScChatAnimation, ScLocalize("Chat message animations"), &g_Config.m_ScChatAnimation, &Content, LineSize);
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Button, &Block);
+	Ui()->DoScrollbarOption(&g_Config.m_ScChatAnimationMs, &g_Config.m_ScChatAnimationMs, &Button, ScLocalize("Chat message (ms)"), 1, 500);
+
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Content, &Block);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScChatOpenAnimation, ScLocalize("Chat open animation"), &g_Config.m_ScChatOpenAnimation, &Content, LineSize);
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Button, &Block);
+	Ui()->DoScrollbarOption(&g_Config.m_ScChatOpenAnimationMs, &g_Config.m_ScChatOpenAnimationMs, &Button, ScLocalize("Chat open (ms)"), 1, 500);
+
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Content, &Block);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScChatTypingAnimation, ScLocalize("Chat typing animation"), &g_Config.m_ScChatTypingAnimation, &Content, LineSize);
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Button, &Block);
+	Ui()->DoScrollbarOption(&g_Config.m_ScChatTypingAnimationMs, &g_Config.m_ScChatTypingAnimationMs, &Button, ScLocalize("Chat typing (ms)"), 1, 500);
+
+	{
+		Block.HSplitTop(MarginSmall, nullptr, &Block);
+		CUIRect ChatStyleRow, ChatStyleLabel, OldChatButton, ModernChatButton;
+		Block.HSplitTop(LineSize, &ChatStyleRow, &Block);
+		ChatStyleRow.VSplitLeft(150.0f, &ChatStyleLabel, &ChatStyleRow);
+		Ui()->DoLabel(&ChatStyleLabel, ScLocalize("Chat style"), 14.0f, TEXTALIGN_ML);
+		ChatStyleRow.VSplitMid(&OldChatButton, &ModernChatButton, 2.0f);
+		static CButtonContainer s_OldChatButton;
+		static CButtonContainer s_ModernChatButton;
+		if(DoButton_Menu(&s_OldChatButton, ScLocalize("Old chat"), g_Config.m_ScChatModernStyle == 0, &OldChatButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
+			g_Config.m_ScChatModernStyle = 0;
+		if(DoButton_Menu(&s_ModernChatButton, ScLocalize("Modern chat"), g_Config.m_ScChatModernStyle == 1, &ModernChatButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
+			g_Config.m_ScChatModernStyle = 1;
+		GameClient()->m_Tooltips.DoToolTip(&s_ModernChatButton, &ModernChatButton, ScLocalize("Every chat line gets its own rounded background with a colored bar on the left: green for server messages, white for players"));
+	}
+
+	if(ModernExpandedHeight <= 0.5f)
+		return;
+
+	CUIRect Visible = Block;
+	Visible.h = ModernExpandedHeight;
+	Ui()->ClipEnable(&Visible);
+
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Button, &Block);
+	Ui()->DoScrollbarOption(&g_Config.m_ScChatModernSize, &g_Config.m_ScChatModernSize, &Button, ScLocalize("Modern chat size"), 50, 200, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "%");
+
+	Block.HSplitTop(MarginSmall, nullptr, &Block);
+	Block.HSplitTop(LineSize, &Label, &Block);
+	Ui()->DoLabel(&Label, ScLocalize("Modern chat colors"), 14.0f, TEXTALIGN_ML);
+
+	static CButtonContainer s_ModernTextColorButton;
+	DoLine_ColorPicker(&s_ModernTextColorButton, ColorPickerLineSize, 13.0f, ColorPickerSpacing, &Block, ScLocalize("Message text"), &g_Config.m_ScChatModernTextColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ScChatModernTextColor)), false);
+	static CButtonContainer s_ModernNameColorButton;
+	DoLine_ColorPicker(&s_ModernNameColorButton, ColorPickerLineSize, 13.0f, ColorPickerSpacing, &Block, ScLocalize("Player names"), &g_Config.m_ScChatModernNameColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ScChatModernNameColor)), false);
+	static CButtonContainer s_ModernBgColorButton;
+	DoLine_ColorPicker(&s_ModernBgColorButton, ColorPickerLineSize, 13.0f, ColorPickerSpacing, &Block, ScLocalize("Background"), &g_Config.m_ScChatModernBgColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ScChatModernBgColor, true)), false, nullptr, true);
+	static CButtonContainer s_ModernBarColorButton;
+	DoLine_ColorPicker(&s_ModernBarColorButton, ColorPickerLineSize, 13.0f, ColorPickerSpacing, &Block, ScLocalize("Left bar"), &g_Config.m_ScChatModernBarColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ScChatModernBarColor)), false);
+	static CButtonContainer s_ModernServerColorButton;
+	DoLine_ColorPicker(&s_ModernServerColorButton, ColorPickerLineSize, 13.0f, ColorPickerSpacing, &Block, ScLocalize("Server messages"), &g_Config.m_ScChatModernServerColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ScChatModernServerColor)), false);
+	static CButtonContainer s_ModernMentionColorButton;
+	DoLine_ColorPicker(&s_ModernMentionColorButton, ColorPickerLineSize, 13.0f, ColorPickerSpacing, &Block, ScLocalize("Mentions"), &g_Config.m_ScChatModernMentionColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ScChatModernMentionColor)), false);
+	static CButtonContainer s_ModernHeartColorButton;
+	DoLine_ColorPicker(&s_ModernHeartColorButton, ColorPickerLineSize, 13.0f, ColorPickerSpacing, &Block, ScLocalize("Friend heart"), &g_Config.m_ScChatModernHeartColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ScChatModernHeartColor)), false);
+
+	Ui()->ClipDisable();
+}
+
 void CMenus::RenderSettingsSixClientChatMediaBlock(CUIRect &Column)
 {
 	const float LineSize = 20.0f;
@@ -685,6 +813,10 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 			Ui()->ClipDisable();
 		}
 	}
+
+	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
+
+	RenderSettingsSixClientChatBlock(Column); // 667client
 
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
@@ -1419,7 +1551,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 
 
 	const bool AnimationsExpanded = g_Config.m_ScAnimations != 0;
-	const float AnimationsExpandedTargetHeight = 12.0f * (MarginSmall + LineSize);
+	const float AnimationsExpandedTargetHeight = 6.0f * (MarginSmall + LineSize);
 	const float AnimationsExpandedHeight = SC_MODULE_REVEAL(AnimationsExpanded, AnimationsExpandedTargetHeight, Client()->RenderFrameTime());
 	const float AnimationsBlockHeight = LineSize + MarginSmall + LineSize + AnimationsExpandedHeight;
 
@@ -1447,12 +1579,6 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		g_Config.m_ScAnimations = DefaultConfig::ScAnimations;
 		g_Config.m_ScModuleUiRevealAnimation = DefaultConfig::ScModuleUiRevealAnimation;
 		g_Config.m_ScModuleUiRevealAnimationMs = DefaultConfig::ScModuleUiRevealAnimationMs;
-		g_Config.m_ScChatAnimation = DefaultConfig::ScChatAnimation;
-		g_Config.m_ScChatAnimationMs = DefaultConfig::ScChatAnimationMs;
-		g_Config.m_ScChatOpenAnimation = DefaultConfig::ScChatOpenAnimation;
-		g_Config.m_ScChatOpenAnimationMs = DefaultConfig::ScChatOpenAnimationMs;
-		g_Config.m_ScChatTypingAnimation = DefaultConfig::ScChatTypingAnimation;
-		g_Config.m_ScChatTypingAnimationMs = DefaultConfig::ScChatTypingAnimationMs;
 		g_Config.m_ScKillfeedAnimation = DefaultConfig::ScKillfeedAnimation;
 		g_Config.m_ScKillfeedAnimationMs = DefaultConfig::ScKillfeedAnimationMs;
 		g_Config.m_ScChatAnimationType = DefaultConfig::ScChatAnimationType;
@@ -1477,27 +1603,6 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 		MainView.HSplitTop(LineSize, &Button, &MainView);
 		Ui()->DoScrollbarOption(&g_Config.m_ScModuleUiRevealAnimationMs, &g_Config.m_ScModuleUiRevealAnimationMs, &Button, ScLocalize("Settings (ms)"), 1, 500);
-
-		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-		MainView.HSplitTop(LineSize, &Content, &MainView);
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScChatAnimation, ScLocalize("Chat message animations"), &g_Config.m_ScChatAnimation, &Content, LineSize);
-		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-		MainView.HSplitTop(LineSize, &Button, &MainView);
-		Ui()->DoScrollbarOption(&g_Config.m_ScChatAnimationMs, &g_Config.m_ScChatAnimationMs, &Button, ScLocalize("Chat message (ms)"), 1, 500);
-
-		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-		MainView.HSplitTop(LineSize, &Content, &MainView);
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScChatOpenAnimation, ScLocalize("Chat open animation"), &g_Config.m_ScChatOpenAnimation, &Content, LineSize);
-		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-		MainView.HSplitTop(LineSize, &Button, &MainView);
-		Ui()->DoScrollbarOption(&g_Config.m_ScChatOpenAnimationMs, &g_Config.m_ScChatOpenAnimationMs, &Button, ScLocalize("Chat open (ms)"), 1, 500);
-
-		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-		MainView.HSplitTop(LineSize, &Content, &MainView);
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScChatTypingAnimation, ScLocalize("Chat typing animation"), &g_Config.m_ScChatTypingAnimation, &Content, LineSize);
-		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-		MainView.HSplitTop(LineSize, &Button, &MainView);
-		Ui()->DoScrollbarOption(&g_Config.m_ScChatTypingAnimationMs, &g_Config.m_ScChatTypingAnimationMs, &Button, ScLocalize("Chat typing (ms)"), 1, 500);
 
 		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 		MainView.HSplitTop(LineSize, &Content, &MainView);
@@ -3069,7 +3174,7 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 	}
 	// 667client
 
-	const float ChatQoLBlockHeight = LineSize + MarginSmall + 6.0f * LineSize;
+	const float ChatQoLBlockHeight = LineSize + MarginSmall + 4.0f * LineSize;
 	CUIRect ChatQoLBlock;
 	Column.HSplitTop(ChatQoLBlockHeight, &ChatQoLBlock, &Column);
 
@@ -3091,7 +3196,6 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 		if(DoButton_CheckBox(&g_Config.m_ClChatReset, ScLocalize("Save unsent messages"), g_Config.m_ClChatReset == 0, &SaveDraftRow))
 			g_Config.m_ClChatReset ^= 1;
 	}
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSilentTyping, ScLocalize("Silent typing"), &g_Config.m_ScSilentTyping, &ChatQoLBlock, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScChatAltCommandLayout, ScLocalize("Commands in other layout"), &g_Config.m_ScChatAltCommandLayout, &ChatQoLBlock, LineSize);
 	{
 		CUIRect MessageActionsRow;
@@ -3102,22 +3206,6 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 		CUIRect NotifySavesRow;
 		ChatQoLBlock.HSplitTop(LineSize, &NotifySavesRow, &ChatQoLBlock);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScNotifySavesOnMap, ScLocalize("Notify about saves on map"), &g_Config.m_ScNotifySavesOnMap, &NotifySavesRow, LineSize);
-	}
-	{
-		CUIRect ChatStyleRow, ChatStyleLabel, OldChatButton, ModernChatButton;
-		ChatQoLBlock.HSplitTop(LineSize, &ChatStyleRow, &ChatQoLBlock);
-		ChatStyleRow.VSplitMid(&ChatStyleLabel, &ChatStyleRow, 2.0f);
-		Ui()->DoLabel(&ChatStyleLabel, ScLocalize("Chat style"), 14.0f, TEXTALIGN_ML);
-		ChatStyleRow.VSplitMid(&OldChatButton, &ModernChatButton, 2.0f);
-		OldChatButton.HMargin(2.0f, &OldChatButton);
-		ModernChatButton.HMargin(2.0f, &ModernChatButton);
-		static CButtonContainer s_OldChatButton;
-		static CButtonContainer s_ModernChatButton;
-		if(DoButton_Menu(&s_OldChatButton, ScLocalize("Old chat"), g_Config.m_ScChatModernStyle == 0, &OldChatButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
-			g_Config.m_ScChatModernStyle = 0;
-		if(DoButton_Menu(&s_ModernChatButton, ScLocalize("Modern chat"), g_Config.m_ScChatModernStyle == 1, &ModernChatButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
-			g_Config.m_ScChatModernStyle = 1;
-		GameClient()->m_Tooltips.DoToolTip(&s_ModernChatButton, &ModernChatButton, ScLocalize("Every chat line gets its own rounded background with a colored bar on the left: green for server messages, white for players"));
 	}
 
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);

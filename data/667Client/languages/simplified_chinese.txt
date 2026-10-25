@@ -2205,3 +2205,43 @@ Music player style
 [667Client]
 A card with the cover, title, artist and progress in the top right corner
 == 右上角显示封面、标题、艺术家和进度的卡片
+
+[667Client]
+Chat
+== 聊天
+
+[667Client]
+Modern chat size
+== 现代聊天大小
+
+[667Client]
+Modern chat colors
+== 现代聊天颜色
+
+[667Client]
+Message text
+== 消息文字
+
+[667Client]
+Player names
+== 玩家名称
+
+[667Client]
+Background
+== 背景
+
+[667Client]
+Left bar
+== 左侧条
+
+[667Client]
+Server messages
+== 服务器消息
+
+[667Client]
+Mentions
+== 提及
+
+[667Client]
+Friend heart
+== 好友爱心

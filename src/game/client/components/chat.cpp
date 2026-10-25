@@ -1363,16 +1363,16 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 ColorRGBA CChat::MessageAccentColor(const CLine &Line) const
 {
 	if(Line.m_ClientId == SERVER_MSG)
-		return ColorRGBA(0.4f, 0.85f, 0.45f, 1.0f);
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ScChatModernServerColor));
 	if(Line.m_ClientId == CLIENT_MSG)
 		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
 	if(Line.m_Whisper)
 		return ColorRGBA(0.8f, 0.55f, 1.0f, 1.0f);
 	if(Line.m_Highlighted)
-		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ScChatModernMentionColor));
 	if(Line.m_Team)
 		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
-	return ColorRGBA(0.95f, 0.95f, 0.95f, 1.0f);
+	return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ScChatModernBarColor));
 }
 
 void CChat::SetMessageFont(bool Modern)
@@ -1565,7 +1565,7 @@ void CChat::OnPrepareLines(float y)
 
 			if(Line.m_Friend && g_Config.m_ClMessageFriend)
 			{
-				TextRender()->TextColor(ModernStyle() ? ColorRGBA(1.0f, 0.3f, 0.35f, 1.0f) : color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor)).WithAlpha(1.0f)); // 667client
+				TextRender()->TextColor(ModernStyle() ? color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ScChatModernHeartColor)).WithAlpha(1.0f) : color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor)).WithAlpha(1.0f)); // 667client
 				TextRender()->CreateOrAppendTextContainer(Line.m_TextContainerIndex, &LineCursor, "♥ ");
 			}
 		}
@@ -1593,7 +1593,7 @@ void CChat::OnPrepareLines(float y)
 		else if(Line.m_ClientId >= 0 && g_Config.m_ClChatTeamColors && GameClient()->m_Teams.Team(Line.m_ClientId))
 			NameColor = GameClient()->GetDDTeamColor(GameClient()->m_Teams.Team(Line.m_ClientId), 0.75f);
 		else if(ModernStyle()) // 667client
-			NameColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+			NameColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ScChatModernNameColor));
 		else
 			NameColor = ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f);
 
@@ -1622,12 +1622,14 @@ void CChat::OnPrepareLines(float y)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
 		else if(Line.m_ClientId == CLIENT_MSG)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
+		else if(Line.m_Highlighted && ModernStyle()) // 667client
+			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ScChatModernMentionColor));
 		else if(Line.m_Highlighted)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
 		else if(Line.m_Team)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
 		else if(ModernStyle()) // 667client
-			Color = ColorRGBA(0.95f, 0.95f, 0.95f, 1.0f);
+			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ScChatModernTextColor));
 		else // regular message
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageColor));
 		TextRender()->TextColor(Color);
@@ -1698,9 +1700,11 @@ void CChat::OnRender()
 
 	// 667client
 	GameClient()->m_ChatMedia.Update(*this);
-	if(ModernStyle() != m_PrevModernStyle)
+	const std::array<unsigned, 7> aModernStyleConfig = {(unsigned)g_Config.m_ScChatModernSize, g_Config.m_ScChatModernTextColor, g_Config.m_ScChatModernNameColor, g_Config.m_ScChatModernBarColor, g_Config.m_ScChatModernServerColor, g_Config.m_ScChatModernMentionColor, g_Config.m_ScChatModernHeartColor};
+	if(ModernStyle() != m_PrevModernStyle || (ModernStyle() && aModernStyleConfig != m_aPrevModernStyleConfig))
 	{
 		m_PrevModernStyle = ModernStyle();
+		m_aPrevModernStyleConfig = aModernStyleConfig;
 		RebuildChat();
 	}
 	// 667client
@@ -1984,7 +1988,7 @@ void CChat::OnRender()
 			if(Line.m_QuadContainerIndex != -1)
 			{
 				// 667client
-				const ColorRGBA BackgroundColor = ModernStyle() ? ColorRGBA(0.1f, 0.1f, 0.12f, 0.6f) : color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClChatBackgroundColor, true));
+				const ColorRGBA BackgroundColor = ModernStyle() ? color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ScChatModernBgColor, true)) : color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClChatBackgroundColor, true));
 				Graphics()->SetColor(BackgroundColor.WithMultipliedAlpha(Blend * ModuleAlpha));
 				// 667client
 				Graphics()->RenderQuadContainerEx(Line.m_QuadContainerIndex, 0, -1, 0, ((LineRenderY + RealMsgPaddingY / 2.0f) - Line.m_TextYOffset));

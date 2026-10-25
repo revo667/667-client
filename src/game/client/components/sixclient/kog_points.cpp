@@ -143,6 +143,10 @@ void CKogPoints::OnRender()
 	if(!m_Pending.m_Name.empty() && Now - m_Pending.m_SentAt > KOG_RESPONSE_TIMEOUT_SECONDS)
 		m_Pending = SPending();
 
+	// 667client: turning auto points off drops the friends still waiting to be asked
+	if(!g_Config.m_ScKogFriendPoints)
+		m_Queue.clear();
+
 	if(m_Queue.empty() || !m_Pending.m_Name.empty() || Now - m_LastSent < KOG_QUERY_INTERVAL_SECONDS || !OnKogServer())
 		return;
 
@@ -252,7 +256,10 @@ bool CKogPoints::ConsumeServerLine(const char *pLine)
 
 	int Points = 0, Rank = 0;
 	if(!ParseLine(pLine, m_Pending.m_Name.c_str(), Points, Rank))
-		return false;
+	{
+		// 667client: other answers to an automatic ask (not found, extra lines) stay out of the chat too
+		return m_Pending.m_Hide && (str_find_nocase(pLine, m_Pending.m_Name.c_str()) || str_find_nocase(pLine, "point"));
+	}
 
 	log_info("kog_points", "%s -> %d points, rank %d (\"%s\")", m_Pending.m_Name.c_str(), Points, Rank, pLine);
 	SEntry &Entry = m_Entries[Key(m_Pending.m_Name.c_str())];
