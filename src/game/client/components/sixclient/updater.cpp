@@ -853,11 +853,15 @@ void CUpdater::InitiateUpdate()
 
 void CUpdater::ApplyUpdateAndRestart()
 {
-	if(GetCurrentState() != IUpdater::NEED_RESTART)
+	if(GetCurrentState() != IUpdater::NEED_RESTART || m_ApplyStarted)
 		return;
 
+	m_ApplyStarted = true; // 667client: OnQuit must not start a second updater on the same archive
 	if(!LaunchApplyScriptAndQuit())
+	{
+		m_ApplyStarted = false;
 		SetCurrentState(IUpdater::FAIL);
+	}
 }
 
 void CUpdater::Update()
@@ -868,10 +872,7 @@ void CUpdater::Update()
 		if(State == IUpdater::VERSION_AVAILABLE)
 			InitiateUpdate();
 		else if(State == IUpdater::NEED_RESTART && !m_ApplyStarted && m_pClient->State() == IClient::STATE_OFFLINE)
-		{
-			m_ApplyStarted = true;
 			ApplyUpdateAndRestart();
-		}
 	}
 
 	if(m_AutoCheckPending && m_pHttp && GetCurrentState() == CLEAN)

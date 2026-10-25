@@ -2136,7 +2136,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		{
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
-			DoTickAmountSlider(&g_Config.m_ScSixInputAmount, &Button, ScLocalize("Max prediction offset"), 0, 150);
+			DoTickAmountSlider(&g_Config.m_ScSixInputAmount, &Button, ScLocalize("Max prediction offset"), 0, 300);
 			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSixInputAmount, &Button, ScLocalize("The highest prediction offset 667 input may use, in ticks (1.00 = 20 ms). Higher feels more instant, but on a bad connection the tee gets corrected back more often."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);

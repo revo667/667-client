@@ -897,6 +897,15 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 		return 1;
 	}
 
+	// 667client: a second updater for the same install would fight over update\extract
+	HANDLE hInstanceMutex = CreateMutexW(NULL, TRUE, L"Local\\CecenClientUpdater");
+	if(hInstanceMutex && GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		LocalFree(ppArgv);
+		CloseHandle(hInstanceMutex);
+		return 0;
+	}
+
 	auto *pArgs      = new WorkerArgs();
 	pArgs->Pid       = (DWORD)_wtol(ppArgv[1]);
 	wcscpy_s(pArgs->aArchive,    ppArgv[2]);

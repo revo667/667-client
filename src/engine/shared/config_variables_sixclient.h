@@ -141,7 +141,7 @@ MACRO_CONFIG_INT(ScBestInputOthers, sc_best_input_others, 0, 0, 1, CFGFLAG_CLIEN
 MACRO_CONFIG_INT(ScSaikoInputAmount, sc_saiko_input_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Saiko input amount in 0.01 ticks")
 MACRO_CONFIG_INT(ScSaikoInputOthers, sc_saiko_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Apply Saiko input to other tees")
 MACRO_CONFIG_INT(ScCloudInputAmount, sc_cloud_input_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cloud input amount in 0.01 ticks")
-MACRO_CONFIG_INT(ScSixInputAmount, sc_667_input_amount, 140, 0, 150, CFGFLAG_CLIENT | CFGFLAG_SAVE, "667 input maximum prediction offset in 0.01 ticks")
+MACRO_CONFIG_INT(ScSixInputAmount, sc_667_input_amount, 140, 0, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "667 input maximum prediction offset in 0.01 ticks")
 MACRO_CONFIG_INT(ScSixInputAdaptive, sc_667_input_adaptive, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Lower the 667 input offset automatically while the server keeps correcting predictions")
 MACRO_CONFIG_INT(ScSixInputSmoothing, sc_667_input_smoothing, 15, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Blend 667 input corrections out over this many milliseconds (0 = snap)")
 MACRO_CONFIG_INT(ScSixInputSubTick, sc_667_input_subtick, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Start input responses from the moment the key was pressed inside the tick")
