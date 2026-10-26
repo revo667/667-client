@@ -3304,6 +3304,8 @@ if(CLIENT)
   set_src(GAME_CLIENT_PRIVATE GLOB_RECURSE private/src/game/client
     components/sixclient/assets_market.cpp
     components/sixclient/assets_market.h
+    components/sixclient/cecen_dm.cpp
+    components/sixclient/cecen_dm.h
     components/sixclient/client_indicator.cpp
     components/sixclient/client_indicator.h
     components/sixclient/menus_assets_market.cpp

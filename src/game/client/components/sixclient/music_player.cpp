@@ -1122,16 +1122,22 @@ namespace
 				Out.m_ServiceId = SessionId(Session);
 
 				auto PlaybackInfo = Session.GetPlaybackInfo();
-				auto Controls = PlaybackInfo.Controls();
+				if(!PlaybackInfo)
+					return false;
 				Out.m_PlaybackState = TranslatePlaybackState(PlaybackInfo.PlaybackStatus());
 
-				auto Timeline = Session.GetTimelineProperties();
-				Out.m_PositionMs = ToMilliseconds(Timeline.Position());
-				Out.m_DurationMs = std::max<int64_t>(0, ToMilliseconds(Timeline.EndTime()) - ToMilliseconds(Timeline.StartTime()));
+				if(auto Timeline = Session.GetTimelineProperties())
+				{
+					Out.m_PositionMs = ToMilliseconds(Timeline.Position());
+					Out.m_DurationMs = std::max<int64_t>(0, ToMilliseconds(Timeline.EndTime()) - ToMilliseconds(Timeline.StartTime()));
+				}
 
-				Out.m_CanPrev = Controls.IsPreviousEnabled();
-				Out.m_CanNext = Controls.IsNextEnabled();
-				Out.m_CanPlayPause = Controls.IsPauseEnabled() || Controls.IsPlayEnabled() || Controls.IsPlayPauseToggleEnabled();
+				if(auto Controls = PlaybackInfo.Controls())
+				{
+					Out.m_CanPrev = Controls.IsPreviousEnabled();
+					Out.m_CanNext = Controls.IsNextEnabled();
+					Out.m_CanPlayPause = Controls.IsPauseEnabled() || Controls.IsPlayEnabled() || Controls.IsPlayPauseToggleEnabled();
+				}
 			}
 			catch(...)
 			{
@@ -1141,39 +1147,42 @@ namespace
 			try
 			{
 				auto MediaProps = Session.TryGetMediaPropertiesAsync().get();
-				Out.m_Title = winrt::to_string(MediaProps.Title());
-				Out.m_Artist = winrt::to_string(MediaProps.Artist());
-				Out.m_Album = winrt::to_string(MediaProps.AlbumTitle());
-				ApplyBrowserMediaFallbacks(Out.m_Title, Out.m_Artist,
-					winrt::to_string(MediaProps.Subtitle()),
-					winrt::to_string(MediaProps.AlbumArtist()));
-
-				// 667client
-				const std::string TrackKey = Out.m_ServiceId + "|" + Out.m_Title + "|" + Out.m_Artist;
-				std::vector<unsigned char> vArtBytes;
-				if(const auto It = m_ThumbnailCache.find(TrackKey); It != m_ThumbnailCache.end())
-					vArtBytes = It->second;
-				else
+				if(MediaProps)
 				{
-					vArtBytes = ReadThumbnailBytes(MediaProps.Thumbnail());
-					// An empty cover is retried: players often publish it a moment after the title.
+					Out.m_Title = winrt::to_string(MediaProps.Title());
+					Out.m_Artist = winrt::to_string(MediaProps.Artist());
+					Out.m_Album = winrt::to_string(MediaProps.AlbumTitle());
+					ApplyBrowserMediaFallbacks(Out.m_Title, Out.m_Artist,
+						winrt::to_string(MediaProps.Subtitle()),
+						winrt::to_string(MediaProps.AlbumArtist()));
+
+					// 667client
+					const std::string TrackKey = Out.m_ServiceId + "|" + Out.m_Title + "|" + Out.m_Artist;
+					std::vector<unsigned char> vArtBytes;
+					if(const auto It = m_ThumbnailCache.find(TrackKey); It != m_ThumbnailCache.end())
+						vArtBytes = It->second;
+					else
+					{
+						vArtBytes = ReadThumbnailBytes(MediaProps.Thumbnail());
+						// An empty cover is retried: players often publish it a moment after the title.
+						if(!vArtBytes.empty())
+						{
+							if(m_ThumbnailCache.size() >= 8)
+								m_ThumbnailCache.clear();
+							m_ThumbnailCache.emplace(TrackKey, vArtBytes);
+						}
+					}
+					// 667client
 					if(!vArtBytes.empty())
 					{
-						if(m_ThumbnailCache.size() >= 8)
-							m_ThumbnailCache.clear();
-						m_ThumbnailCache.emplace(TrackKey, vArtBytes);
+						Out.m_Art.m_Type = SMusicArt::EType::BYTES;
+						Out.m_Art.m_Key = Out.m_ServiceId + "|" + Out.m_Title + "|" + Out.m_Artist + "|" + std::to_string(vArtBytes.size());
+						Out.m_Art.m_vBytes = std::move(vArtBytes);
 					}
-				}
-				// 667client
-				if(!vArtBytes.empty())
-				{
-					Out.m_Art.m_Type = SMusicArt::EType::BYTES;
-					Out.m_Art.m_Key = Out.m_ServiceId + "|" + Out.m_Title + "|" + Out.m_Artist + "|" + std::to_string(vArtBytes.size());
-					Out.m_Art.m_vBytes = std::move(vArtBytes);
-				}
-				else
-				{
-					Out.m_Art.m_Key = Out.m_ServiceId + "|" + Out.m_Title + "|" + Out.m_Artist;
+					else
+					{
+						Out.m_Art.m_Key = Out.m_ServiceId + "|" + Out.m_Title + "|" + Out.m_Artist;
+					}
 				}
 			}
 			catch(...)

@@ -101,7 +101,8 @@ void CBackground::OnRender()
 	{
 		CMenuMediaBackground &MediaBackground = GameClient()->m_SixClient.MenuMediaBackground();
 		MediaBackground.SyncFromConfig(g_Config.m_ScGameMediaBackground, g_Config.m_ScMenuMediaBackgroundPath);
-		MediaBackground.Update();
+		if(!GameClient()->m_Menus.IsActive())
+			MediaBackground.Update();
 		if(g_Config.m_ScGameMediaBackground && g_Config.m_ClOverlayEntities > 0)
 		{
 			float ViewWidth = 0.0f;

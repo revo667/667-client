@@ -38,6 +38,7 @@
 #include "components/sixclient/snap_tap.h" // sixclient
 #include "components/sixclient/optimizer.h" // sixclient
 #include "components/sixclient/system_tuning.h" // sixclient
+#include <game/client/components/sixclient/cecen_dm.h> // sixclient
 #include <game/client/components/sixclient/client_indicator.h> // sixclient
 #include "components/sixclient/kog_points.h" // sixclient
 #include "components/sixclient/music_dock.h" // sixclient
@@ -263,6 +264,7 @@ public:
 	CMusicDock m_MusicDock; // 667client
 	CKogPoints m_KogPoints; // 667client
 	CClientIndicator m_ClientIndicator; // 667client
+	CCecenDm m_CecenDm; // 667client
 	CTeamScoreboard m_TeamScoreboard; // 667client
 	CMenuRainBackground m_MenuRainBackground; // 667client
 	CBrowserUtils m_BrowserUtils; // 667client

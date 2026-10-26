@@ -1170,6 +1170,9 @@ void CMenus::Render()
 		m_ServerMapPreview.Clear();
 	// 667client
 
+	const IClient::EClientState ClientState = Client()->State();
+	const bool LightConnectingMenu = ClientState == IClient::STATE_CONNECTING || ClientState == IClient::STATE_LOADING;
+
 	static int s_Frame = 0;
 	if(s_Frame == 0)
 	{
@@ -1181,13 +1184,11 @@ void CMenus::Render()
 		UpdateMusicState();
 		s_Frame++;
 	}
-	else
+	else if(!LightConnectingMenu)
 	{
 		m_CommunityIcons.Update();
 	}
 
-	// Initially add DDNet as favorite community and select its tab.
-	// This must be delayed until the DDNet info is available.
 	if(m_CreateDefaultFavoriteCommunities &&
 		ServerBrowser()->DDNetInfoAvailable())
 	{
@@ -1214,10 +1215,6 @@ void CMenus::Render()
 		m_JoinTutorial.m_Queued = false;
 	}
 
-	// Determine the client state once before rendering because it can change
-	// while rendering which causes frames with broken user interface.
-	const IClient::EClientState ClientState = Client()->State();
-
 	if(ClientState == IClient::STATE_ONLINE || ClientState == IClient::STATE_DEMOPLAYBACK)
 	{
 		ms_ColorTabbarInactive = ms_ColorTabbarInactiveIngame;
@@ -1226,17 +1223,16 @@ void CMenus::Render()
 	}
 	else
 	{
-		// 667client
 		const float MediaScreenHeight = 300.0f;
 		const float MediaScreenWidth = MediaScreenHeight * Graphics()->ScreenAspect();
 		CMenuMediaBackground &MediaBackground = GameClient()->m_SixClient.MenuMediaBackground();
 		MediaBackground.SyncFromConfig(g_Config.m_ScMenuMediaBackground, g_Config.m_ScMenuMediaBackgroundPath);
-		MediaBackground.Update();
+		if(!LightConnectingMenu)
+			MediaBackground.Update();
 		if(!MediaBackground.Render(MediaScreenWidth, MediaScreenHeight) && !GameClient()->m_MenuRainBackground.Render() && !GameClient()->m_MenuBackground.Render())
 		{
 			RenderBackground();
 		}
-		// 667client
 		ms_ColorTabbarInactive = ms_ColorTabbarInactiveOutgame;
 		ms_ColorTabbarActive = ms_ColorTabbarActiveOutgame;
 		ms_ColorTabbarHover = ms_ColorTabbarHoverOutgame;

@@ -146,14 +146,15 @@ void CMenus::RenderSettings(CUIRect MainView)
 		TCLocalize("TClient"), // TClient
 		Localize("Cecen Client"), // 667client
 		Localize("Cecen Social"), // 667client
+		Localize("Cecen DMs"), // 667client
 		Localize("Profiles"), // TClient
 		Localize("Configs"), // TClient
 		Localize("Credits")};
 	static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 	const int TabCorners = IGraphics::CORNER_R;
 
-	// 667client: Assets right after Controls; Cecen Client and Cecen Social always the last two.
-	static const int s_aTabOrder[] = {SETTINGS_GENERAL, SETTINGS_TEE, SETTINGS_APPEARANCE, SETTINGS_CONTROLS, SETTINGS_ASSETS, SETTINGS_GRAPHICS, SETTINGS_SOUND, SETTINGS_DDNET, SETTINGS_TCLIENT, SETTINGS_PROFILES, SETTINGS_CONFIGS, SETTINGS_CREDITS, SETTINGS_SIXCLIENT, SETTINGS_SOCIAL};
+	// 667client: Assets right after Controls; Cecen Client, Cecen Social and Cecen DMs stay last.
+	static const int s_aTabOrder[] = {SETTINGS_GENERAL, SETTINGS_TEE, SETTINGS_APPEARANCE, SETTINGS_CONTROLS, SETTINGS_ASSETS, SETTINGS_GRAPHICS, SETTINGS_SOUND, SETTINGS_DDNET, SETTINGS_TCLIENT, SETTINGS_PROFILES, SETTINGS_CONFIGS, SETTINGS_CREDITS, SETTINGS_SIXCLIENT, SETTINGS_SOCIAL, SETTINGS_DM};
 	for(const int i : s_aTabOrder)
 	{
 		TabBar.HSplitTop(10.0f, nullptr, &TabBar);

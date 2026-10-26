@@ -351,14 +351,14 @@ public:
 
 	void Update(CGameClient &This, const CNamePlateData &Data) override
 	{
-		m_Texture = This.m_ClientIndicator.Texture();
+		m_Texture = This.m_ClientIndicator.MonoTexture();
 		m_Visible = Data.m_ShowClientIndicator && m_Texture.IsValid();
 		if(!m_Visible)
 			return;
-		// Slightly smaller than the text so it sits on the name's cap height.
-		const float Height = Data.m_FontSize * 0.92f;
+		// Small and gray so it does not pull the eye away from the tee.
+		const float Height = Data.m_FontSize * 0.65f;
 		m_Size = vec2(This.m_ClientIndicator.IconWidth(Height), Height);
-		m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, Data.m_Color.a);
+		m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, Data.m_Color.a * 0.9f);
 	}
 };
 
@@ -370,13 +370,13 @@ public:
 
 	void Update(CGameClient &This, const CNamePlateData &Data) override
 	{
-		m_Texture = This.m_ClientIndicator.SpotifyTexture();
+		m_Texture = This.m_ClientIndicator.SpotifyMonoTexture();
 		m_Visible = Data.m_ShowSpotify && m_Texture.IsValid();
 		if(!m_Visible)
 			return;
-		const float Size = Data.m_FontSize * 0.8f;
+		const float Size = Data.m_FontSize * 0.6f;
 		m_Size = vec2(Size, Size);
-		m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, Data.m_Color.a);
+		m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, Data.m_Color.a * 0.9f);
 	}
 };
 // 667client
@@ -768,10 +768,10 @@ private:
 			AddPart<CNamePlatePartPing>(This); // TClient
 			AddPart<CNamePlatePartIgnoreMark>(This); // TClient
 			AddPart<CNamePlatePartClientIndicator>(This); // 667client
+			AddPart<CNamePlatePartSpotify>(This); // 667client
 			AddPart<CNamePlatePartFriendMark>(This);
 			AddPart<CNamePlatePartClientId>(This, false);
 			AddPart<CNamePlatePartName>(This);
-			AddPart<CNamePlatePartSpotify>(This); // 667client
 			AddPart<CNamePlatePartNewLine>(This);
 
 			AddPart<CNamePlatePartClan>(This);
@@ -953,7 +953,8 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	// 667client
 	Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark && GameClient()->m_aClients[pPlayerInfo->m_ClientId].m_Friend;
 	Data.m_ShowClientIndicator = Data.m_ShowName && GameClient()->m_ClientIndicator.IsUserInGame(pPlayerInfo->m_ClientId); // 667client
-	Data.m_ShowSpotify = Data.m_ShowName && g_Config.m_ScSpotifyNameplate && GameClient()->m_ClientIndicator.MusicInGame(pPlayerInfo->m_ClientId) != nullptr; // 667client
+	const auto *pMusic = GameClient()->m_ClientIndicator.MusicInGame(pPlayerInfo->m_ClientId); // 667client
+	Data.m_ShowSpotify = Data.m_ShowName && g_Config.m_ScSpotifyNameplate && pMusic && pMusic->m_Playing; // 667client
 	Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds);
 	Data.m_FontSize = 18.0f + 20.0f * g_Config.m_ClNamePlatesSize / 100.0f;
 

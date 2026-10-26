@@ -189,6 +189,7 @@ void CGameClient::OnConsoleInit()
 					      &m_MusicDock, // 667client
 					      &m_KogPoints, // 667client
 					      &m_ClientIndicator, // 667client
+					      &m_CecenDm, // 667client
 					      &m_BrowserUtils, // 667client
 					      &m_EgoFinishedMaps, // 667client
 					      &m_AssetsMarket, // 667client
@@ -251,6 +252,7 @@ void CGameClient::OnConsoleInit()
 						  &m_FastActions, // 667client
 						  &m_Emoticon,
 						  &m_ImportantAlert,
+						  &m_CecenDm, // 667client
 						  &m_AdminPanel, // 667client
 						  &m_Menus,
 						  &m_Controls,

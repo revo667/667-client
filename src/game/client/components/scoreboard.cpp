@@ -132,6 +132,7 @@ void CScoreboard::ResetTexts()
 		Player.m_ScoreMillis.Reset(TextRender());
 		Player.m_Name.Reset(TextRender());
 		Player.m_MuteMark.Reset(TextRender());
+		Player.m_FriendMark.Reset(TextRender());
 		Player.m_ReadyMark.Reset(TextRender());
 		Player.m_Clan.Reset(TextRender());
 		Player.m_Ping.Reset(TextRender());
@@ -856,13 +857,26 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 				const CClientIndicator::SMusic *pMusic = GameClient()->m_ClientIndicator.MusicInGame(pInfo->m_ClientId);
 				const float SpotifySize = FontSize * 1.05f;
 				const float SpotifyGap = FontSize * 0.35f;
-				const float NameMaxWidth = std::max(NameLength - (NameTextOffset - NameOffset) - (pMusic ? SpotifySize + SpotifyGap : 0.0f), 0.0f);
+				const bool Friend = pInfo->m_ClientId >= 0 && GameClient()->m_aClients[pInfo->m_ClientId].m_Friend;
+				const float HeartSize = FontSize * 0.7f;
+				const float HeartGap = FontSize * 0.3f;
+				float FriendRoom = 0.0f;
+				if(Friend)
+				{
+					TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+					Player.m_FriendMark.Update(TextRender(), FontIcon::HEART, HeartSize);
+					TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+					FriendRoom = HeartGap + Player.m_FriendMark.Width();
+				}
+				const float NameMaxWidth = std::max(NameLength - (NameTextOffset - NameOffset) - FriendRoom - (pMusic ? SpotifySize + SpotifyGap : 0.0f), 0.0f);
 				Player.m_Name.Update(TextRender(), aBuf, FontSize, NameMaxWidth, TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END);
 				Player.m_Name.Render(TextRender(), vec2(NameTextOffset, TextY), NameColor);
+				if(Friend)
+					Player.m_FriendMark.Render(TextRender(), vec2(NameTextOffset + Player.m_Name.Width() + HeartGap, TextY + (FontSize - HeartSize) * 0.5f), ColorRGBA(1.0f, 0.3f, 0.35f, TextColor.a));
 				if(pMusic)
 				{
 					const bool Listening = GameClient()->m_ClientIndicator.IsListeningTo(ClientData.m_aName);
-					const CUIRect SpotifyRect = {NameTextOffset + Player.m_Name.Width() + SpotifyGap, Row.y + (Row.h - SpotifySize) / 2.0f, SpotifySize, SpotifySize};
+					const CUIRect SpotifyRect = {NameTextOffset + Player.m_Name.Width() + FriendRoom + SpotifyGap, Row.y + (Row.h - SpotifySize) / 2.0f, SpotifySize, SpotifySize};
 					GameClient()->m_ClientIndicator.RenderSpotifyIcon(SpotifyRect.x, SpotifyRect.y, SpotifyRect.w, (pMusic->m_Playing || Listening ? 1.0f : 0.5f) * TextColor.a);
 					if(m_MouseUnlocked)
 					{

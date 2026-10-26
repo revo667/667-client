@@ -833,6 +833,7 @@ public:
 		SETTINGS_TCLIENT, // TClient
 		SETTINGS_SIXCLIENT, // 667client
 		SETTINGS_SOCIAL, // 667client
+		SETTINGS_DM, // 667client
 		SETTINGS_PROFILES, // TClient
 		SETTINGS_CONFIGS, // TClient
 		SETTINGS_CREDITS,
@@ -963,6 +964,8 @@ public:
 	void SetMenuPage(int NewPage);
 	// 667client: Cecen Social > Sharing, with a note that listen along needs Spotify Connect
 	void OpenSpotifySettings();
+	void OpenCecenSocial();
+	void OpenCecenDm();
 	void RefreshBrowserTab(bool Force);
 	void ForceRefreshLanPage();
 	void SetShowStart(bool ShowStart);
@@ -1017,6 +1020,7 @@ private:
 	// 667client
 	void RenderSettingsSixClientFriends(CUIRect MainView); // 667client
 	void RenderSettingsCecenSocial(CUIRect MainView); // 667client
+	void RenderSettingsCecenDm(CUIRect MainView); // 667client
 	void RenderSpotify(CUIRect MainView); // 667client
 	void RenderSettingsCecenUi(CUIRect MainView); // 667client
 	void RenderSettingsRestartBar(CUIRect RestartBar); // 667client

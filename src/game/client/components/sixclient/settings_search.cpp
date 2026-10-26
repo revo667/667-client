@@ -80,6 +80,7 @@ static const char *LeafLabel(int Leaf)
 	case SETTINGS_NAV_LEAF_SC_CONFIGS: return ScLocalize("Configs");
 	case SETTINGS_NAV_LEAF_SC_INFO: return ScLocalize("Info");
 	case SETTINGS_NAV_LEAF_SOCIAL: return Localize("Cecen Social");
+	case SETTINGS_NAV_LEAF_DM: return Localize("Cecen DMs");
 	default: return Localize("Settings");
 	}
 }

@@ -20,6 +20,7 @@
 #include <engine/textrender.h>
 
 #include <game/client/components/hud_layout.h>
+#include <game/client/components/sixclient/spotify_connect.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
@@ -103,13 +104,23 @@ void CMusicDock::UpdateOpenState(bool Hovered, float Delta)
 void CMusicDock::UpdateVolume(bool Open)
 {
 	const int64_t Now = time_get();
-	if(Open && !m_DraggingVolume && Now - m_LastVolumeRead > time_freq())
+	if(Open && !m_DraggingVolume && Now - m_LastVolumeRead > time_freq() / 4)
 	{
 		m_LastVolumeRead = Now;
-		float Volume;
-		m_VolumeAvailable = SystemVolumeGet(Volume);
-		if(m_VolumeAvailable)
-			m_Volume = Volume;
+		CSpotifyConnect::SState SpotifyState;
+		m_VolumeFromSpotify = g_Config.m_ScSpotifyConnect && GameClient()->m_MusicPlayer.SpotifyConnect().Ready() && GameClient()->m_MusicPlayer.SpotifyConnect().GetState(SpotifyState) && SpotifyState.m_Active;
+		if(m_VolumeFromSpotify)
+		{
+			m_VolumeAvailable = true;
+			m_Volume = std::clamp(SpotifyState.m_Volume / 65535.0f, 0.0f, 1.0f);
+		}
+		else
+		{
+			float Volume;
+			m_VolumeAvailable = SystemVolumeGet(Volume);
+			if(m_VolumeAvailable)
+				m_Volume = Volume;
+		}
 	}
 }
 
@@ -279,18 +290,22 @@ void CMusicDock::RenderPanel(const CUIRect &Panel, float Scale, float Alpha, vec
 	VolumeBar.HMargin((VolumeBar.h - 4.0f * Scale) * 0.5f, &VolumeBar);
 	const char *pVolumeIcon = m_Volume <= 0.001f ? FontIcon::VOLUME_XMARK : (m_Volume < 0.5f ? FontIcon::VOLUME_LOW : FontIcon::VOLUME_HIGH);
 	RenderIcon(VolumeIcon, pVolumeIcon, 11.0f * Scale, ColorRGBA(1.0f, 1.0f, 1.0f, (m_VolumeAvailable ? 0.85f : 0.3f) * Alpha));
+	auto &&ApplyVolume = [&](float Volume) {
+		m_Volume = std::clamp(Volume, 0.0f, 1.0f);
+		if(m_VolumeFromSpotify)
+			GameClient()->m_MusicPlayer.SpotifyConnect().SetVolume(m_Volume);
+		else
+			SystemVolumeSet(m_Volume);
+	};
 	if(m_VolumeAvailable && Clicked && Inside(VolumeIcon, Mouse))
 	{
 		if(m_Volume > 0.001f)
 		{
 			s_VolumeBeforeMute = m_Volume;
-			m_Volume = 0.0f;
+			ApplyVolume(0.0f);
 		}
 		else
-		{
-			m_Volume = std::max(0.05f, s_VolumeBeforeMute);
-		}
-		SystemVolumeSet(m_Volume);
+			ApplyVolume(std::max(0.05f, s_VolumeBeforeMute));
 	}
 
 	VolumeBar.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.15f * Alpha), IGraphics::CORNER_ALL, 2.0f * Scale);
@@ -309,13 +324,15 @@ void CMusicDock::RenderPanel(const CUIRect &Panel, float Scale, float Alpha, vec
 		const bool MouseHeld = Ui()->MouseButton(0) || Input()->KeyIsPressed(KEY_MOUSE_1);
 		if(m_DraggingVolume)
 		{
-			m_Volume = std::clamp((Mouse.x - VolumeBar.x) / std::max(1.0f, VolumeBar.w), 0.0f, 1.0f);
+			const float NextVolume = std::clamp((Mouse.x - VolumeBar.x) / std::max(1.0f, VolumeBar.w), 0.0f, 1.0f);
 			const int64_t Now = time_get();
 			if(!MouseHeld || Now - m_LastVolumeWrite > time_freq() / 25)
 			{
 				m_LastVolumeWrite = Now;
-				SystemVolumeSet(m_Volume);
+				ApplyVolume(NextVolume);
 			}
+			else
+				m_Volume = NextVolume;
 			if(!MouseHeld)
 				m_DraggingVolume = false;
 		}

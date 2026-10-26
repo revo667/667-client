@@ -36,6 +36,7 @@ class CMusicDock : public CComponent
 
 	float m_Volume = 0.5f;
 	bool m_VolumeAvailable = false;
+	bool m_VolumeFromSpotify = false;
 	bool m_DraggingVolume = false;
 	int64_t m_LastVolumeRead = 0;
 	int64_t m_LastVolumeWrite = 0;

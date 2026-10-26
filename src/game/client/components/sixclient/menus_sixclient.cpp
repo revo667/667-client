@@ -3172,7 +3172,6 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBetaReports, &BetaRow, ScLocalize("While Cecen Client is in beta, crashes, freezes, stutters and lag are sent to the Cecen team with your name, the server, the map, your system and a few settings, so they can be fixed"));
 		Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 	}
-	// 667client
 
 	const float ChatQoLBlockHeight = LineSize + MarginSmall + 4.0f * LineSize;
 	CUIRect ChatQoLBlock;
