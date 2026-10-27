@@ -33,6 +33,17 @@ namespace
 		const char *pStr = json_string_get(pValue);
 		return pStr != nullptr ? pStr : "";
 	}
+
+	static double JsonNumberOrZero(const json_value *pValue)
+	{
+		if(pValue == nullptr || pValue == &json_value_none)
+			return 0.0;
+		if(pValue->type == json_integer)
+			return (double)pValue->u.integer;
+		if(pValue->type == json_double)
+			return pValue->u.dbl;
+		return 0.0;
+	}
 } // namespace
 
 float MusicPlayerTextWidth(ITextRender *pTextRender, float FontSize, const char *pText)
@@ -361,12 +372,17 @@ void CMusicPlayerLyrics::StartRequest(IHttp *pHttp, const char *pTitle, const ch
 	}
 
 	AbortRequest();
+	m_pHttp = pHttp;
+	m_RequestIsSearch = false;
+	m_RequestTitle = pTitle ? pTitle : "";
+	m_RequestArtist = pArtist ? pArtist : "";
+	m_RequestDurationMs = DurationMs;
 
 	char aEscapedTitle[512];
 	char aEscapedArtist[512];
 	char aEscapedAlbum[512];
-	EscapeUrl(aEscapedTitle, pTitle ? pTitle : "");
-	EscapeUrl(aEscapedArtist, pArtist ? pArtist : "");
+	EscapeUrl(aEscapedTitle, m_RequestTitle.c_str());
+	EscapeUrl(aEscapedArtist, m_RequestArtist.c_str());
 	EscapeUrl(aEscapedAlbum, pAlbum ? pAlbum : "");
 
 	const int DurationSec = (int)((std::max<int64_t>(0, DurationMs) + 500) / 1000);
@@ -383,15 +399,60 @@ void CMusicPlayerLyrics::StartRequest(IHttp *pHttp, const char *pTitle, const ch
 			"https://lrclib.net/api/get?track_name=%s&artist_name=%s&album_name=%s",
 			aEscapedTitle, aEscapedArtist, aEscapedAlbum);
 	}
+	RunRequest(aUrl);
+}
 
-	m_pRequest = HttpGet(aUrl);
+void CMusicPlayerLyrics::StartSearchRequest()
+{
+	char aEscapedTitle[512];
+	char aEscapedArtist[512];
+	EscapeUrl(aEscapedTitle, m_RequestTitle.c_str());
+	EscapeUrl(aEscapedArtist, m_RequestArtist.c_str());
+
+	char aUrl[2048];
+	str_format(aUrl, sizeof(aUrl), "https://lrclib.net/api/search?track_name=%s&artist_name=%s", aEscapedTitle, aEscapedArtist);
+	m_RequestIsSearch = true;
+	RunRequest(aUrl);
+}
+
+void CMusicPlayerLyrics::RunRequest(const char *pUrl)
+{
+	m_pRequest = HttpGet(pUrl);
 	m_pRequest->Timeout(CTimeout{10000, 0, 500, 10});
 	m_pRequest->LogProgress(HTTPLOG::FAILURE);
 	m_pRequest->FailOnErrorStatus(false);
 	m_pRequest->HeaderString("Lrclib-Client", "667Client/" SIXCLIENT_VERSION " (https://github.com/revo667/667-client)");
 	m_RequestKey = m_ActiveKey;
 	m_DisplayState = EDisplayState::Loading;
-	pHttp->Run(m_pRequest);
+	m_pHttp->Run(m_pRequest);
+}
+
+bool CMusicPlayerLyrics::PickSearchResult(const json_value *pRoot, std::vector<SLine> &vOut) const
+{
+	if(pRoot == nullptr || pRoot == &json_value_none || pRoot->type != json_array)
+		return false;
+
+	int64_t BestDiff = -1;
+	const char *pBest = nullptr;
+	for(int i = 0; i < json_array_length(pRoot); i++)
+	{
+		const json_value *pItem = json_array_get(pRoot, i);
+		if(pItem == nullptr || pItem->type != json_object)
+			continue;
+		const char *pSynced = JsonStringOrEmpty(json_object_get(pItem, "syncedLyrics"));
+		if(pSynced[0] == '\0' || str_utf8_comp_nocase(JsonStringOrEmpty(json_object_get(pItem, "trackName")), m_RequestTitle.c_str()) != 0)
+			continue;
+		const int64_t DurationMs = (int64_t)(JsonNumberOrZero(json_object_get(pItem, "duration")) * 1000.0);
+		const int64_t Diff = m_RequestDurationMs > 0 ? std::abs(DurationMs - m_RequestDurationMs) : 0;
+		if(Diff > SEARCH_MAX_DURATION_DIFF_MS)
+			continue;
+		if(BestDiff < 0 || Diff < BestDiff)
+		{
+			BestDiff = Diff;
+			pBest = pSynced;
+		}
+	}
+	return pBest != nullptr && ParseSyncedLyrics(pBest, vOut);
 }
 
 void CMusicPlayerLyrics::ProcessRequest()
@@ -411,6 +472,11 @@ void CMusicPlayerLyrics::ProcessRequest()
 		m_DisplayState = EDisplayState::Offline;
 		m_vLines.clear();
 		ClearActiveTrack();
+		if(m_RetryCount < MAX_RETRIES)
+		{
+			m_RetryTick = time_get() + time_freq() * (5 << m_RetryCount);
+			m_RetryCount++;
+		}
 	};
 
 	if(pFinished->State() != EHttpState::DONE || pFinished->StatusCode() == 0)
@@ -431,7 +497,12 @@ void CMusicPlayerLyrics::ProcessRequest()
 	if(StatusCode != 404)
 	{
 		json_value *pRoot = pFinished->ResultJson();
-		if(pRoot != nullptr && pRoot != &json_value_none && pRoot->type == json_object)
+		if(m_RequestIsSearch)
+		{
+			if(PickSearchResult(pRoot, Entry.m_vLines))
+				Entry.m_State = EDisplayState::Ready;
+		}
+		else if(pRoot != nullptr && pRoot != &json_value_none && pRoot->type == json_object)
 		{
 			const char *pSynced = JsonStringOrEmpty(json_object_get(pRoot, "syncedLyrics"));
 			if(ParseSyncedLyrics(pSynced, Entry.m_vLines))
@@ -439,6 +510,12 @@ void CMusicPlayerLyrics::ProcessRequest()
 		}
 		if(pRoot)
 			json_value_free(pRoot);
+	}
+
+	if(Entry.m_State == EDisplayState::NotFound && !m_RequestIsSearch && ApplyToActive && m_pHttp != nullptr)
+	{
+		StartSearchRequest();
+		return;
 	}
 
 	if(!FinishedKey.empty())
@@ -523,6 +600,8 @@ void CMusicPlayerLyrics::Update(IHttp *pHttp, const char *pTitle, const char *pA
 		m_ActiveKey = Key;
 		m_vLines.clear();
 		ClearActiveTrack();
+		m_RetryCount = 0;
+		m_RetryTick = 0;
 		SyncMediaClock(SnapshotPositionMs, DurationMs, Playing, true);
 
 		const auto It = m_Cache.find(Key);
@@ -535,6 +614,12 @@ void CMusicPlayerLyrics::Update(IHttp *pHttp, const char *pTitle, const char *pA
 		m_DisplayState = EDisplayState::Loading;
 		StartRequest(pHttp, pTitle, pArtist, pAlbum, DurationMs);
 		return;
+	}
+
+	if(m_DisplayState == EDisplayState::Offline && m_RetryTick != 0 && !m_pRequest && time_get() >= m_RetryTick)
+	{
+		m_RetryTick = 0;
+		StartRequest(pHttp, pTitle, pArtist, pAlbum, DurationMs);
 	}
 
 	SyncMediaClock(SnapshotPositionMs, DurationMs, Playing, false);

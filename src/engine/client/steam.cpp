@@ -7,6 +7,8 @@
 
 #include <steam/steam_api_flat.h>
 
+#include <cstdlib>
+
 class CSteam : public ISteam
 {
 	HSteamPipe m_SteamPipe;
@@ -143,6 +145,14 @@ class CSteamStub : public ISteam
 
 ISteam *CreateSteam()
 {
+	if(!getenv("SteamAppId"))
+	{
+#if defined(CONF_FAMILY_WINDOWS)
+		_putenv_s("SteamAppId", "412220");
+#else
+		setenv("SteamAppId", "412220", 0);
+#endif
+	}
 	if(!SteamAPI_Init())
 	{
 		return new CSteamStub();

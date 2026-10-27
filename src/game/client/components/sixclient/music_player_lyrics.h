@@ -16,6 +16,7 @@ class CUi;
 class IHttp;
 class ITextRender;
 struct STextColorSplit;
+struct _json_value;
 
 float MusicPlayerTextWidth(ITextRender *pTextRender, float FontSize, const char *pText);
 
@@ -77,6 +78,8 @@ private:
 	static constexpr int64_t NOT_FOUND_HOLD_MS = 5000;
 	static constexpr int64_t OFFLINE_HOLD_MS = 5000;
 	static constexpr int64_t BACKWARDS_SEEK_THRESHOLD_MS = 800;
+	static constexpr int64_t SEARCH_MAX_DURATION_DIFF_MS = 10000;
+	static constexpr int MAX_RETRIES = 3;
 
 	struct SCacheEntry
 	{
@@ -108,6 +111,9 @@ private:
 	int ResolveDisplayLineIndex() const;
 	void ApplyCacheEntry(const SCacheEntry &Entry);
 	void StartRequest(IHttp *pHttp, const char *pTitle, const char *pArtist, const char *pAlbum, int64_t DurationMs);
+	void StartSearchRequest();
+	void RunRequest(const char *pUrl);
+	bool PickSearchResult(const _json_value *pRoot, std::vector<SLine> &vOut) const;
 	void ProcessRequest();
 	void SyncMediaClock(int64_t SnapshotPositionMs, int64_t DurationMs, bool Playing, bool ForceReset);
 	void EnsureLayout(ITextRender *pTextRender, float FontSize, int LineIndex);
@@ -124,6 +130,13 @@ private:
 	EDisplayState m_DisplayState = EDisplayState::Idle;
 	std::vector<SLine> m_vLines;
 	std::shared_ptr<IHttpRequest> m_pRequest;
+	IHttp *m_pHttp = nullptr;
+	bool m_RequestIsSearch = false;
+	std::string m_RequestTitle;
+	std::string m_RequestArtist;
+	int64_t m_RequestDurationMs = 0;
+	int m_RetryCount = 0;
+	int64_t m_RetryTick = 0;
 	std::unordered_map<std::string, SCacheEntry> m_Cache;
 	float m_NotFoundDisplayMs = 0.0f;
 	float m_OfflineDisplayMs = 0.0f;
