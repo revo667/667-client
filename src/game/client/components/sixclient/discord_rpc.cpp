@@ -227,11 +227,12 @@ static void NormalizeDiscordImageUrl(char *pDst, int DstSize, const char *pSrc)
 
 void SixClientResolveDiscordImage(char *pDst, int DstSize, const char *pConfigured)
 {
-	TrimDiscordImage(pDst, DstSize, pConfigured);
-	if(pDst[0] == '\0' || str_comp(pDst, SIXCLIENT_DISCORD_LEGACY_LARGE_IMAGE_KEY) == 0 || str_comp(pDst, SIXCLIENT_DISCORD_OLD_DEFAULT_LARGE_IMAGE) == 0)
+	char aTrimmed[512];
+	TrimDiscordImage(aTrimmed, sizeof(aTrimmed), pConfigured);
+	if(aTrimmed[0] == '\0' || str_comp(aTrimmed, SIXCLIENT_DISCORD_LEGACY_LARGE_IMAGE_KEY) == 0 || str_comp(aTrimmed, SIXCLIENT_DISCORD_OLD_DEFAULT_LARGE_IMAGE) == 0)
 		str_copy(pDst, SIXCLIENT_DISCORD_DEFAULT_LARGE_IMAGE, DstSize);
 	else
-		NormalizeDiscordImageUrl(pDst, DstSize, pDst);
+		NormalizeDiscordImageUrl(pDst, DstSize, aTrimmed);
 }
 
 static void PrepareDiscordImageUrl(char *pDst, int DstSize, const char *pSrc, unsigned CacheBust)
