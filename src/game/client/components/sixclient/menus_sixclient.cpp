@@ -37,13 +37,12 @@
 #include <string>
 #include <vector>
 
-// 667client
 enum
 {
 	SIXCLIENT_TAB_VISUALS = 0,
 	SIXCLIENT_TAB_GAMEPLAY,
 	SIXCLIENT_TAB_OTHERS,
-	SIXCLIENT_TAB_COSMETICS, // 667client: was Friends, which moved to Cecen Social
+	SIXCLIENT_TAB_COSMETICS,
 	SIXCLIENT_TAB_SENSITIVITY,
 	SIXCLIENT_TAB_ASSETS,
 	SIXCLIENT_TAB_CONFIGS,
@@ -404,16 +403,11 @@ static bool IsSixClientTabFlagSet(int32_t Flags, int Tab)
 {
 	return (Flags & (1 << Tab)) != 0;
 }
-// 667client
-
 void CMenus::RenderSettingsSixClient(CUIRect MainView)
 {
-	// 667client
 	const float TopExtend = 20.0f;
 	MainView.y -= TopExtend;
 	MainView.h += TopExtend;
-	// 667client
-
 	static CButtonContainer s_aPageTabs[NUM_SIXCLIENT_TABS] = {};
 
 	MainView.HSplitTop(8.0f, nullptr, &MainView);
@@ -476,7 +470,6 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		s_CurSixClientTab = FirstVisibleTab;
 
 	int SelectedVisibleIndex = 0;
-	// 667client
 	{
 		CUIRect TabBar, TabButton;
 		MainView.HSplitTop(24.0f, &TabBar, &MainView);
@@ -495,8 +488,6 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		}
 		MainView.HSplitTop(10.0f, nullptr, &MainView);
 	}
-	// 667client
-
 	if(s_ShowSixClientFun)
 	{
 		RenderSettingsSixClientFun(MainView);
@@ -523,7 +514,6 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		else if(Tab == SIXCLIENT_TAB_INFO)
 			RenderSettingsSixClientInfo(Content);
 	};
-
 
 	const SCUiAnimations::STabSwitch TabSwitch = SCUiAnimations::AnimateTabSwitch(SelectedVisibleIndex, VisibleCount, Client()->RenderFrameTime(), 0);
 	const int FromTab = aVisibleValues[TabSwitch.m_FromIndex];
@@ -816,7 +806,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
-	RenderSettingsSixClientChatBlock(Column); // 667client
+	RenderSettingsSixClientChatBlock(Column);
 
 	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
@@ -1144,13 +1134,11 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScStartMenuMonoImages, ScLocalize("Black and white menu images"), &g_Config.m_ScStartMenuMonoImages, &RainContent, LineSize);
 	}
 
-
 	const float LeftColumnEndY = Column.y;
 
 	CUIRect RightColumn = RightView;
 	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
 
-	// 667client: settings layout, the classic tabs or the Cecen UI hub and categories
 	{
 		const float SwitchHeight = 24.0f;
 		CUIRect CecenUiBlock;
@@ -1548,7 +1536,6 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	}
 
 	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
-
 
 	const bool AnimationsExpanded = g_Config.m_ScAnimations != 0;
 	const float AnimationsExpandedTargetHeight = 6.0f * (MarginSmall + LineSize);
@@ -2025,9 +2012,7 @@ void CMenus::DoTickAmountSlider(int *pValue, const CUIRect *pRect, const char *p
 	Ui()->DoLabel(&Label, aBuf, Label.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML);
 
 	const float Rel = (Value - Min) / (float)(Max - Min);
-	// 667client
 	const float NewRel = Ui()->DoScrollbarH(pValue, &ScrollBar, Rel, nullptr, nullptr);
-	// 667client
 	Value = (int)(Min + NewRel * (Max - Min) + 0.5f);
 	*pValue = std::clamp(Value, Min, Max);
 }
@@ -2106,7 +2091,6 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 		InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 		{
-			// The modes in a drop-down, like TClient and Aether.
 			static const int s_aModes[] = {SC_INPUTS_SIX, SC_INPUTS_FAST, SC_INPUTS_BEST, SC_INPUTS_SAIKO, SC_INPUTS_CLOUD, SC_INPUTS_MEOW};
 			const char *apModeNames[] = {"667 Input", ScLocalize("Fast Input"), ScLocalize("Best Input"), ScLocalize("Saiko Input"), ScLocalize("Cloud Input"), ScLocalize("Meow Input")};
 			const char *apModeTips[] = {
@@ -2393,16 +2377,12 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			str_format(aBuf, sizeof(aBuf), "%s: %s", ScLocalize("Delay"), ScLocalize("Off"));
 		else
 			str_format(aBuf, sizeof(aBuf), "%s: %dms", ScLocalize("Delay"), Value);
-		// 667client
-
 		CUIRect DelayLabel, ScrollBar;
 		Button.VSplitMid(&DelayLabel, &ScrollBar, std::min(10.0f, Button.w * 0.05f));
 		Ui()->DoLabel(&DelayLabel, aBuf, DelayLabel.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML);
 
 		const float Rel = (Value - Min) / (float)(Max - Min);
-		// 667client
 		const float NewRel = Ui()->DoScrollbarH(&g_Config.m_ScSnapTapDelay, &ScrollBar, Rel, nullptr, nullptr);
-		// 667client
 		Value = (int)(Min + NewRel * (Max - Min) + 0.5f);
 		g_Config.m_ScSnapTapDelay = std::clamp(Value, Min, Max);
 
@@ -2639,10 +2619,25 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 
 	MainLeft.HSplitTop(MarginSmall, nullptr, &MainLeft);
 	MainLeft.HSplitTop(LineSize, &Button, &MainLeft);
+	CUIRect LowLatencyButton, MaxFpsButton;
+	Button.VSplitMid(&LowLatencyButton, &MaxFpsButton, MarginSmall);
 	static CButtonContainer s_LowLatencyPresetButton;
-	if(DoButton_Menu(&s_LowLatencyPresetButton, ScLocalize("Apply low latency preset"), 0, &Button))
+	if(DoButton_Menu(&s_LowLatencyPresetButton, ScLocalize("Apply low latency preset"), 0, &LowLatencyButton))
 		GameClient()->m_SystemTuning.ApplyLowLatencyPreset();
-	GameClient()->m_Tooltips.DoToolTip(&s_LowLatencyPresetButton, &Button, ScLocalize("Turns off V-Sync, removes the update rate limit and enables the low latency options above"));
+	GameClient()->m_Tooltips.DoToolTip(&s_LowLatencyPresetButton, &LowLatencyButton, ScLocalize("Turns off V-Sync, removes the update rate limit and enables the low latency options above"));
+	static CButtonContainer s_MaxFpsPresetButton;
+	if(DoButton_Menu(&s_MaxFpsPresetButton, ScLocalize("Max FPS preset"), 0, &MaxFpsButton))
+	{
+		GameClient()->m_SystemTuning.ApplyMaxFpsPreset();
+		if(g_Config.m_GfxFsaaSamples > 0)
+		{
+			uint32_t MultiSamplingCount = 0;
+			if(!Graphics()->SetMultiSampling(0, MultiSamplingCount))
+				m_NeedRestartGraphics = true;
+			g_Config.m_GfxFsaaSamples = 0;
+		}
+	}
+	GameClient()->m_Tooltips.DoToolTip(&s_MaxFpsPresetButton, &MaxFpsButton, ScLocalize("Low latency preset plus no FPS limit, no FSAA, no high detail, no particles and no frozen tee HUD"));
 
 	CUIRect RightColumn = RightView;
 	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
@@ -3151,7 +3146,6 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 	Column.HSplitTop(10.0f, nullptr, &Column);
 	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
 
-	// 667client: beta reports
 	{
 		CUIRect BetaBlock;
 		Column.HSplitTop(LineSize + MarginSmall + LineSize, &BetaBlock, &Column);
@@ -3358,7 +3352,6 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 	RightView.VSplitRight(MarginSmall, &RightView, nullptr);
 	LeftView.HSplitMid(&LeftView, &LowerLeftView, 0.0f);
 
-	// ── Cecen Client Links ───────────────────────────────────────────────────
 	LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
 	Ui()->DoLabel(&Label, ScLocalize("Cecen Client Links"), HeadlineFontSize, TEXTALIGN_ML);
 	LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
@@ -3388,7 +3381,6 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 		Updater()->CheckForUpdate();
 #endif
 
-	// ── Config Files (anchored to the bottom of the left column) ──────────
 	LeftView = LowerLeftView;
 	LeftView.HSplitBottom(LineSize * 2.0f + MarginSmall * 2.0f + HeadlineFontSize, nullptr, &LeftView);
 	LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
@@ -3407,7 +3399,6 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 		Client()->ViewFile(aBuf);
 	}
 
-	// ── Cecen Client Developers ─────────────────────────────────────────────
 	RightView.HSplitTop(HeadlineHeight, &Label, &RightView);
 	Ui()->DoLabel(&Label, ScLocalize("Cecen Client Developers"), HeadlineFontSize, TEXTALIGN_ML);
 	RightView.HSplitTop(MarginSmall, nullptr, &RightView);
@@ -3438,7 +3429,6 @@ void CMenus::RenderSettingsSixClientInfo(CUIRect MainView)
 		RenderDevSkin(TeeRect.Center(), TeeSize, "kir4i", "default", false, 0, 0, 0, false, true);
 	}
 
-	// ── Hide Settings Tabs ────────────────────────────────────────────────
 	RightView.HSplitTop(MarginSmall, nullptr, &RightView);
 	RightView.HSplitTop(HeadlineHeight, &Label, &RightView);
 	Ui()->DoLabel(&Label, ScLocalize("Hide Settings Tabs"), HeadlineFontSize, TEXTALIGN_ML);
@@ -3771,7 +3761,7 @@ void CMenus::DoRocketPreview(const CUIRect *pRect)
 
 void CMenus::RenderSettingsSixClientParticles3D(CUIRect &Column)
 {
-	CUIRect MainView; // scratch rect, as in the Visuals tab these blocks came from
+	CUIRect MainView;
 	const float LineSize = 20.0f;
 	const float MarginSmall = 5.0f;
 	const float HeadlineFontSize = 20.0f;
@@ -3892,7 +3882,7 @@ void CMenus::RenderSettingsSixClientParticles3D(CUIRect &Column)
 
 void CMenus::RenderSettingsSixClientCursorTrail(CUIRect &Column)
 {
-	CUIRect MainView; // scratch rect, as in the Visuals tab these blocks came from
+	CUIRect MainView;
 	const float LineSize = 20.0f;
 	const float MarginSmall = 5.0f;
 	const float HeadlineFontSize = 20.0f;
@@ -4058,7 +4048,7 @@ void CMenus::RenderSettingsSixClientCursorTrail(CUIRect &Column)
 
 void CMenus::RenderSettingsSixClientKeystrokes(CUIRect &Column)
 {
-	CUIRect MainView; // scratch rect, as in the Visuals tab these blocks came from
+	CUIRect MainView;
 	const float LineSize = 20.0f;
 	const float MarginSmall = 5.0f;
 	const float HeadlineFontSize = 20.0f;

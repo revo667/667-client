@@ -342,9 +342,7 @@ public:
 	CMovingTiles m_MovingTilesBackground = CMovingTiles{false};
 	CMovingTiles m_MovingTilesForeground = CMovingTiles{true};
 
-	// 667client: for the beta reporter. Time each component spent since the reporter last
-	// collected it (time_get() ticks), and how often the server moved our tee away from where
-	// it was predicted ("rubberbanding").
+	// 667client
 	struct SComponentTime
 	{
 		int64_t m_Update = 0;
@@ -366,18 +364,13 @@ public:
 	void UpdateFindDistance();
 	static void ConFindDistance(IConsole::IResult *pResult, void *pUserData);
 	static void ConPerfMeasure(IConsole::IResult *pResult, void *pUserData);
-	// Which components are timed: the features added since 1.0.22, set by the beta reporter. The
-	// others are not, so the measuring itself costs next to nothing.
 	std::vector<char> m_vTimedComponents;
 	const std::vector<class CComponent *> &AllComponents() const { return m_vpAll; }
 	int m_BetaCorrections = 0;
 	float m_BetaMaxCorrection = 0.0f;
-	// Fast input: how far the first predicted-ahead tick moved when predicting again, because of a
-	// new snapshot or because of a new input. These are what makes a fast input tee jump back and forth.
 	int m_BetaFastInputSnapshotJumps = 0;
 	int m_BetaFastInputInputJumps = 0;
 	float m_BetaMaxFastInputJump = 0.0f;
-	// Antiping: other tees the server moved away from where we predicted them.
 	int m_BetaOthersCorrections = 0;
 	float m_BetaMaxOthersCorrection = 0.0f;
 

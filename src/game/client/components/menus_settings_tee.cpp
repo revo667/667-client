@@ -158,7 +158,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		g_Config.m_ClFatSkins ^= 1;
 	}
 
-	// Skin quality // 667client
 	{
 		Checkboxes.HSplitTop(2.0f, nullptr, &Checkboxes);
 		Checkboxes.HSplitTop(QualitySliderHeight, &Button, &Checkboxes);
@@ -236,7 +235,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	RenderFrozenSkinSettings(SkinPrefix); // 667client
 
-	// Player identity and skin area. // 667client
 	CUIRect RandomColorsButton, CustomColorsButton, RandomSkinButton, TeePreview, Fields;
 	YourSkin.HSplitTop(NameClanSkinHeight, &TeePreview, &YourSkin);
 	YourSkin.HSplitTop(5.0f, nullptr, &YourSkin);
@@ -287,7 +285,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	OwnSkinInfo.ApplyColors(*pUseCustomColor, *pColorBody, *pColorFeet);
 	OwnSkinInfo.m_Size = 50.0f;
 
-	// Tee // 667client
 	{
 		vec2 OffsetToMid;
 		CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &OwnSkinInfo, OffsetToMid);
@@ -435,7 +432,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		SetNeedSendInfo(); // 667client
 	}
 
-	// Custom color pickers // 667client
 	if(*pUseCustomColor)
 	{
 		CUIRect CustomColors;

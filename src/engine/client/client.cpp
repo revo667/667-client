@@ -2361,8 +2361,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					// add new
 					m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, TmpBuffer3.AsSnapshot(), AltSnapSize, AltSnapBuffer.AsSnapshot());
 
-					// 667client: a long wait for the next snapshot is network lag (or a stall here,
-					// which the beta reporter tells apart by the frame times)
+					// 667client
 					if(Conn == g_Config.m_ClDummy)
 					{
 						const int64_t ArrivalTime = time_get();
@@ -5155,7 +5154,7 @@ int main(int argc, const char **argv)
 
 	const std::thread::id MainThreadId = std::this_thread::get_id();
 	dbg_assert_set_handler([MainThreadId, pClient](const char *pMsg) {
-		BetaProbe::OnAssert(pMsg); // 667client: any thread's assert ends the process
+		BetaProbe::OnAssert(pMsg); // 667client
 		if(MainThreadId != std::this_thread::get_id())
 			return;
 

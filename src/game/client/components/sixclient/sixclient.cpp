@@ -467,8 +467,6 @@ void CMenus::RenderFrozenSkinSettings(CUIRect &View)
 
 	char aBuf[64];
 	str_format(aBuf, sizeof(aBuf), "%s: %d%%", Localize("Darken"), g_Config.m_ScFrozenSkinDarken);
-	// 667client
-
 	g_Config.m_ScFrozenSkinDarken = CUi::ms_LinearScrollbarScale.ToAbsolute(
 		Ui()->DoScrollbarH(&g_Config.m_ScFrozenSkinDarken, &ScrollBar, CUi::ms_LinearScrollbarScale.ToRelative(g_Config.m_ScFrozenSkinDarken, 0, FROZEN_SKIN_MAX_DARKEN), nullptr, nullptr),
 		0, FROZEN_SKIN_MAX_DARKEN);
@@ -676,12 +674,10 @@ float SixClientScoreboardPlayerPopupHeight(const CGameClient *pGameClient, bool 
 	}
 
 	float Height = 2.0f * POPUP_MARGIN + POPUP_HEADER_SIZE + POPUP_ITEM_SPACING * 2.0f;
-	// One row of icons: friend, mute, emoticons, spectate, teammate, whisper, copy skin.
 	if(!IsLocal)
 		Height += POPUP_ITEM_SPACING * 2.0f + POPUP_ACTION_SIZE;
 	if(ExtraTeamRows > 0)
 		Height += POPUP_ITEM_SPACING * 4.0f + ExtraTeamRows * (POPUP_BUTTON_SIZE + POPUP_ITEM_SPACING * 2.0f);
-	// Song line and listen along button.
 	if(!IsLocal && pGameClient->m_ClientIndicator.MusicInGame(ClientId))
 		Height += 2.0f * (POPUP_ITEM_SPACING * 2.0f + POPUP_BUTTON_SIZE);
 	return Height;

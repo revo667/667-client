@@ -148,7 +148,6 @@ bool CSkins7::LoadSkinPart(int PartType, const char *pName, int DirType)
 		return false;
 	}
 
-	// Keep 0.6 and 0.7 skin memory usage under the same quality limit. // 667client
 	const size_t MaxWidth = (size_t)g_Config.m_ClSkinMaxWidth;
 	if(Info.m_Width > MaxWidth)
 	{

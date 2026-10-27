@@ -8,6 +8,7 @@
 #include <engine/shared/protocol.h>
 
 #include <game/client/component.h>
+#include <game/client/ui.h>
 
 class CTeamScoreboard : public CComponent
 {
@@ -24,6 +25,13 @@ class CTeamScoreboard : public CComponent
 	SPlayerState m_aState[MAX_CLIENTS];
 	int m_LastLocalTeam = -1;
 
+	CCachedText m_HeaderLabel;
+	CCachedText m_aHeaderIcons[3];
+	CCachedText m_Heart;
+	CCachedText m_aNames[MAX_CLIENTS];
+	CCachedText m_aaValues[MAX_CLIENTS][3];
+	void ResetTexts();
+
 	bool IsFrozen(int ClientId, int CurTick) const;
 	bool JustHammered(int ClientId, int CurTick) const;
 	int LocalTeam() const;
@@ -34,6 +42,8 @@ class CTeamScoreboard : public CComponent
 public:
 	int Sizeof() const override { return sizeof(*this); }
 	void OnReset() override;
+	void OnWindowResize() override;
+	void OnShutdown() override;
 	void OnNewSnapshot() override;
 	void OnMessage(int MsgType, void *pRawMsg) override;
 	void OnRender() override;

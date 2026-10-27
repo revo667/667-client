@@ -321,7 +321,6 @@ bool CSkins::LoadSkinData(const char *pName, CSkinLoadData &Data) const
 		Data.m_Info.Free();
 		return false;
 	}
-	// Downscale oversized skins before uploading dozens of sprite textures to the GPU. // 667client
 	const size_t MaxWidth = (size_t)g_Config.m_ClSkinMaxWidth;
 	if(Data.m_Info.m_Width > MaxWidth && DivX > 0 && DivY > 0)
 	{
@@ -960,8 +959,7 @@ const CSkins::CSkinContainer *CSkins::FindContainerImpl(const char *pName)
 		pSkinContainer->SetState(pSkinContainer->DetermineInitialState());
 		ExistingSkin = m_Skins.insert({pSkinContainer->Name(), std::move(pSkinContainer)}).first;
 	}
-	// 667client: suppressed skins still have a container; returning nullptr here tripped the
-	// "No skin container found for managed tee render info" assertion in OnUpdate.
+	// 667client
 	if(ExistingSkin->second->IsSuppressedForGame())
 	{
 		return ExistingSkin->second.get();

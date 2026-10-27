@@ -95,7 +95,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 	}
 	// 667client
 
-	// 667client: the Cecen UI layout (sc_ui_style 1) replaces the tab bar with a hub and categories
+	// 667client
 	if(g_Config.m_ScUiStyle == 1)
 	{
 		RenderSettingsCecenUi(MainView);
@@ -153,8 +153,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 	static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 	const int TabCorners = IGraphics::CORNER_R;
 
-	// 667client: Assets right after Controls; Cecen Client, Cecen Social and Cecen DMs stay last.
-	static const int s_aTabOrder[] = {SETTINGS_GENERAL, SETTINGS_TEE, SETTINGS_APPEARANCE, SETTINGS_CONTROLS, SETTINGS_ASSETS, SETTINGS_GRAPHICS, SETTINGS_SOUND, SETTINGS_DDNET, SETTINGS_TCLIENT, SETTINGS_PROFILES, SETTINGS_CONFIGS, SETTINGS_CREDITS, SETTINGS_SIXCLIENT, SETTINGS_SOCIAL, SETTINGS_DM};
+	// 667client
+	static const int s_aTabOrder[] = {SETTINGS_GENERAL, SETTINGS_TEE, SETTINGS_APPEARANCE, SETTINGS_CONTROLS, SETTINGS_ASSETS, SETTINGS_GRAPHICS, SETTINGS_SOUND, SETTINGS_DDNET, SETTINGS_TCLIENT, SETTINGS_PROFILES, SETTINGS_CONFIGS, SETTINGS_CREDITS, SETTINGS_SIXCLIENT, SETTINGS_SOCIAL};
 	for(const int i : s_aTabOrder)
 	{
 		TabBar.HSplitTop(10.0f, nullptr, &TabBar);
@@ -162,7 +162,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		// 667client
 		const bool ExploreLock = m_AssetsEditorState.m_Open && m_AssetsEditorState.m_ExploreSide >= 0;
 		const bool AssetsTab = i == SETTINGS_ASSETS;
-		if(DoButton_MenuTab(&s_aTabButtons[i], apTabs[i], g_Config.m_UiSettingsPage == i, &Button, TabCorners, &m_aAnimatorsSettingsTab[i], nullptr, nullptr, nullptr, 10.0f, nullptr, true, IGraphics::CORNER_NONE, -1.0f, ExploreLock && !AssetsTab ? 0.35f : 1.0f) && (!ExploreLock || AssetsTab))
+		const bool Checked = g_Config.m_UiSettingsPage == i || (i == SETTINGS_SOCIAL && g_Config.m_UiSettingsPage == SETTINGS_DM);
+		if(DoButton_MenuTab(&s_aTabButtons[i], apTabs[i], Checked, &Button, TabCorners, &m_aAnimatorsSettingsTab[i], nullptr, nullptr, nullptr, 10.0f, nullptr, true, IGraphics::CORNER_NONE, -1.0f, ExploreLock && !AssetsTab ? 0.35f : 1.0f) && (!ExploreLock || AssetsTab))
 		// 667client
 			g_Config.m_UiSettingsPage = i;
 	}
@@ -170,6 +171,22 @@ void CMenus::RenderSettings(CUIRect MainView)
 	// 667client
 	if(m_AssetsEditorState.m_Open && m_AssetsEditorState.m_ExploreSide >= 0 && g_Config.m_UiSettingsPage != SETTINGS_ASSETS)
 		m_AssetsEditorState.m_ExploreSide = -1;
+	if(g_Config.m_UiSettingsPage == SETTINGS_SOCIAL || g_Config.m_UiSettingsPage == SETTINGS_DM)
+	{
+		CUIRect SocialTabs;
+		MainView.HSplitTop(24.0f, &SocialTabs, &MainView);
+		MainView.HSplitTop(10.0f, nullptr, &MainView);
+		SocialTabs.VSplitLeft(std::min(320.0f, SocialTabs.w), &SocialTabs, nullptr);
+		static CButtonContainer s_aSocialTabButtons[2];
+		const int aSocialPages[] = {SETTINGS_SOCIAL, SETTINGS_DM};
+		const float SocialTabWidth = SocialTabs.w / std::size(aSocialPages);
+		for(int Tab = 0; Tab < (int)std::size(aSocialPages); ++Tab)
+		{
+			SocialTabs.VSplitLeft(SocialTabWidth, &Button, &SocialTabs);
+			if(DoButton_MenuTab(&s_aSocialTabButtons[Tab], apTabs[aSocialPages[Tab]], g_Config.m_UiSettingsPage == aSocialPages[Tab], &Button, Tab == 0 ? IGraphics::CORNER_L : IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
+				g_Config.m_UiSettingsPage = aSocialPages[Tab];
+		}
+	}
 	RenderSettingsContentLegacyStyle(MainView);
 	// 667client
 
@@ -177,7 +194,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsRestartBar(RestartBar);
 }
 
-// 667client: shared by the Old UI and the Cecen UI settings layouts
+// 667client
 void CMenus::RenderSettingsRestartBar(CUIRect RestartBar)
 {
 	CUIRect RestartWarning, RestartButton;

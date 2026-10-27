@@ -24,7 +24,6 @@ static constexpr int HOLD_STEP_MS = 40;
 
 #include <string>
 #include <vector>
-// Spotify activates its window shortly after it appears, keep guarding through that.
 static constexpr int SPOTIFY_WINDOW_SETTLE_MS = 1500;
 
 static std::vector<DWORD> SpotifyProcessIds()
@@ -99,7 +98,6 @@ static bool SpotifyWindowVisible()
 	return Data.m_Found;
 }
 
-// Only undoes a switch that Spotify caused, never one the user made.
 static void ReclaimFromSpotify(HWND Window)
 {
 	if(!Window || !IsWindow(Window))
@@ -112,7 +110,6 @@ static void ReclaimFromSpotify(HWND Window)
 	const DWORD CurrentThread = GetCurrentThreadId();
 	const bool Attached = ForegroundThread != 0 && ForegroundThread != CurrentThread &&
 			      AttachThreadInput(CurrentThread, ForegroundThread, TRUE);
-	// A fullscreen game minimizes when it loses focus, bring it back up first.
 	if(IsIconic(Window))
 		ShowWindowAsync(Window, SW_RESTORE);
 	SetForegroundWindow(Window);
@@ -166,7 +163,6 @@ CForegroundGuard::CForegroundGuard()
 	if(Window != nullptr && ProcessId == GetCurrentProcessId())
 	{
 		m_pWindow = Window;
-		// While locked no other process, including the Spotify we launch, can take the foreground.
 		m_Locked = LockSetForegroundWindow(LSFW_LOCK) != 0;
 	}
 }

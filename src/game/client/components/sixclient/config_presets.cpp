@@ -179,7 +179,6 @@ bool CScConfigPresets::Load(const char *pName)
 	char aPath[IO_MAX_PATH_LENGTH];
 	if(!MakePath(aPath, sizeof(aPath), pName))
 		return false;
-	// The list is cached, so the file may be gone; check before wiping the current settings.
 	if(!Storage()->FileExists(aPath, IStorage::TYPE_SAVE))
 	{
 		Refresh();

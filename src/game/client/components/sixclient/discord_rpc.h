@@ -17,10 +17,7 @@ struct SDiscordPresenceVars
 
 inline constexpr const char *DISCORD_PRESENCE_VARIABLES = "{map} {player} {clan} {skin} {server} {gametype} {players} {maxplayers} {version}";
 
-// Public HTTPS logo — Discord app has no uploaded art assets, so asset keys like "cecenclient" show as ?.
-// Keep under Discord Game SDK's 128-char large_image limit (including optional ?sc= cache-bust).
 inline constexpr const char *SIXCLIENT_DISCORD_DEFAULT_LARGE_IMAGE = "https://cdn.jsdelivr.net/gh/revo667/cecen-client-releases@main/discord/cecenclient-v2.png";
-// The default before the v2 logo; a config that saved it gets the current default.
 inline constexpr const char *SIXCLIENT_DISCORD_OLD_DEFAULT_LARGE_IMAGE = "https://cdn.jsdelivr.net/gh/revo667/cecen-client-releases@main/discord/cecenclient.png";
 inline constexpr const char *SIXCLIENT_DISCORD_LEGACY_LARGE_IMAGE_KEY = "cecenclient";
 

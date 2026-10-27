@@ -261,7 +261,6 @@ bool CFastPractice::CanEnable() const
 	return true;
 }
 
-
 int CFastPractice::CurrentLocalPracticeId() const
 {
 	if(!m_Enabled)
@@ -307,7 +306,6 @@ bool CFastPractice::ResolvePracticeRoles(int &LocalClientId, int &DummyClientId)
 
 	return true;
 }
-
 
 int CFastPractice::ControlledPracticeId() const
 {
@@ -492,7 +490,6 @@ bool CFastPractice::ForcePredictPlayers() const
 				(GameClient()->m_Snap.m_pLocalInfo && GameClient()->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS);
 	return Active() && !Spectating;
 }
-
 
 bool CFastPractice::HasPracticePickup(vec2 Pos, int Type, int Subtype)
 {
@@ -1213,7 +1210,6 @@ void CFastPractice::MaybePlayHammerHitEffect(CCharacter *pChar)
 		break;
 	}
 }
-
 
 void CFastPractice::CaptureFrozenTargets()
 {
@@ -1980,8 +1976,6 @@ void CFastPractice::SyncFromPrediction()
 	UpdateGhostData();
 }
 
-
-
 void CFastPractice::UpdateGhostForClientId(int ClientId, SGhostData &Ghost)
 {
 	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
@@ -2082,7 +2076,6 @@ void CFastPractice::RenderHudOverlay() const
 		{"/infjump", "say /infjump"},
 	};
 
-	// Match CTeamScoreboard palette
 	const ColorRGBA ColorHeader(0.68f, 0.68f, 0.74f, 1.0f);
 	const ColorRGBA ColorPanel(0.04f, 0.04f, 0.06f, 0.72f);
 	const ColorRGBA ColorRowLine(1.0f, 1.0f, 1.0f, 0.06f);

@@ -62,7 +62,6 @@ namespace
 		int m_Value;
 		int64_t m_Time;
 	};
-	// A small ring: the reporter drains it every frame, a burst beyond this is not worth keeping.
 	constexpr int MAX_EVENTS = 64;
 	SEvent gs_aEvents[MAX_EVENTS];
 	int gs_EventStart = 0;
@@ -122,7 +121,6 @@ namespace
 		{
 			if(pMessage->m_Level > LEVEL_WARN && !(pMessage->m_Level <= LEVEL_INFO && IsFeatureSystem(pMessage->m_aSystem)))
 				return;
-			// "2026-10-21 05:45:38 I discord: ..." without the date
 			const char *pLine = pMessage->m_aLine;
 			if(pMessage->m_TimestampLength > 11)
 				pLine += 11;

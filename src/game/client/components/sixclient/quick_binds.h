@@ -32,4 +32,4 @@ public:
 	void OnConsoleInit() override;
 };
 
-#endif // GAME_CLIENT_COMPONENTS_667CLIENT_QUICK_BINDS_H
+#endif

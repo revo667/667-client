@@ -962,7 +962,7 @@ public:
 	};
 
 	void SetMenuPage(int NewPage);
-	// 667client: Cecen Social > Sharing, with a note that listen along needs Spotify Connect
+	// 667client
 	void OpenSpotifySettings();
 	void OpenCecenSocial();
 	void OpenCecenDm();
@@ -1010,7 +1010,6 @@ private:
 	int DoButtonNoRect_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners = IGraphics::CORNER_ALL);
 	int DoButtonLineSize_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, float ButtonLineSize, bool Fake = false, const char *pImageName = nullptr, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, ColorRGBA Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f));
 
-	// found in components/667client/menus_667client.cpp // 667client
 	void RenderSettingsSixClient(CUIRect MainView);
 	void RenderSettingsSixClientVisuals(CUIRect MainView);
 	void RenderSettingsSixClientGameplay(CUIRect MainView);

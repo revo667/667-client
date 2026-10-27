@@ -202,7 +202,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	// the game snapshots are modifiable by the game
 	CSnapshotStorage m_aSnapshotStorage[NUM_DUMMIES];
-	int64_t m_aLastSnapshotArrival[NUM_DUMMIES] = {}; // 667client: for the beta reporter's lag events
+	int64_t m_aLastSnapshotArrival[NUM_DUMMIES] = {}; // 667client
 	CSnapshotStorage::CHolder *m_aapSnapshots[NUM_DUMMIES][NUM_SNAPSHOT_TYPES];
 
 	int m_aReceivedSnapshots[NUM_DUMMIES] = {0, 0};

@@ -458,8 +458,6 @@ void CPlayer::Snap(int SnappingClient)
 				DDNetSpectatorInfo.m_SpectatorCount = SpectatorCount;
 				SpectatorCountObj.m_NumSpectators = SpectatorCount;
 				Server()->SnapNewItem(0, SpectatorCountObj);
-				// Id = clientId+1 lets 667 clients resolve watcher nicknames. Every item carries the
-				// total, since stock clients read whichever SpectatorCount item they see last.
 				for(int i = 0; i < SpectatorCount; i++)
 					Server()->SnapNewItem(aWatcherIds[i] + 1, SpectatorCountObj);
 			}

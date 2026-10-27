@@ -43,14 +43,10 @@ private:
 	};
 
 	std::unordered_map<std::string, SEntry> m_Entries;
-	// 667client: when each name was last asked for, answered or not, so a name the server doesn't
-	// answer for is not asked again and again (each ask is a "/points" chat command).
 	std::unordered_map<std::string, int64_t> m_LastAsked;
 	std::deque<std::string> m_Queue;
 	SPending m_Pending;
 	int64_t m_LastSent = 0;
-	// 667client: the friends' points are asked for once per game start, on the first KoG server
-	// the player joins; switching servers does not ask again.
 	bool m_AskFriendsOnJoin = false;
 	bool m_AskedFriends = false;
 	int64_t m_JoinedAt = 0;

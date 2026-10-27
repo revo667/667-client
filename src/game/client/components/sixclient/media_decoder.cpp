@@ -240,8 +240,6 @@ namespace MediaDecoder
 		(void)pGraphics;
 		Image.Free();
 
-		
-		
 		if(IsPngSignature(pData, DataSize))
 		{
 			CByteBufferReader Reader(pData, DataSize);
@@ -593,15 +591,12 @@ namespace MediaDecoder
 				}
 			}
 
-			
 			{
 				constexpr int MaxReasonableFallbackUpdateMs = 200; 
 				if(DurationMs > 0 && DurationMs <= MaxReasonableFallbackUpdateMs)
 					FallbackFrameDurationMs = std::min(FallbackFrameDurationMs, ClampFrameDurationMs(DurationMs));
 			}
 
-			
-			
 			{
 				constexpr size_t StartupFrameClampCount = 60;
 				const size_t FrameIndex = DecodedFrames.m_vFrames.size();
@@ -662,7 +657,6 @@ namespace MediaDecoder
 			if(!pCodecCtx || avcodec_parameters_to_context(pCodecCtx, pStream->codecpar) < 0 || avcodec_open2(pCodecCtx, pCodec, nullptr) < 0)
 				break;
 
-			
 			{
 				AVRational Rate = pStream->avg_frame_rate;
 				if(Rate.num <= 0 || Rate.den <= 0)
@@ -821,8 +815,6 @@ namespace MediaDecoder
 	}
 #endif
 
-	// Mirrors the ffmpeg limits: sources above MEDIA_MAX_DIMENSION are rejected and animations
-	// longer than m_MaxAnimationDurationMs fall back to their first frame.
 	static bool DecodeImageWithImageIoCpu(const unsigned char *pData, size_t DataSize, SMediaDecodedFrames &DecodedFrames, const SMediaDecodeLimits &Limits)
 	{
 		DecodedFrames.Free();
@@ -863,7 +855,6 @@ namespace MediaDecoder
 	bool DecodeImageWithFfmpegCpu(IGraphics *pGraphics, const unsigned char *pData, size_t DataSize, const char *pContextName, SMediaDecodedFrames &DecodedFrames, const SMediaDecodeLimits &Limits)
 	{
 #if defined(CONF_PLATFORM_MACOS)
-		// The macOS ffmpeg build has no decoders, so this is the only path that decodes there.
 		if(DecodeImageWithImageIoCpu(pData, DataSize, DecodedFrames, Limits))
 			return true;
 #endif
@@ -878,7 +869,6 @@ namespace MediaDecoder
 			return false;
 
 		CImageInfo Image;
-		
 		
 		if(IsPngSignature(pData, DataSize))
 		{

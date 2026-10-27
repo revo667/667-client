@@ -49,9 +49,6 @@ bool SystemVolumeSet(float Volume)
 #include <endpointvolume.h>
 #include <mmdeviceapi.h>
 
-// 667client: runs on the game thread. COM is entered apartment-threaded, like SDL does, and left
-// again afterwards: entering it multi-threaded here first would change the game thread's
-// apartment for everything that comes later (SDL's text input needs it apartment-threaded).
 template<typename TAction>
 static bool WithEndpointVolume(TAction &&Action)
 {

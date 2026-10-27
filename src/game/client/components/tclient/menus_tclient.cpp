@@ -2499,7 +2499,6 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 			return g_Config.m_TcUiShowTClient != 0;
 		if(Domain == ConfigDomain::SIXCLIENT) // 667client
 			return g_Config.m_TcUiShowSixClient != 0; // 667client
-		// only show DDNet, TClient and Cecen Client domains
 		return false;
 	};
 
@@ -2787,7 +2786,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 	s_ScrollRegion.End();
 }
 
-// 667client: shown on the Cecen Client / Cosmetics page
+// 667client
 void CMenus::RenderTClientPet(CUIRect &Column)
 {
 	CUIRect Button, Label;
@@ -2843,7 +2842,7 @@ void CMenus::RenderTClientPet(CUIRect &Column)
 	RenderTools()->RenderTee(pIdleState, &TeeInfo, PetEmote, Dir, TeeRenderPos);
 }
 
-// 667client: shown on the Cecen Client / Cosmetics page
+// 667client
 void CMenus::RenderTClientFrozenTeeDisplay(CUIRect &Column)
 {
 	CUIRect Button, Label;
@@ -2900,7 +2899,7 @@ void CMenus::RenderTClientFrozenTeeDisplay(CUIRect &Column)
 	// 667client
 }
 
-// 667client: shown on the Cecen Client / Cosmetics page
+// 667client
 void CMenus::RenderTClientTileOutlines(CUIRect &Column)
 {
 	CUIRect Button, Label;
@@ -2948,7 +2947,7 @@ void CMenus::RenderTClientTileOutlines(CUIRect &Column)
 	// DoLine_ColorPicker(&s_OutlineColorKillId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Column, TCLocalize("Kill outline color"), &g_Config.m_TcOutlineColorKill, ColorRGBA(0.0f, 0.0f, 0.0f), false);
 }
 
-// 667client: shown on the Cecen Client / Cosmetics page
+// 667client
 void CMenus::RenderTClientRainbow(CUIRect &Column)
 {
 	CUIRect Button, Label;
@@ -2981,7 +2980,7 @@ void CMenus::RenderTClientRainbow(CUIRect &Column)
 	Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 }
 
-// 667client: shown on the Cecen Client / Cosmetics page
+// 667client
 void CMenus::RenderTClientTeeTrails(CUIRect &Column)
 {
 	CUIRect Button, Label;
@@ -3024,7 +3023,7 @@ void CMenus::RenderTClientTeeTrails(CUIRect &Column)
 	Ui()->DoScrollbarOption(&g_Config.m_TcTeeTrailAlpha, &g_Config.m_TcTeeTrailAlpha, &Button, TCLocalize("Trail alpha"), 0, 100);
 }
 
-// 667client: shown on the Cecen Client / Cosmetics page
+// 667client
 void CMenus::RenderTClientBgDraw(CUIRect &Column)
 {
 	CUIRect Button, Label;

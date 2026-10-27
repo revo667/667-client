@@ -55,7 +55,6 @@ void CFastInputLog::OnConsoleInit()
 {
 	Console()->Register("sc_input_log", "", CFGFLAG_CLIENT, ConToggle, this, "Start or stop recording a fast input log");
 	Console()->Register("sc_input_log_mark", "", CFGFLAG_CLIENT, ConMark, this, "Mark the current moment in the fast input log");
-	// 667client: the delta and f modes were removed; saved configs fall back to fast input.
 	Console()->Chain("sc_inputs", ConchainInputs, this);
 	Console()->Register("sc_input_calibrate", "", CFGFLAG_CLIENT, ConCalibrate, this, "Play for two minutes to find the best 667 input settings for you");
 }

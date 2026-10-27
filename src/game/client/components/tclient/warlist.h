@@ -160,9 +160,7 @@ public:
 
 	CWarDataCache m_WarPlayers[MAX_CLIENTS];
 
-	// 667client: UpdateWarPlayers runs on every snapshot. Matching every player against every
-	// entry made big war lists cost milliseconds each time, so entries are indexed by name and
-	// clan, and a player is only matched again when their name or clan or the index changed.
+	// 667client
 	std::unordered_map<std::string, std::vector<int>> m_NameIndex;
 	std::unordered_map<std::string, std::vector<int>> m_ClanIndex;
 	size_t m_IndexedEntries = (size_t)-1;

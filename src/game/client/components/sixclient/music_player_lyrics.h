@@ -17,6 +17,8 @@ class IHttp;
 class ITextRender;
 struct STextColorSplit;
 
+float MusicPlayerTextWidth(ITextRender *pTextRender, float FontSize, const char *pText);
+
 class CMusicPlayerLyrics
 {
 public:

@@ -98,8 +98,6 @@ bool HudExtras::GetSpectatorCountState(CGameClient *pGameClient, IClient *pClien
 	};
 
 	int Count = 0;
-	// The count is computed for the connection we are snapping, which is the dummy while cl_dummy is 1.
-	// The other local tee is a valid watcher, so only the active one is skipped.
 	const int LocalId = pGameClient->m_Snap.m_LocalClientId;
 	if(pClient->IsSixup())
 	{
@@ -125,7 +123,6 @@ bool HudExtras::GetSpectatorCountState(CGameClient *pGameClient, IClient *pClien
 
 		if(pGameClient->m_Snap.m_NumSpectatorWatchers > 0)
 		{
-			// Server snaps one item per watcher (id = client id + 1).
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				if(pGameClient->m_Snap.m_aSpectatorWatchers[i])
@@ -135,9 +132,6 @@ bool HudExtras::GetSpectatorCountState(CGameClient *pGameClient, IClient *pClien
 		}
 		else if(Count > 0)
 		{
-			// Stock DDNet only snaps the total, so infer names from the players the server can
-			// be counting: spectating or paused and not AFK. If they match the total the names
-			// are certain; otherwise only name likely watchers and leave the rest as "+N".
 			const int LocalTeam = LocalId >= 0 && LocalId < MAX_CLIENTS ? pGameClient->m_Teams.Team(LocalId) : TEAM_FLOCK;
 			vec2 LocalPos = vec2(0.0f, 0.0f);
 			bool HasLocalPos = false;
@@ -164,10 +158,8 @@ bool HudExtras::GetSpectatorCountState(CGameClient *pGameClient, IClient *pClien
 					continue;
 
 				int Score = 0;
-				// Paused teammates are usually watching their partner.
 				if(LocalTeam != TEAM_FLOCK && pGameClient->m_Teams.Team(i) == LocalTeam)
 					Score += 2;
-				// SpecChar is the paused tee's own position: parked next to us is a weak hint.
 				if(ClientData.m_SpecCharPresent && HasLocalPos && distance(ClientData.m_SpecChar, LocalPos) < 800.0f)
 					Score += 1;
 				aCandidateIds[NumCandidates] = i;
@@ -182,7 +174,6 @@ bool HudExtras::GetSpectatorCountState(CGameClient *pGameClient, IClient *pClien
 			}
 			else if(NumCandidates > Count)
 			{
-				// Insertion sort keeps client id order among equal scores, so names don't flicker.
 				for(int i = 1; i < NumCandidates; i++)
 				{
 					for(int j = i; j > 0 && aCandidateScore[j] > aCandidateScore[j - 1]; j--)

@@ -27,7 +27,6 @@ namespace
 		return Value;
 	}
 
-	// Prefer the unclamped delay: the clamped one rounds tiny GIF delays up to 100ms.
 	double FrameDelaySeconds(CFDictionaryRef Properties, CFStringRef ContainerKey, CFStringRef UnclampedKey, CFStringRef ClampedKey)
 	{
 		const CFDictionaryRef Container = Properties ? (CFDictionaryRef)CFDictionaryGetValue(Properties, ContainerKey) : nullptr;
@@ -58,7 +57,6 @@ namespace
 	{
 		const size_t SourceWidth = CGImageGetWidth(Image);
 		const size_t SourceHeight = CGImageGetHeight(Image);
-		// Same cap as the ffmpeg path; images are decoded lazily, so this runs before any pixels exist.
 		if(SourceWidth == 0 || SourceHeight == 0 || SourceWidth > 4096 || SourceHeight > 4096)
 			return false;
 
@@ -75,7 +73,6 @@ namespace
 		const CGColorSpaceRef ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 		if(!ColorSpace)
 			return false;
-		// CoreGraphics only renders into premultiplied RGBA; undone below.
 		const CGContextRef Context = CGBitmapContextCreate(Out.m_vRgba.data(), Width, Height, 8, (size_t)Width * 4, ColorSpace, (CGBitmapInfo)kCGImageAlphaPremultipliedLast | (CGBitmapInfo)kCGBitmapByteOrder32Big);
 		CGColorSpaceRelease(ColorSpace);
 		if(!Context)
@@ -125,7 +122,6 @@ bool MacDecodeImageFrames(const unsigned char *pData, size_t DataSize, int MaxDi
 		if(!Rendered)
 			break;
 		TotalBytes += Frame.m_vRgba.size();
-		// Keep what fits instead of failing a long animation outright.
 		if(MaxTotalBytes > 0 && TotalBytes > MaxTotalBytes && !vFrames.empty())
 			break;
 		Frame.m_DurationMs = FrameDurationMs(Source, i);

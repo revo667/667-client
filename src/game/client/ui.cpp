@@ -1174,7 +1174,6 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 		Color.a *= ButtonColorMul(pId);
 		if(CecenStyle)
 		{
-			// Cecen UI: flat, rounded buttons; the checked one in the accent color.
 			const bool Achromatic = absolute(Color.r - Color.g) <= 0.02f && absolute(Color.g - Color.b) <= 0.02f;
 			const ColorRGBA Fill = Props.m_Checked ? SixClientUiTheme::CecenUiAccent(0.8f) : (Achromatic ? ColorRGBA(1.0f, 1.0f, 1.0f, Color.a * 0.2f) : Color);
 			pRect->Draw(Fill, Props.m_Corners, std::max(Props.m_Rounding, 7.0f));
@@ -1674,7 +1673,6 @@ float CUi::DoScrollbarH(const void *pId, const CUIRect *pRect, float Current, co
 		// 667client
 		if(SixClientUiTheme::IsCecenUiScope() && !SixClientUiTheme::IsCustomUiScrollbar())
 		{
-			// Cecen UI: a thin rail filled up to a round knob, over the range the knob travels.
 			const bool Active = CheckActiveItem(pId) || HotItem() == pId;
 			const float Center = Handle.x + Handle.w / 2.0f;
 			const float Start = Rail.x + Handle.w / 2.0f;

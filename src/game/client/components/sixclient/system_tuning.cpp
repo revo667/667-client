@@ -12,6 +12,8 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
+#include <game/client/gameclient.h>
+
 #if defined(CONF_FAMILY_WINDOWS)
 #include <Windows.h>
 #include <TlHelp32.h>
@@ -146,6 +148,20 @@ void CSystemTuning::ApplyLowLatencyPreset()
 	SetDDNetProcessPriority(true);
 #endif
 	UpdateLatencyState(static_cast<IEngineGraphics *>(Graphics())->WindowActive() != 0);
+}
+
+void CSystemTuning::ApplyMaxFpsPreset()
+{
+	ApplyLowLatencyPreset();
+	g_Config.m_GfxRefreshRate = 0;
+	g_Config.m_TcShowFrozenHud = 0;
+	g_Config.m_ScOptimizer = 1;
+	g_Config.m_ScOptimizerDisableParticles = 1;
+	if(!g_Config.m_ScOptimizerDisableHighDetail)
+	{
+		g_Config.m_ScOptimizerDisableHighDetail = 1;
+		GameClient()->m_Optimizer.OnOptimizerDisableHighDetailToggled();
+	}
 }
 
 void CSystemTuning::DiscordPriorityThread(void *pUserData)

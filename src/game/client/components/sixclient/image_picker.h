@@ -11,23 +11,16 @@
 #include <string>
 #include <thread>
 
-// 667client: the operating system's "open file" dialog for one image, shown from a worker
-// thread so the game keeps rendering. Windows uses GetOpenFileName, macOS osascript's
-// "choose file", Linux zenity.
 class CImagePicker
 {
 public:
 	~CImagePicker();
 
-	// Does nothing while a dialog is already open.
 	void Start(const char *pTitle);
 	bool Busy();
-	// The chosen absolute path (UTF-8) once the dialog closed; false while open or when cancelled.
 	bool TakeResult(std::string &Path);
 
 private:
-	// Shared with the dialog thread, which can outlive the picker: an open dialog can't be closed
-	// from here, so the thread is detached on destruction and must not touch the picker itself.
 	struct SState
 	{
 		CLock m_Lock;

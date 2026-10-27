@@ -199,6 +199,7 @@
 	{"Performance", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Gameplay", &g_Config.m_ScLowLatencyTimers, nullptr},
 	{"Low latency timers", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Performance", &g_Config.m_ScLowLatencyTimers, nullptr},
 	{"Apply low latency preset", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Performance", &g_Config.m_ScLowLatencyTimers, nullptr},
+	{"Max FPS preset", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Performance", &g_Config.m_ScLowLatencyTimers, nullptr},
 #if defined(CONF_FAMILY_WINDOWS)
 	{"High process priority", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Performance", &g_Config.m_ScHighProcessPriority, nullptr},
 	{"Game thread scheduling (MMCSS)", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Performance", &g_Config.m_ScMmcss, nullptr},

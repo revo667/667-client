@@ -206,9 +206,6 @@ MACRO_CONFIG_INT(ScRocketGlowPower, sc_rocket_glow_power, 50, 0, 100, CFGFLAG_CL
 MACRO_CONFIG_INT(ScRocketGlowMode, sc_rocket_glow_mode, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Rocket Glow mode: 0=Classic, 1=Prism, 2=Pulse, 3=Crystal")
 MACRO_CONFIG_COL(ScRocketGlowColor, sc_rocket_glow_color, 2555648, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Rocket Glow custom color")
 
-
-
-
 // Meme Nuke Rocket Explosion & Screen Shake
 MACRO_CONFIG_INT(ScMemeNukeExplosion, sc_meme_nuke_explosion, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable meme mega nuclear explosion on rocket impact")
 MACRO_CONFIG_INT(ScMemeNukeShake, sc_meme_nuke_shake, 100, 0, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Screen shake intensity for nuke rocket explosion (0-200%)")
@@ -236,7 +233,6 @@ MACRO_CONFIG_INT(ScStartMenuMonoImages, sc_start_menu_mono_images, 1, 0, 1, CFGF
 MACRO_CONFIG_INT(ScGameMediaBackground, sc_game_media_background, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable custom media background in game background rendering")
 MACRO_CONFIG_STR(ScMenuMediaBackgroundPath, sc_menu_media_background_path, IO_MAX_PATH_LENGTH, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Path to the custom menu media background file")
 MACRO_CONFIG_INT(ScGameMediaBackgroundOffset, sc_game_media_background_offset, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "How much the custom media background is fixed to the map when rendering the in-game background")
-
 
 // UI Themes
 MACRO_CONFIG_INT(ScUiThemes, sc_ui_themes, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable UI Themes")
@@ -333,7 +329,6 @@ MACRO_CONFIG_INT(ScOptimizerFpsFogZoomPercent, sc_optimizer_fps_fog_zoom_percent
 MACRO_CONFIG_INT(ScOptimizerFpsFogRenderRect, sc_optimizer_fps_fog_render_rect, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Render an outline rectangle showing the FPS fog area")
 MACRO_CONFIG_INT(ScOptimizerFpsFogCullMapTiles, sc_optimizer_fps_fog_cull_map_tiles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cull map tile rendering outside the FPS fog area")
 
-// System tuning
 MACRO_CONFIG_INT(ScLowLatencyTimers, sc_low_latency_timers, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Request precise timers while the window is active (Windows: 1 ms timer resolution and no power throttling, macOS: no App Nap or timer coalescing)")
 MACRO_CONFIG_INT(ScMmcss, sc_mmcss, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Register the game thread with the Windows multimedia scheduler (MMCSS Games) while the window is active")
 MACRO_CONFIG_INT(ScHighProcessPriority, sc_high_process_priority, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Set DDNets process priority to high")
@@ -378,7 +373,6 @@ MACRO_CONFIG_INT(ScMainMenuAnimation, sc_main_menu_animation, 1, 0, 1, CFGFLAG_C
 MACRO_CONFIG_INT(ScMainMenuAnimationSpeed, sc_main_menu_animation_speed, 12, 1, 50, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Main menu hover animation speed")
 MACRO_CONFIG_INT(ScChatAnimationType, sc_chat_animation_type, 3, 1, 4, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Chat animation type")
 
-// Legacy HUD layout mirrors from Cecen Client 2.0 (load-only; migrated into hud_layout.cfg)
 MACRO_CONFIG_INT(ScHudMusicPlayerX, sc_hud_music_player_x, 198, -1000, 1000, CFGFLAG_CLIENT, "Legacy music player HUD X")
 MACRO_CONFIG_INT(ScHudMusicPlayerY, sc_hud_music_player_y, 0, -1000, 1000, CFGFLAG_CLIENT, "Legacy music player HUD Y")
 MACRO_CONFIG_INT(ScHudMusicPlayerScale, sc_hud_music_player_scale, 100, 25, 300, CFGFLAG_CLIENT, "Legacy music player HUD scale")
@@ -462,19 +456,16 @@ MACRO_CONFIG_COL(ScCornerIndicatorColorAlive, sc_corner_indicator_color_alive, 0
 MACRO_CONFIG_COL(ScCornerIndicatorColorFrozen, sc_corner_indicator_color_frozen, 0xFF6BFF8AU, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Frozen corner indicator color")
 MACRO_CONFIG_COL(ScCornerIndicatorLastTeammateColor, sc_corner_indicator_last_teammate_color, 0xFF6EFF80U, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Corner indicator color when indicating the last teammate")
 
-// Team scoreboard overlay
 MACRO_CONFIG_INT(ScTeamScoreboard, sc_team_scoreboard, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show the top-left team scoreboard overlay with per-teammate freezes, saves and deaths")
 MACRO_CONFIG_INT(ScTeamScoreboardOnlyInTeam, sc_team_scoreboard_only_in_team, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Only show the team scoreboard while in a DDRace team")
 MACRO_CONFIG_INT(ScTeamScoreboardSize, sc_team_scoreboard_size, 100, 50, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team scoreboard size (percent)")
 MACRO_CONFIG_INT(ScTeamScoreboardY, sc_team_scoreboard_y, 0, 0, 280, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team scoreboard vertical offset from the top-left corner (HUD units)")
 
-// Fast practice overlay
 MACRO_CONFIG_INT(ScFastPracticeHud, sc_fast_practice_hud, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show the top-left fast practice overlay while practice is enabled")
 MACRO_CONFIG_INT(ScFastPracticeShowBinds, sc_fast_practice_show_binds, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show configured practice binds on the fast practice overlay")
 MACRO_CONFIG_INT(ScFastPracticeHudSize, sc_fast_practice_hud_size, 100, 50, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Fast practice overlay size (percent)")
 MACRO_CONFIG_INT(ScFastPracticeHudY, sc_fast_practice_hud_y, 0, 0, 280, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Fast practice overlay vertical offset from the top-left corner (HUD units)")
 
-// Hook effects
 MACRO_CONFIG_COL(ScHookFxColor, sc_hook_fx_color, 9371558, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color of the hook, air jump and hammer effects")
 MACRO_CONFIG_INT(ScHookTether, sc_hook_tether, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "A lasso and pulses along the hook when you hook another player")
 MACRO_CONFIG_INT(ScHookLassoBox, sc_hook_lasso_box, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Corner brackets on the player your hook holds")

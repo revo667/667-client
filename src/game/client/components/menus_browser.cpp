@@ -1651,7 +1651,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 				}
 
 				// Compare unsorted server id of the friend with the unsorted id of the currently selected server
-				bool InSelectedServer = m_SelectedIndex >= 0 && Friend.ServerInfo() && Friend.ServerInfo()->m_ServerIndex == ServerBrowser()->SortedGet(m_SelectedIndex)->m_ServerIndex;
+				const CServerInfo *pSelectedServer = ServerBrowser()->SortedGet(m_SelectedIndex);
+				bool InSelectedServer = pSelectedServer && Friend.ServerInfo() && Friend.ServerInfo()->m_ServerIndex == pSelectedServer->m_ServerIndex;
 
 				const ColorRGBA Color = PlayerBackgroundColor(FriendType == FRIEND_PLAYER_ON, FriendType == FRIEND_CLAN_ON, FriendType == FRIEND_OFF ? true : Friend.IsAfk(), InSelectedServer, Inside);
 				Rect.Draw(Color, IGraphics::CORNER_ALL, 5.0f);
@@ -1943,7 +1944,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					int ButtonResult = Ui()->DoButtonLogic(pWarItemId, 0, &Rect, BUTTONFLAG_LEFT);
 					GameClient()->m_Tooltips.DoToolTip(pWarItemId, &Rect, Localize("Click to select server. Double click to connect."));
 
-					const bool InSelectedServer = m_SelectedIndex >= 0 && WarItem.m_pServerInfo->m_ServerIndex == ServerBrowser()->SortedGet(m_SelectedIndex)->m_ServerIndex;
+					const CServerInfo *pSelectedServer = ServerBrowser()->SortedGet(m_SelectedIndex);
+					const bool InSelectedServer = pSelectedServer && WarItem.m_pServerInfo->m_ServerIndex == pSelectedServer->m_ServerIndex;
 					const float Alpha = 0.25f + (Inside ? 0.1f : 0.0f) + (InSelectedServer ? 0.1f : 0.0f);
 					const ColorRGBA BaseColor = pWarType->m_Color.WithAlpha(Alpha);
 					const ColorRGBA DrawColor = ClientInfo.m_Afk ? ColorRGBA(BaseColor.r * 0.65f, BaseColor.g * 0.65f, BaseColor.b * 0.65f, BaseColor.a) : BaseColor;

@@ -70,7 +70,7 @@ class CScoreboard : public CComponent
 		bool m_IsSpectating;
 
 		static float Height(CGameClient *pGameClient, bool IsLocal, bool IsSpectatorRow, int ClientId);
-		// 667client: Discord-style card at the top: picture or tee, name, bio, connections.
+		// 667client
 		static float CardHeight(CGameClient *pGameClient, int ClientId);
 		void RenderCard(CUIRect Card);
 		static CUi::EPopupMenuFunctionResult Render(void *pContext, CUIRect View, bool Active);

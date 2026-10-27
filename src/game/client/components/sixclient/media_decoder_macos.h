@@ -9,17 +9,14 @@
 #include <cstdint>
 #include <vector>
 
-// The ffmpeg shipped for macOS is built without any decoders, so JPEG/GIF/WebP/HEIC
-// (album covers, chat media) are decoded with ImageIO instead.
 struct SMacDecodedImageFrame
 {
-	std::vector<uint8_t> m_vRgba; // straight (non-premultiplied) RGBA8, top row first
+	std::vector<uint8_t> m_vRgba;
 	int m_Width = 0;
 	int m_Height = 0;
 	int m_DurationMs = 0;
 };
 
-// Frames are fully composited. MaxDimension <= 0 keeps the source size.
 bool MacDecodeImageFrames(const unsigned char *pData, size_t DataSize, int MaxDimension, int MaxFrames, size_t MaxTotalBytes, bool AllFrames, std::vector<SMacDecodedImageFrame> &vFrames);
 
 #endif

@@ -28,7 +28,6 @@ static constexpr const char *KOG_POINTS_FILE = "667Client/kog_points.txt";
 static constexpr int64_t KOG_QUERY_INTERVAL_SECONDS = 5;
 static constexpr int64_t KOG_RESPONSE_TIMEOUT_SECONDS = 6;
 static constexpr int64_t KOG_REFRESH_SECONDS = 1800;
-// A name is asked for at most once an hour, automatically or on request.
 static constexpr int64_t KOG_RETRY_SECONDS = 3600;
 static constexpr int64_t KOG_FORCED_RETRY_SECONDS = 3600;
 
@@ -90,8 +89,6 @@ void CKogPoints::Request(const char *pName, bool Force)
 	const SEntry *pEntry = Find(pName);
 	if(!Force && pEntry && Now - pEntry->m_UpdatedAt < KOG_REFRESH_SECONDS)
 		return;
-	// 667client: every ask is a "/points" chat command, so names are not asked again too soon,
-	// whether or not the server answered last time.
 	const auto Asked = m_LastAsked.find(Key(pName));
 	if(Asked != m_LastAsked.end() && Now - Asked->second < (Force ? KOG_FORCED_RETRY_SECONDS : KOG_RETRY_SECONDS))
 		return;
@@ -118,14 +115,12 @@ void CKogPoints::Send(const std::string &Name, bool Hide)
 	m_Pending.m_SentAt = time_timestamp();
 	m_Pending.m_Hide = Hide;
 	m_LastSent = m_Pending.m_SentAt;
-	m_LastAsked[Key(Name.c_str())] = m_Pending.m_SentAt; // 667client
+	m_LastAsked[Key(Name.c_str())] = m_Pending.m_SentAt;
 }
 
 void CKogPoints::OnRender()
 {
 	const int64_t Now = time_timestamp();
-	// A few seconds after joining (the server info decides whether this is KoG), ask for the
-	// friends' points, once per game start. Nothing else asks on its own.
 	if(m_AskFriendsOnJoin && g_Config.m_ScKogFriendPoints && Now - m_JoinedAt >= 3 && Client()->State() == IClient::STATE_ONLINE)
 	{
 		m_AskFriendsOnJoin = false;
@@ -143,7 +138,6 @@ void CKogPoints::OnRender()
 	if(!m_Pending.m_Name.empty() && Now - m_Pending.m_SentAt > KOG_RESPONSE_TIMEOUT_SECONDS)
 		m_Pending = SPending();
 
-	// 667client: turning auto points off drops the friends still waiting to be asked
 	if(!g_Config.m_ScKogFriendPoints)
 		m_Queue.clear();
 
@@ -257,7 +251,6 @@ bool CKogPoints::ConsumeServerLine(const char *pLine)
 	int Points = 0, Rank = 0;
 	if(!ParseLine(pLine, m_Pending.m_Name.c_str(), Points, Rank))
 	{
-		// 667client: other answers to an automatic ask (not found, extra lines) stay out of the chat too
 		return m_Pending.m_Hide && (str_find_nocase(pLine, m_Pending.m_Name.c_str()) || str_find_nocase(pLine, "point"));
 	}
 

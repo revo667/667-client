@@ -45,9 +45,7 @@ void CFgfWeather::BuildMask(const CScreenRect &View)
 	const float Right = View.m_BottomRight.x + VIEW_MARGIN * 2.0f;
 	const float Top = View.m_TopLeft.y - VIEW_MARGIN * 2.0f;
 	const float Bottom = View.m_BottomRight.y + VIEW_MARGIN * 2.0f;
-	// 667client: the mask is snapped to a coarse grid. It used to follow the view tile by tile, so
-	// it was rebuilt (up to 400x400 tiles) every time the camera crossed a tile and on every frame
-	// of a zoom, which stuttered while zooming out.
+	// 667client
 	const int X0 = std::max(0, std::min(round_to_int(Left), round_to_int(Right)) / 32) / MASK_SNAP_TILES * MASK_SNAP_TILES;
 	const int Y0 = std::max(0, std::min(round_to_int(Top), round_to_int(Bottom)) / 32) / MASK_SNAP_TILES * MASK_SNAP_TILES;
 	const int X1 = (std::max(round_to_int(Left), round_to_int(Right)) / 32 / MASK_SNAP_TILES + 1) * MASK_SNAP_TILES - 1;
@@ -82,7 +80,6 @@ void CFgfWeather::BuildMask(const CScreenRect &View)
 			const bool Solid = Tile == TILE_SOLID || Tile == TILE_NOHOOK;
 			const int Index = y * Width + x;
 			m_Solid[Index] = Solid ? 1 : 0;
-			// RandomAirPoint clips to the current view, the mask now outlives small camera moves.
 			if(!Solid)
 				m_AirTiles.push_back(Index);
 		}
@@ -189,8 +186,6 @@ void CFgfWeather::Spawn(const CScreenRect &View, float Passed, float Time)
 	const float AverageLife = Snow ? 5.0f : 0.45f;
 	const float Wanted = (Snow ? 110.0f : 170.0f) * Amount * Area * Height / 800.0f;
 	m_SpawnAccumulator += Passed * Wanted / AverageLife;
-	// If the mask found no air (common when the view is mostly solid), keep trying
-	// with collision checks instead of giving up for the whole frame.
 	const int TryLimit = (m_MaskReady && !m_AirTiles.empty()) ? 48 : 400;
 	int Tries = 0;
 	while(m_SpawnAccumulator >= 1.0f && Tries < TryLimit)
@@ -349,7 +344,6 @@ void CFgfWeather::Draw(float Time)
 		const IGraphics::CTextureHandle FlakeTexture = GameClient()->m_ExtrasSkin.m_SpriteParticleSnowflake;
 		const bool Sprite = g_Config.m_ScWeatherSnowflakes != 0 && FlakeTexture.IsValid();
 		Graphics()->BlendNormal();
-		// Glow base so snow stays visible even when the extras snowflake sprite is washed out.
 		Graphics()->TextureSet(m_GlowTexture);
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(0.0f);
@@ -374,7 +368,6 @@ void CFgfWeather::Draw(float Time)
 				const float Fade = std::clamp(std::min(Drop.m_Life / 0.5f, (Drop.m_LifeSpan - Drop.m_Life) / 1.0f), 0.0f, 1.0f);
 				const float Spin = Drop.m_Phase + Time * (Drop.m_Phase < pi ? 0.4f : -0.4f);
 				Graphics()->QuadsSetRotation(Spin);
-				// Snowflake sprites are authored white; tinting them often makes them disappear.
 				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.95f * Fade);
 				const float Size = Drop.m_Size * 3.4f;
 				IGraphics::CQuadItem Flake(Drop.m_Pos.x, Drop.m_Pos.y, Size, Size);
@@ -449,7 +442,6 @@ void CFgfWeather::AmbientDust()
 		p.m_EndAlpha = 0.0f;
 		p.m_Collides = false;
 		p.m_Color = Color;
-		// Atmosphere dust must keep working even when the optimizer disables game particles.
 		GameClient()->m_Particles.Add(Sparkle ? CParticles::GROUP_TRAIL_EXTRA : CParticles::GROUP_PROJECTILE_TRAIL, &p, random_float(0.0f, LifeSpan), true);
 	}
 }
@@ -458,7 +450,6 @@ void CFgfWeather::OnRender()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
-	// Atmosphere is an explicit setting; do not kill it with OptimizerDisableParticles.
 	if(WeatherFxHidden())
 		return;
 
@@ -483,7 +474,6 @@ void CFgfWeather::OnRender()
 	const CScreenRect View = Graphics()->MapScreenToWorld(Center.x, Center.y, 100.0f, 100.0f, 100.0f,
 		0.0f, 0.0f, Graphics()->ScreenAspect(), GameClient()->m_Camera.m_Zoom);
 
-	// Earlier layers (moving tiles / map groups) can leave a non-world MapScreen or clip.
 	Graphics()->ClipDisable();
 	Graphics()->MapScreen(View);
 

@@ -17,7 +17,6 @@ namespace
 		return g_Config.m_TcFastInputAmount / 20.0f;
 	}
 
-	// Best input is ported from BestClient (MIT, Copyright (c) 2026 BestProject Team).
 	float BestModeOffsetTicks()
 	{
 		if(g_Config.m_ScInputs != SC_INPUTS_BEST || g_Config.m_ScBestInputAmount <= 0)
@@ -76,7 +75,6 @@ int ScInputs::PredictionTicks(float OffsetTicks)
 
 int ScInputs::PredictionTicksOthers(float OffsetTicks)
 {
-	// meow input only gives other tees one extra tick
 	if(g_Config.m_ScInputs == SC_INPUTS_MEOW)
 		return OffsetTicks > 0.0f ? 1 : 0;
 	return PredictionTicks(OffsetTicks);

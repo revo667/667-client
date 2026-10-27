@@ -29,7 +29,7 @@
 #include <game/client/ui.h>
 #include <game/localization.h>
 
-static constexpr float POPUP_WIDTH = 230.0f; // 667client: room for the profile card
+static constexpr float POPUP_WIDTH = 230.0f; // 667client
 
 // Horizontal spacing of the scoreboard contents, both to its edges and between columns
 static constexpr float MARGIN = 10.0f;
@@ -557,9 +557,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 
 	const float ScoreOffset = Scoreboard.x + MARGIN;
 	const float ScoreLength = TextRender()->TextWidth(FontSize, UseTime ? "00:00:00" : "99999");
-	// 667client: Cecen Client badges get their own column between the score and the tee,
-	// reserved for every row so tees and names stay aligned.
-	// Sized from the font so sparse boards with tall rows don't blow it up, capped so dense boards stay tidy.
+	// 667client
 	const float BadgeHeight = g_Config.m_ScClientIndicator ? std::min(FontSize * 1.8f, LineHeight - Spacing * 0.5f) : 0.0f;
 	const float BadgeSlot = BadgeHeight > 0.0f ? GameClient()->m_ClientIndicator.IconWidth(BadgeHeight) + MARGIN * 0.5f : 0.0f;
 	const float TeeOffset = ScoreOffset + ScoreLength + MARGIN + BadgeSlot;
@@ -853,7 +851,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 					Player.m_MuteMark.Render(TextRender(), vec2(NameTextOffset, TextY), NameColor);
 					NameTextOffset += Player.m_MuteMark.Width();
 				}
-				// 667client: room for the Spotify icon after the name
+				// 667client
 				const CClientIndicator::SMusic *pMusic = GameClient()->m_ClientIndicator.MusicInGame(pInfo->m_ClientId);
 				const float SpotifySize = FontSize * 1.05f;
 				const float SpotifyGap = FontSize * 0.35f;
@@ -1292,7 +1290,7 @@ static constexpr float POPUP_BUTTON_FONT = 10.0f;
 
 float CScoreboard::CScoreboardPopupContext::Height(CGameClient *pGameClient, bool IsLocal, bool IsSpectatorRow, int ClientId)
 {
-	// 667client: the card replaces the name header
+	// 667client
 	return SixClientScoreboardPlayerPopupHeight(pGameClient, IsLocal, IsSpectatorRow, ClientId) - POPUP_HEADER_SIZE + CardHeight(pGameClient, ClientId);
 }
 
@@ -1304,7 +1302,6 @@ static constexpr float CARD_PADDING = 8.0f;
 static constexpr float CARD_ROW = 20.0f;
 static constexpr float CARD_BIO_FONT = 10.0f;
 
-// Cecen Client users have a profile on the presence service; everyone else gets the default card.
 static const SSocialCard *PopupProfile(CGameClient *pGameClient, int ClientId)
 {
 	if(!pGameClient->m_ClientIndicator.IsUserInGame(ClientId))
@@ -1324,11 +1321,11 @@ float CScoreboard::CScoreboardPopupContext::CardHeight(CGameClient *pGameClient,
 {
 	const CGameClient::CClientData &Client = pGameClient->m_aClients[ClientId];
 	const SSocialCard *pCard = PopupProfile(pGameClient, ClientId);
-	float Height = CARD_BANNER + CARD_RING / 2.0f + 4.0f; // banner and the lower half of the picture
+	float Height = CARD_BANNER + CARD_RING / 2.0f + 4.0f;
 	Height += 17.0f; // name
 	if(Client.m_aClan[0])
 		Height += 13.0f;
-	Height += 16.0f; // points and hours, or "Private profile"
+	Height += 16.0f;
 	if(pCard && !pCard->m_Private)
 	{
 		const float Bio = CardBioHeight(pGameClient, *pCard);
@@ -1372,7 +1369,6 @@ void CScoreboard::CScoreboardPopupContext::RenderCard(CUIRect Card)
 	Card.HSplitTop(CARD_BANNER, &Banner, nullptr);
 	Banner.Draw(CecenSocial::BannerColor(Client.m_aName), IGraphics::CORNER_T, 3.0f);
 
-	// Picture, or the player's tee on a soft disc.
 	const float RingX = Card.x + CARD_PADDING;
 	const float RingY = Banner.y + Banner.h - CARD_RING / 2.0f;
 	CUIRect Ring = {RingX, RingY, CARD_RING, CARD_RING};
@@ -1391,7 +1387,6 @@ void CScoreboard::CScoreboardPopupContext::RenderCard(CUIRect Card)
 		pScoreboard->RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(Avatar.x + Avatar.w / 2.0f, Avatar.y + Avatar.h / 2.0f + OffsetToMid.y));
 	}
 
-	// Badges on the banner's lower edge, right of the picture: Cecen Client, Spotify.
 	{
 		float BadgeX = Card.x + Card.w - CARD_PADDING;
 		const float BadgeY = Banner.y + Banner.h + 3.0f;
@@ -1436,7 +1431,6 @@ void CScoreboard::CScoreboardPopupContext::RenderCard(CUIRect Card)
 		return;
 	}
 
-	// Points and hours, fetched when the card opens; a spinner until they arrive.
 	{
 		const SSocialStats *pStats = CecenSocial::PlayerStats(pGameClient->Http(), Client.m_aName);
 		CKogPoints &KogPoints = pGameClient->m_KogPoints;
@@ -1557,8 +1551,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::CScoreboardPopupContext::Render(void 
 	if(!Client.m_Active)
 		return CUi::POPUP_CLOSE_CURRENT;
 
-	// 667client: the profile card replaces the name header. Its size changes once the
-	// profile arrives, so the popup follows it.
+	// 667client
 	const float WantedHeight = Height(pGameClient, pPopupContext->m_IsLocal, pPopupContext->m_IsSpectating, pPopupContext->m_ClientId);
 	if(std::abs(WantedHeight - pPopupContext->m_LastHeight) > 0.5f)
 	{
@@ -1582,8 +1575,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::CScoreboardPopupContext::Render(void 
 		pConsole->ExecuteLine(aEscapedCommand, IConsole::CLIENT_ID_UNSPECIFIED);
 	};
 
-	// 667client: every action is a small icon in one centred row: friend, mute, mute emoticons,
-	// spectate, teammate, whisper, copy skin. The war list and /swap buttons are gone.
+	// 667client
 	if(!pPopupContext->m_IsLocal)
 	{
 		const int ActionCorners = IGraphics::CORNER_ALL;
@@ -1675,7 +1667,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::CScoreboardPopupContext::Render(void 
 	}
 	View.HSplitTop(POPUP_ITEM_SPACING * 2, nullptr, &View);
 
-	// 667client: Spotify song this player shares
+	// 667client
 	const CClientIndicator::SMusic *pMusic = pGameClient->m_ClientIndicator.MusicInGame(pPopupContext->m_ClientId);
 	if(!pPopupContext->m_IsLocal && pMusic)
 	{

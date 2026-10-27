@@ -10,12 +10,12 @@
 #include <string>
 
 #if defined(CONF_FAMILY_WINDOWS)
-// commdlg.h needs the GDI types the project leaves out of windows.h; nothing here clashes with them.
 #undef NOGDI
 #undef WIN32_LEAN_AND_MEAN
+// clang-format off
 #include <windows.h>
-// commdlg.h has to come after windows.h.
 #include <commdlg.h>
+// clang-format on
 #pragma comment(lib, "comdlg32.lib")
 #endif
 
@@ -75,7 +75,6 @@ namespace
 
 CImagePicker::~CImagePicker()
 {
-	// The dialog can't be closed from here; let the thread finish on its own.
 	if(m_Thread.joinable())
 		m_Thread.detach();
 }

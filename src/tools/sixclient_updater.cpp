@@ -148,7 +148,6 @@ static bool ReadCentralDirectory(const std::vector<unsigned char> &vZip, std::ve
 	if(vZip.size() < 22)
 		return false;
 
-
 	size_t Eocd = 0;
 	bool Found = false;
 	const size_t MaxComment = vZip.size() < 65557 ? vZip.size() : 65557;
@@ -347,7 +346,6 @@ static bool Extract(const wchar_t *pArchive, const wchar_t *pDestDir, const std:
 				Ch = L'\\';
 		}
 
-
 		if(Entry.m_Name.back() == '/')
 		{
 			EnsureDirectories(Full + L'\\');
@@ -440,7 +438,6 @@ static bool InstallFile(const wchar_t *pSrc, const wchar_t *pDst)
 			DeleteFileW(aOld);
 		return true;
 	}
-
 
 	if(!CopyFileW(pSrc, pDst, FALSE))
 	{
@@ -563,7 +560,6 @@ static DWORD WINAPI WorkerThread(LPVOID pParam)
 {
 	auto *pA = (WorkerArgs *)pParam;
 
-
 	SetStatus(L"Waiting for client to close...");
 	SetPercent(2);
 	{
@@ -578,7 +574,6 @@ static DWORD WINAPI WorkerThread(LPVOID pParam)
 	}
 	SetPercent(8);
 
-
 	wchar_t aExtract[MAX_PATH];
 	_snwprintf_s(aExtract, _TRUNCATE, L"%ls\\update\\extract", pA->aInstallDir);
 	DeleteTree(aExtract);
@@ -587,7 +582,6 @@ static DWORD WINAPI WorkerThread(LPVOID pParam)
 		Fail(L"Failed to create extraction directory.");
 		delete pA; return 1;
 	}
-
 
 	SetStatus(L"Extracting update...");
 	if(!zip::Extract(pA->aArchive, aExtract, [](int Done, int Total)
@@ -600,7 +594,6 @@ static DWORD WINAPI WorkerThread(LPVOID pParam)
 		delete pA; return 1;
 	}
 	SetPercent(50);
-
 
 	wchar_t aCopyRoot[MAX_PATH];
 	wcscpy_s(aCopyRoot, aExtract);
@@ -628,7 +621,6 @@ static DWORD WINAPI WorkerThread(LPVOID pParam)
 		}
 	}
 
-
 	SetStatus(L"Backing up settings...");
 	wchar_t aBackup[MAX_PATH];
 	_snwprintf_s(aBackup, _TRUNCATE, L"%ls\\update\\backup_%lu", pA->aInstallDir, pA->Pid);
@@ -643,7 +635,6 @@ static DWORD WINAPI WorkerThread(LPVOID pParam)
 	}
 	SetPercent(55);
 
-
 	SetStatus(L"Installing files...");
 	{
 		int Total = CountFiles(aCopyRoot);
@@ -657,7 +648,6 @@ static DWORD WINAPI WorkerThread(LPVOID pParam)
 	}
 	SetPercent(90);
 
-
 	SetStatus(L"Restoring settings...");
 	for(const wchar_t *pRel : k_aUserDirs)
 	{
@@ -669,14 +659,12 @@ static DWORD WINAPI WorkerThread(LPVOID pParam)
 	}
 	SetPercent(95);
 
-
 	SetStatus(L"Cleaning up...");
 	DeleteFileW(pA->aArchive);
 	DeleteTree(aExtract);
 	DeleteTree(aBackup);
 	CleanupOldFiles(pA->aInstallDir);
 	SetPercent(100);
-
 
 	SetStatus(L"Launching Cecen Client...");
 	Sleep(500);
@@ -886,7 +874,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 {
 	InitializeCriticalSection(&g_Lock);
 
-
 	int Argc = 0;
 	LPWSTR *ppArgv = CommandLineToArgvW(GetCommandLineW(), &Argc);
 	if(Argc < 5 || !ppArgv)
@@ -897,7 +884,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 		return 1;
 	}
 
-	// 667client: a second updater for the same install would fight over update\extract
+	// 667client
 	HANDLE hInstanceMutex = CreateMutexW(NULL, TRUE, L"Local\\CecenClientUpdater");
 	if(hInstanceMutex && GetLastError() == ERROR_ALREADY_EXISTS)
 	{
@@ -912,7 +899,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 	wcscpy_s(pArgs->aInstallDir, ppArgv[3]);
 	wcscpy_s(pArgs->aExePath,    ppArgv[4]);
 	LocalFree(ppArgv);
-
 
 	WNDCLASSEXW Wc      = {};
 	Wc.cbSize           = sizeof(Wc);
@@ -939,7 +925,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 		NULL, NULL, hInst, NULL);
 
 	if(!g_hWnd) return 1;
-
 
 	HANDLE hThread = CreateThread(NULL, 0, WorkerThread, pArgs, 0, NULL);
 	if(hThread) CloseHandle(hThread);

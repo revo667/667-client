@@ -27,4 +27,4 @@ public:
 	void OnUpdate() override;
 };
 
-#endif // GAME_CLIENT_COMPONENTS_667CLIENT_AUTOMARGIN_H
+#endif

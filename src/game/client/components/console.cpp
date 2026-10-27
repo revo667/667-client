@@ -157,7 +157,7 @@ static std::pair<EArgumentCompletionType, int> ArgumentCompletion(const char *pS
 	return {EArgumentCompletionType::NONE, -1};
 }
 
-// 667client: names of the players on the server, matched from the start ("rai" for "rain cakir").
+// 667client
 static int PossiblePlayers(const char *pStr, CGameClient *pGameClient, IConsole::FPossibleCallback pfnCallback = IConsole::EmptyPossibleCommandCallback, void *pUser = nullptr)
 {
 	int Index = 0;

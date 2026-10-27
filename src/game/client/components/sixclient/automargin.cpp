@@ -23,8 +23,7 @@ constexpr float JITTER_ENTER_MS = 4.0f;
 constexpr float JITTER_EXIT_MS = 2.0f;
 constexpr int MARGIN_DEADZONE = 1;
 constexpr int MARGIN_STEP_DOWN = 5;
-// 667client: a jump of the margin moves the predicted time at once and the own tee visibly
-// skips ahead. Rising in steps lets the prediction catch up smoothly.
+// 667client
 constexpr int MARGIN_STEP_UP = 8;
 
 float MarginFromPing(float Ping)

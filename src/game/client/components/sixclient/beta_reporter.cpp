@@ -69,14 +69,11 @@ static constexpr int UPLOAD_INTERVAL_SECONDS = 120;
 static constexpr int URGENT_UPLOAD_SECONDS = 10;
 static constexpr int MAX_EVENTS = 40;
 static constexpr int HANG_MS = 1000;
-// The watchdog samples the game thread's stack once a stall passes this, so even a short freeze
-// shows where the game was waiting. It only acts while the game is already stuck.
 static constexpr int SAMPLE_STALL_MS = 120;
 static constexpr int WATCHDOG_INTERVAL_MS = 25;
 static constexpr int ARM_DELAY_SECONDS = 5;
 static constexpr int MAX_STACK_FRAMES = 32;
 
-// The crash handlers can't use the storage or allocate, so the paths are resolved up front.
 static char gs_aCrashPath[IO_MAX_PATH_LENGTH];
 static char gs_aAssertPath[IO_MAX_PATH_LENGTH];
 static char gs_aHangPath[IO_MAX_PATH_LENGTH];
@@ -102,7 +99,6 @@ namespace
 	std::string ComponentName(const CComponent *pComponent)
 	{
 		const char *pName = typeid(*pComponent).name();
-		// MSVC: "class CMusicPlayer", Itanium ABI: "12CMusicPlayer"
 		if(str_startswith(pName, "class "))
 			pName += 6;
 		else if(str_startswith(pName, "struct "))
@@ -154,7 +150,6 @@ namespace
 	}
 
 #if defined(_M_X64) || defined(__x86_64__)
-	// Unwinds with the tables the compiler emits for every x64 function, like the OS does.
 	int WalkStack(CONTEXT Context, uintptr_t *pFrames, int MaxFrames)
 	{
 		int Num = 0;
@@ -171,7 +166,6 @@ namespace
 			}
 			else if(Num == 1)
 			{
-				// A leaf function (only possible at the top): the return address is on the stack.
 				Context.Rip = *(DWORD64 *)Context.Rsp;
 				Context.Rsp += 8;
 			}
@@ -265,24 +259,19 @@ namespace
 		gs_pfnPreviousFilter = SetUnhandledExceptionFilter(BetaExceptionFilter);
 	}
 
-	// Whether the bytes before Address end in a call instruction, so Address is a return address.
 	bool FollowsCall(uintptr_t Address)
 	{
 		if(Address < gs_ExeBase + 8 || Address >= gs_ExeEnd)
 			return false;
 		const unsigned char *p = (const unsigned char *)Address;
-		if(p[-5] == 0xE8) // call rel32
+		if(p[-5] == 0xE8)
 			return true;
-		// call r/m64 (FF /2) with a 2, 3, 6 or 7 byte encoding
 		for(int Back : {2, 3, 6, 7})
 			if(p[-Back] == 0xFF && (p[-Back + 1] & 0x38) == 0x10)
 				return true;
 		return false;
 	}
 
-	// Samples the stuck game thread. While it is suspended nothing here may take a lock it could
-	// hold (the heap, the loader), so only its registers and raw stack are copied; the copy is
-	// searched for return addresses into the game afterwards.
 	bool SampleMainThread(std::vector<std::string> &vFrames)
 	{
 #if defined(_M_X64) || defined(__x86_64__)
@@ -365,7 +354,6 @@ namespace
 		Action.sa_sigaction = BetaSignalHandler;
 		Action.sa_flags = SA_SIGINFO | SA_RESETHAND;
 		sigemptyset(&Action.sa_mask);
-		// SIGTRAP: a failed assert ends in a trap instruction after the assert hook ran.
 		for(int Signal : {SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGABRT, SIGTRAP})
 			sigaction(Signal, &Action, nullptr);
 	}
@@ -401,8 +389,6 @@ namespace
 			snprintf(pBuf, BufSize, "0x%llx", (unsigned long long)Address);
 	}
 
-	// Frame pointers are always kept on macOS, so the stuck thread's stack is followed through them
-	// while it is suspended (only reading its stack, no locks), and named once it runs again.
 	bool SampleMainThread(std::vector<std::string> &vFrames)
 	{
 #if defined(CONF_PLATFORM_MACOS) && (defined(__arm64__) || defined(__x86_64__))
@@ -464,7 +450,6 @@ namespace
 		std::abort();
 	}
 
-	// key=value lines, "frame=" and the lines after "stack:" become the stack.
 	void ParseReport(const char *pText, CBetaReporter::SEvent &Event)
 	{
 		bool InStack = false;
@@ -568,9 +553,6 @@ void CBetaReporter::OnInit()
 		WriteWholeFile(aPath, m_InstallId.c_str(), m_InstallId.size());
 	}
 
-	// The features added since 1.0.22 (listen along and Spotify Connect, Cecen badges, Cecen Social
-	// and the profile cards, the Cecen UI, the weather rework) and the reporter itself, so its own
-	// cost shows too. Only these are timed per frame.
 	static const char *const s_apFeatureComponents[] = {"CClientIndicator", "CMusicPlayer", "CMusicDock", "CScoreboard", "CNamePlates", "CMenus", "CFgfWeather", "CTeamScoreboard", "CTranslate", "CHud", "CParticles", "CBetaReporter"};
 	const auto &vpComponents = GameClient()->AllComponents();
 	GameClient()->m_vTimedComponents.assign(vpComponents.size(), 0);
@@ -590,7 +572,6 @@ void CBetaReporter::OnInit()
 		}
 	}
 
-	// Parts of the heavier features, so a report says which part takes the time.
 	for(int Part = 0; Part < BetaProbe::NUM_PARTS; Part++)
 	{
 		SFeature Feature;
@@ -653,7 +634,6 @@ void CBetaReporter::ReadPreviousSession()
 	{
 		Event.m_Type = "assert";
 		ParseReport(Assert.c_str(), Event);
-		// SIGABRT after a failed assert carries the stack
 		if(!Crash.empty())
 		{
 			SEvent CrashEvent;
@@ -668,7 +648,6 @@ void CBetaReporter::ReadPreviousSession()
 	}
 	else
 	{
-		// Neither a crash nor an assert: killed, often from the task manager while the game hung.
 		Event.m_Type = "unclean_exit";
 		if(!Hang.empty())
 			ParseReport(Hang.c_str(), Event);
@@ -681,7 +660,6 @@ void CBetaReporter::ReadPreviousSession()
 	for(auto &[Key, Value] : SessionInfo.m_vStrings)
 		Event.m_vStrings.emplace_back("session_" + Key, Value);
 
-	// The game's own assertion log holds the last log lines before the end.
 	if(Event.m_Type != "unclean_exit")
 	{
 		struct SNewest
@@ -713,7 +691,6 @@ void CBetaReporter::ReadPreviousSession()
 		}
 	}
 
-	// Saved before sending, so a report that fails to upload is tried again next start.
 	std::vector<SEvent> vEvents;
 	vEvents.push_back(std::move(Event));
 	const std::string Payload = BuildPayload(vEvents);
@@ -759,7 +736,6 @@ void CBetaReporter::OnShutdown()
 	StopWatchdog();
 	if(!m_vEvents.empty() && !Storage()->FileExists(PENDING_FILE, IStorage::TYPE_SAVE))
 		SavePending();
-	// A clean exit: the next start finds no session marker.
 	Storage()->RemoveFile(SESSION_FILE, IStorage::TYPE_SAVE);
 }
 
@@ -775,11 +751,18 @@ void CBetaReporter::SavePending()
 void CBetaReporter::OnStateChange(int NewState, int OldState)
 {
 	(void)OldState;
-	// Loading a map and the first seconds on a server are expected to be slow.
 	m_Armed = false;
 	m_ArmedSince = time_get_impl();
 	m_WatchArmed = false;
 	(void)NewState;
+}
+
+void CBetaReporter::OnRelease()
+{
+	m_Armed = false;
+	m_ArmedSince = time_get_impl();
+	m_WatchArmed = false;
+	m_LastRenderTime = 0;
 }
 
 void CBetaReporter::AddCommon(SEvent &Event)
@@ -807,7 +790,6 @@ void CBetaReporter::AddEvent(SEvent &&Event)
 		m_vEvents.push_back(std::move(Event));
 		return;
 	}
-	// Full: a hitch only replaces a smaller hitch.
 	auto Ms = [](const SEvent &E) {
 		for(const auto &[Key, Value] : E.m_vNumbers)
 			if(Key == "ms")
@@ -830,7 +812,6 @@ void CBetaReporter::RecordHitch(int ActiveMs, int64_t Now)
 	SEvent Event;
 	Event.m_Type = ActiveMs >= HANG_MS ? "hang" : "hitch";
 	Event.m_vNumbers.emplace_back("ms", ActiveMs);
-	// Time outside the measured top level phases (input, the console, the main loop itself).
 	const int64_t Measured = BetaProbe::g_aPhaseTicks[BetaProbe::PHASE_UPDATE] + BetaProbe::g_aPhaseTicks[BetaProbe::PHASE_RENDER] + BetaProbe::g_aPhaseTicks[BetaProbe::PHASE_SWAP];
 	const int OtherMs = ActiveMs - (int)(Measured * 1000 / time_freq());
 	if(OtherMs >= 1)
@@ -844,7 +825,6 @@ void CBetaReporter::RecordHitch(int ActiveMs, int64_t Now)
 			Event.m_vNumbers.emplace_back(BetaProbe::PhaseName(Phase), PhaseMs);
 	}
 
-	// What took the time: the slowest components in this window.
 	const auto &vpComponents = GameClient()->AllComponents();
 	const auto &vTimes = GameClient()->m_vComponentTimes;
 	std::vector<std::pair<std::string, int>> vTop;
@@ -876,7 +856,6 @@ void CBetaReporter::RecordHitch(int ActiveMs, int64_t Now)
 		const std::lock_guard<std::mutex> Lock(m_WatchdogMutex);
 		if(!m_vHangSamples.empty())
 		{
-			// The last sample is the deepest into the stall.
 			Event.m_vStack = m_vHangSamples.back().m_vFrames;
 			Event.m_vNumbers.emplace_back("samples", (int64_t)m_vHangSamples.size());
 		}
@@ -910,8 +889,6 @@ void CBetaReporter::CollectWindow(int64_t Now)
 
 	if(m_Armed && Delta > 0)
 	{
-		// A hitch is a frame well above both the setting and this player's usual frame time, so
-		// a slow computer running at 15 FPS does not report every frame.
 		const int AverageMs = m_Frames > 0 ? (int)(m_FrameTicks * 1000 / Freq / m_Frames) : 0;
 		const int ThresholdMs = std::max(g_Config.m_ScBetaHitchMs, 4 * AverageMs);
 		m_Frames++;
@@ -920,7 +897,6 @@ void CBetaReporter::CollectWindow(int64_t Now)
 			RecordHitch(ActiveMs, Now);
 	}
 
-	// Lag the engine noticed. A late snapshot during our own stall is the stall, not the network.
 	int Type, Value;
 	int64_t Time;
 	while(BetaProbe::PopEvent(Type, Value, Time))
@@ -981,7 +957,6 @@ void CBetaReporter::CollectWindow(int64_t Now)
 		m_NumOthersCorrections += Game.m_BetaOthersCorrections;
 		m_MaxOthersCorrection = std::max(m_MaxOthersCorrection, (int)Game.m_BetaMaxOthersCorrection);
 
-		// Corrections in a burst are what players call lag: the tee jumping back and forth.
 		if(m_BurstStart == 0)
 			m_BurstStart = Now;
 		m_BurstCorrections += Game.m_BetaCorrections;
@@ -1015,7 +990,6 @@ void CBetaReporter::CollectWindow(int64_t Now)
 	Game.m_BetaOthersCorrections = 0;
 	Game.m_BetaMaxOthersCorrection = 0.0f;
 
-	// Start the next window.
 	std::fill(std::begin(BetaProbe::g_aPhaseTicks), std::end(BetaProbe::g_aPhaseTicks), 0);
 	std::fill(std::begin(BetaProbe::g_aPartTicks), std::end(BetaProbe::g_aPartTicks), 0);
 	for(auto &ComponentTime : GameClient()->m_vComponentTimes)
@@ -1040,7 +1014,6 @@ void CBetaReporter::OnUpdate()
 {
 	if(m_pUpload && m_pUpload->Done())
 	{
-		// StatusCode() asserts unless the request is DONE: a failed connection (ERROR) has none.
 		const int Status = m_pUpload->State() == EHttpState::DONE ? m_pUpload->StatusCode() : 0;
 		const bool Ok = Status >= 200 && Status < 300;
 		if(Ok && !m_UploadedFromFile.empty())
@@ -1186,12 +1159,10 @@ std::string CBetaReporter::BuildPayload(const std::vector<SEvent> &vEvents)
 	Setting("tc_remove_anti", g_Config.m_TcRemoveAnti);
 	Json.EndObject();
 
-	// Per feature: average cost per frame, the worst frame, and frames where it took 4 ms or more.
 	Json.WriteAttribute("features");
 	Json.BeginObject();
 	for(const SFeature &Feature : m_vFeatures)
 	{
-		// Leave out what costs nothing, so the report shows what matters.
 		const int64_t AvgUs = m_Frames > 0 ? Feature.m_TotalTicks * 1000000 / time_freq() / m_Frames : 0;
 		if(AvgUs < 5 && Feature.m_MaxTicks * 1000 / time_freq() < 1 && Feature.m_JitterFrames == 0)
 			continue;
@@ -1204,7 +1175,6 @@ std::string CBetaReporter::BuildPayload(const std::vector<SEvent> &vEvents)
 	}
 	Json.EndObject();
 
-	// Spotify Connect: its helper process and the commands sent to it.
 	{
 		const CSpotifyConnect &Connect = GameClient()->m_MusicPlayer.SpotifyConnect();
 		const CSpotifyConnect::SStats Stats = Connect.Stats();
@@ -1227,7 +1197,6 @@ std::string CBetaReporter::BuildPayload(const std::vector<SEvent> &vEvents)
 		Setting("dropped_commands", Stats.m_DroppedCommands);
 		Json.EndObject();
 
-		// The helper's own log says why it failed; sent when something went wrong since the last report.
 		const int Problems = Stats.m_SpawnFailures + Stats.m_Exits + Stats.m_FailedCommands;
 		if(Problems > m_ReportedSpotifyProblems)
 		{
@@ -1352,7 +1321,6 @@ void CBetaReporter::WatchdogMain()
 			NumSamples = 0;
 			LastSample = 0;
 		}
-		// A few samples per hang, spread out: the last shows where it is still stuck.
 		if(NumSamples >= 4 || (LastSample != 0 && Now - LastSample < time_freq() * 7 / 10))
 			continue;
 		LastSample = Now;
@@ -1364,8 +1332,6 @@ void CBetaReporter::WatchdogMain()
 		if(!SampleMainThread(Sample.m_vFrames))
 			Sample.m_vFrames.clear();
 
-		// A long hang goes on disk right away: if the player kills the hung game, the next start
-		// still knows where. Short stalls only live in memory.
 		if(StallMs >= HANG_MS)
 		{
 			std::string Text = "stall_ms=" + std::to_string(StallMs) + "\n";

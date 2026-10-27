@@ -317,7 +317,6 @@ public:
 					return;
 				}
 #if defined(CONF_PLATFORM_MACOS)
-				// macOS .app: binary is Contents/MacOS/X, data is Contents/Resources/data.
 				str_format(aBuf, sizeof(aBuf), "%s/../Resources/data/mapres", aDir);
 				if(fs_is_dir(aBuf))
 				{

@@ -20,21 +20,15 @@
 #include <unistd.h>
 #include <vector>
 
-// Captures what the music app plays through a Core Audio process tap (macOS 14.2+). The first tap
-// asks for "system audio recording" permission; when it is denied the tap only delivers silence,
-// so long silence while the player reports playing is reported as FALLBACK and the music player
-// keeps its synthetic animation instead of flat bars.
-
 namespace SixClientVisualizer
 {
 
 namespace
 {
-constexpr int MAX_PENDING_SAMPLES = 48000; // one second at 48 kHz, older samples are dropped
+constexpr int MAX_PENDING_SAMPLES = 48000;
 constexpr int64_t SILENCE_FALLBACK_MS = 2500;
 constexpr int64_t IDLE_TEARDOWN_MS = 8000;
 constexpr int64_t RETRY_DELAY_MS = 5000;
-// kAudioObjectPropertyElementMain is macOS 12+, the deployment target is older.
 constexpr AudioObjectPropertyElement ELEMENT_MAIN = 0;
 
 AudioObjectID TranslatePidToProcessObject(pid_t Pid)
@@ -47,8 +41,6 @@ AudioObjectID TranslatePidToProcessObject(pid_t Pid)
 	return Object;
 }
 
-// Every audio process whose bundle id starts with the player's id, so browser helper
-// processes ("com.google.Chrome.helper") count for "com.google.Chrome".
 std::vector<AudioObjectID> FindPlayerProcessObjects(const std::string &ServiceId)
 {
 	std::vector<AudioObjectID> vResult;
@@ -115,7 +107,6 @@ class CCoreAudioVisualizerSource final : public IVisualizerSource
 	int64_t m_ConfigRevision = 0;
 	SVisualizerFrame m_LatestFrame;
 
-	// Written by the IO block on m_Queue, drained by the worker.
 	std::mutex m_SampleMutex;
 	std::vector<float> m_vPendingSamples;
 
@@ -146,7 +137,6 @@ class CCoreAudioVisualizerSource final : public IVisualizerSource
 	{
 		if(!pInput || pInput->mNumberBuffers == 0)
 			return;
-		// The tap is float32; interleaved buffers carry all channels, planar ones one channel each.
 		const AudioBuffer &First = pInput->mBuffers[0];
 		const UInt32 FirstChannels = std::max<UInt32>(1, First.mNumberChannels);
 		const UInt32 Frames = First.mDataByteSize / (sizeof(float) * FirstChannels);
@@ -200,7 +190,6 @@ class CCoreAudioVisualizerSource final : public IVisualizerSource
 		m_TapId = kAudioObjectUnknown;
 		m_TapSampleRate = 0;
 		m_TapServiceId.clear();
-		// Blocks already queued may still push samples; flush them before clearing.
 		if(m_Queue)
 			dispatch_sync(m_Queue, ^{});
 		std::lock_guard<std::mutex> Lock(m_SampleMutex);
@@ -222,7 +211,6 @@ class CCoreAudioVisualizerSource final : public IVisualizerSource
 			}
 			else
 			{
-				// Player not found (e.g. Safari plays from a WebKit helper): tap everything except our own game sounds.
 				const AudioObjectID Own = TranslatePidToProcessObject(getpid());
 				if(Own != kAudioObjectUnknown)
 					[pProcesses addObject:@(Own)];
@@ -253,7 +241,6 @@ class CCoreAudioVisualizerSource final : public IVisualizerSource
 			pAggregate[@kAudioAggregateDeviceIsStackedKey] = @NO;
 			pAggregate[@kAudioAggregateDeviceTapAutoStartKey] = @YES;
 			pAggregate[@kAudioAggregateDeviceTapListKey] = @[@{@kAudioSubTapUIDKey: pTapUid, @kAudioSubTapDriftCompensationKey: @YES}];
-			// The output device gives the aggregate a clock to run on.
 			const std::string OutputUid = DefaultOutputDeviceUid();
 			if(!OutputUid.empty())
 			{
@@ -341,7 +328,6 @@ class CCoreAudioVisualizerSource final : public IVisualizerSource
 			if(Hint.m_Playing)
 				LastPlayingTick = Now;
 			const bool Idle = !Hint.m_Playing && (LastPlayingTick == 0 || Now - LastPlayingTick > IDLE_TEARDOWN_MS * Freq / 1000);
-			// The hint briefly loses its service id between snapshots; only a different named player counts.
 			const bool PlayerChanged = m_AggregateId != kAudioObjectUnknown && !Hint.m_ServiceId.empty() && Hint.m_ServiceId != m_TapServiceId;
 			if(m_AggregateId != kAudioObjectUnknown && (Idle || PlayerChanged))
 			{
@@ -414,7 +400,6 @@ class CCoreAudioVisualizerSource final : public IVisualizerSource
 			else if(LatchedSignal && SilentReads >= 10)
 				LatchedSignal = false;
 
-			// Denied permission looks exactly like silence, so prolonged silence during playback falls back.
 			const bool LongSilence = Hint.m_Playing && Now - LastSignalTick > SILENCE_FALLBACK_MS * Freq / 1000;
 			RawFrame.m_HasRealtimeSignal = LatchedSignal;
 			RawFrame.m_BackendStatus = LatchedSignal ? EVisualizerBackendStatus::LIVE : (LongSilence ? EVisualizerBackendStatus::FALLBACK : EVisualizerBackendStatus::SILENT);

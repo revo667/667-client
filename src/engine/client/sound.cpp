@@ -706,8 +706,7 @@ int CSound::LoadOpus(const char *pFilename, int StorageType)
 	void *pData;
 	unsigned DataSize;
 	bool bLoaded = false; // 667client
-	// 667client: fallback chain custom → default → original.
-	// Determine which pack folder to load from (if any).
+	// 667client
 	const char *pEffectivePack = nullptr;
 	{
 		char aPackDir[256];
@@ -795,8 +794,7 @@ int CSound::LoadWV(const char *pFilename, int StorageType)
 	void *pData;
 	unsigned DataSize;
 	bool bLoaded = false; // 667client
-	// 667client: fallback chain custom → default → original.
-	// Determine which pack folder to load from (if any).
+	// 667client
 	const char *pEffectivePack = nullptr;
 	{
 		char aPackDir[256];

@@ -43,6 +43,7 @@ public:
 	void SetDDNetProcessPriority(bool Set);
 	void StartDiscordPriorityThread();
 	void ApplyLowLatencyPreset();
+	void ApplyMaxFpsPreset();
 
 	bool LowLatencyTimersActive() const { return m_LowLatencyTimersApplied; }
 	bool MmcssActive() const { return m_MmcssApplied; }

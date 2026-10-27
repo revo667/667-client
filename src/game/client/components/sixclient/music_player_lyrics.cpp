@@ -35,6 +35,30 @@ namespace
 	}
 } // namespace
 
+float MusicPlayerTextWidth(ITextRender *pTextRender, float FontSize, const char *pText)
+{
+	if(pTextRender == nullptr)
+		return FontSize * 5.0f;
+
+	struct SEntry
+	{
+		std::string m_Text;
+		float m_FontSize;
+		float m_Width;
+	};
+	static std::vector<SEntry> s_vCache;
+	for(const SEntry &Entry : s_vCache)
+	{
+		if(Entry.m_FontSize == FontSize && Entry.m_Text == pText)
+			return Entry.m_Width;
+	}
+	if(s_vCache.size() >= 48)
+		s_vCache.clear();
+	const float Width = pTextRender->TextWidth(FontSize, pText, -1, -1.0f);
+	s_vCache.push_back({pText, FontSize, Width});
+	return Width;
+}
+
 float CMusicPlayerLyrics::LyricsTextSlotWidth(float Scale, float WidthScale)
 {
 	return LYRICS_SLOT_WIDTH * Scale * WidthScale;
@@ -101,7 +125,7 @@ float CMusicPlayerLyrics::PreferredTextSlotWidth(ITextRender *pTextRender, float
 		return ClampedMax;
 
 	const float Pad = 1.2f * Scale * WidthScale;
-	const float TextW = pTextRender->TextWidth(FontSize, pText, -1, -1.0f);
+	const float TextW = MusicPlayerTextWidth(pTextRender, FontSize, pText);
 	return std::clamp(TextW + Pad * 2.0f, 0.0f, ClampedMax);
 }
 
@@ -879,13 +903,13 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 			{
 				str_format(aDigit, sizeof(aDigit), "%d", CountdownDigit(DrawIndex));
 				pText = aDigit;
-				TextW = pTextRender->TextWidth(FontSize, aDigit, -1, -1.0f);
+				TextW = MusicPlayerTextWidth(pTextRender, FontSize, aDigit);
 			}
 		}
 		else if(IsFallbackIndex(DrawIndex))
 		{
 			pText = (DrawIndex == m_CurrentLineIndex) ? m_LayoutText.c_str() : FallbackText(DrawIndex);
-			TextW = (DrawIndex == m_CurrentLineIndex) ? m_BaseLineWidth : pTextRender->TextWidth(FontSize, pText, -1, -1.0f);
+			TextW = (DrawIndex == m_CurrentLineIndex) ? m_BaseLineWidth : MusicPlayerTextWidth(pTextRender, FontSize, pText);
 		}
 		else
 		{
@@ -933,15 +957,15 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 		{
 			char aDigit[4];
 			str_format(aDigit, sizeof(aDigit), "%d", CountdownDigit(m_OutgoingLineIndex));
-			OutWidth = pTextRender->TextWidth(FontSize, aDigit, -1, -1.0f);
+			OutWidth = MusicPlayerTextWidth(pTextRender, FontSize, aDigit);
 		}
 		else if(IsFallbackIndex(m_OutgoingLineIndex))
 		{
-			OutWidth = pTextRender->TextWidth(FontSize, FallbackText(m_OutgoingLineIndex), -1, -1.0f);
+			OutWidth = MusicPlayerTextWidth(pTextRender, FontSize, FallbackText(m_OutgoingLineIndex));
 		}
 		else
 		{
-			OutWidth = pTextRender->TextWidth(FontSize, m_vLines[m_OutgoingLineIndex].m_Text.c_str(), -1, -1.0f);
+			OutWidth = MusicPlayerTextWidth(pTextRender, FontSize, m_vLines[m_OutgoingLineIndex].m_Text.c_str());
 		}
 		const float OutX = CenterX - OutWidth * 0.5f;
 		const int OutColorMode = IsMutedFallback(m_OutgoingLineIndex) ? 1 : 2;

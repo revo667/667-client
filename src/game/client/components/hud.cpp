@@ -1969,7 +1969,6 @@ void CHud::RenderLocalTime(bool ForcePreview)
 		return;
 	if(!ForcePreview && !g_Config.m_ClShowLocalTimeAlways && !GameClient()->m_Scoreboard.IsActive())
 		return;
-	// Music dock opens at the top edge; hide Tab local time so they don't stack.
 	if(!ForcePreview && GameClient()->m_MusicDock.IsOpen())
 		return;
 

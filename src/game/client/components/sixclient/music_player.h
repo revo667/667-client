@@ -53,17 +53,16 @@ public:
 		CMusicPlayerLyrics::SLineWindow m_Lyrics;
 	};
 
-	// What this client plays in Spotify, for sharing and listen along.
 	struct SSpotifyTrack
 	{
 		bool m_Valid = false;
 		bool m_Playing = false;
-		bool m_Buffering = false; // Spotify Connect only
-		bool m_FromConnect = false; // the position comes from Spotify Connect (exact) rather than the system
+		bool m_Buffering = false;
+		bool m_FromConnect = false;
 		std::string m_Title;
 		std::string m_Artist;
 		std::string m_Album;
-		std::string m_Uri; // empty when the platform does not expose it (Windows)
+		std::string m_Uri;
 		int64_t m_PositionMs = 0;
 		int64_t m_DurationMs = 0;
 	};
@@ -87,11 +86,9 @@ public:
 	void DockPlayPause();
 	void DockNext();
 	bool GetSpotifyTrack(SSpotifyTrack &Out) const;
-	// pUri must be a spotify:track URI; anything else is ignored.
 	void PlaySpotifyTrack(const char *pUri, int64_t PositionMs);
 	void SeekSpotifyTo(int64_t PositionMs);
 	void SetSpotifyPlaying(bool Playing);
-	// With Spotify Connect logged in, track changes never move the focus away from the game.
 	bool SpotifyConnectReady() const;
 	CSpotifyConnect &SpotifyConnect() { return *m_pSpotifyConnect; }
 	void RenderHudEditor(bool ForcePreview);
@@ -107,6 +104,7 @@ private:
 	void RenderMusicPlayerCard(bool ForcePreview);
 	void EnsureImpl();
 	void UpdateSpotifyConnect();
+	void UpdateLayout();
 };
 
 #endif

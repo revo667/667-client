@@ -146,7 +146,7 @@ public:
 	void Begin(CUIRect *pClipRect, const CScrollRegionParams *pParams = nullptr);
 	void End();
 	bool AddRect(const CUIRect &Rect, bool ShouldScrollHere = false); // returns true if the added rect is visible (not clipped)
-	void ScrollHere(EScrollOption Option = SCROLLHERE_KEEP_IN_VIEW, bool Smooth = false); // 667client: Smooth
+	void ScrollHere(EScrollOption Option = SCROLLHERE_KEEP_IN_VIEW, bool Smooth = false); // 667client
 	void ScrollRelative(EScrollRelative Direction, float SpeedMultiplier = 1.0f);
 	void ScrollRelativeDirect(vec2 ScrollAmount);
 	void DoEdgeScrolling();

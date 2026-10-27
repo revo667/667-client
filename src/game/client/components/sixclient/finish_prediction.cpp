@@ -172,9 +172,7 @@ bool CFinishPrediction::IsFreezeTileIndex(int Index) const
 	return Index >= 0 && Index < (int)m_vIsFreeze.size() && m_vIsFreeze[Index] != 0;
 }
 
-// 667client: the path data is built from copies of the map's game and front tiles on a job
-// thread. On a large map the distance field takes long enough to stall the game if it ran on
-// the game thread at the first snapshot.
+// 667client
 class CFinishPathJob : public IJob
 {
 public:
@@ -321,8 +319,6 @@ private:
 		};
 		auto Idx = [&](int X, int Y) { return Y * m_Width + X; };
 
-		// Visited marks carry the number of the search that set them, so a search never has to
-		// clear the whole map first. Clearing it per freeze tile made this quadratic in map size.
 		std::vector<int> vVisited(MapSize, 0);
 		int Search = 0;
 		std::vector<int> Queue;
@@ -493,7 +489,6 @@ bool CFinishPrediction::EnsurePathData()
 	const int Height = Collision()->GetHeight();
 	if(m_pPathJob)
 	{
-		// A build for this map and setting is on its way.
 		if(!m_PathRebuildPending && m_JobWidth == Width && m_JobHeight == Height && m_JobFreezeWalls == WantFreezeWalls)
 			return false;
 		StartPathJob();

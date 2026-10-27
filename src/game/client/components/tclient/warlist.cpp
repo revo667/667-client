@@ -416,8 +416,6 @@ void CWarList::SortWarEntries()
 void CWarList::UpdateWarPlayers()
 {
 	// 667client
-	// The index is rebuilt when entries or types are added or removed, and once a second so edits
-	// made in place (the war list menu changes entries directly) show up too.
 	const int64_t Now = time_get();
 	if(m_vWarEntries.size() != m_IndexedEntries || m_WarTypes.size() != m_IndexedTypes || Now - m_LastIndexTime > time_freq())
 	{
@@ -464,8 +462,6 @@ void CWarList::UpdateWarPlayers()
 		const std::vector<int> &vByName = NameIt != m_NameIndex.end() ? NameIt->second : s_vNone;
 		const std::vector<int> &vByClan = ClanIt != m_ClanIndex.end() ? ClanIt->second : s_vNone;
 
-		// Visit the matching entries in list order, like matching every entry did: a later entry
-		// overrides the reason and colour of an earlier one.
 		size_t NameNext = 0, ClanNext = 0;
 		while(NameNext < vByName.size() || ClanNext < vByClan.size())
 		{

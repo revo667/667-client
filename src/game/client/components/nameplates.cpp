@@ -355,7 +355,6 @@ public:
 		m_Visible = Data.m_ShowClientIndicator && m_Texture.IsValid();
 		if(!m_Visible)
 			return;
-		// Small and gray so it does not pull the eye away from the tee.
 		const float Height = Data.m_FontSize * 0.65f;
 		m_Size = vec2(This.m_ClientIndicator.IconWidth(Height), Height);
 		m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, Data.m_Color.a * 0.9f);

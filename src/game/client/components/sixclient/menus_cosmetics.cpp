@@ -2,11 +2,6 @@
  * Using this code needs written permission: https://discord.gg/667, contact@revo667.com
  * CC-b91f3041 */
 
-// 667client: Cecen Client / Cosmetics settings page. Purely visual effects gathered in one
-// place: TClient's pet, frozen tee display, tile outlines, rainbow, tee trails and background
-// drawing on the left; weapon glow, 3D particles, cursor trail, keystrokes, hook effects and
-// weather on the right.
-
 #include <game/client/components/menus.h>
 #include <game/client/components/sixclient/ui_theme/style.h>
 #include <game/client/ui.h>
@@ -35,8 +30,6 @@ void CMenus::RenderSettingsSixClientCosmetics(CUIRect MainView)
 	LeftView.VSplitLeft(MarginSmall, nullptr, &LeftView);
 	RightView.VSplitRight(MarginSmall, &RightView, nullptr);
 
-	// The TClient sections only lay out their content; their backgrounds are drawn first, from
-	// the size each section had last frame (moved along with the scroll offset).
 	static std::vector<CUIRect> s_SectionBoxes;
 	static float s_PrevScrollOffset = 0.0f;
 	const float ScrollOffset = MainView.y;
@@ -68,7 +61,6 @@ void CMenus::RenderSettingsSixClientCosmetics(CUIRect MainView)
 	Section(&CMenus::RenderTClientBgDraw);
 	const float LeftEnd = Column.y;
 
-	// The Cecen Client blocks draw their own background.
 	Column = RightView;
 	Column.HSplitTop(10.0f, nullptr, &Column);
 	RenderSettingsSixClientWeaponGlow(Column);

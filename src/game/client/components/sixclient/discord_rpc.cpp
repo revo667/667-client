@@ -174,7 +174,6 @@ static bool IsHttpDiscordImage(const char *pValue)
 	return str_startswith_nocase(pValue, "http://") || str_startswith_nocase(pValue, "https://");
 }
 
-// Discord's media proxy needs a direct image URL. Browser imgur links (imgur.com/x) are HTML pages.
 static void NormalizeDiscordImageUrl(char *pDst, int DstSize, const char *pSrc)
 {
 	TrimDiscordImage(pDst, DstSize, pSrc);
@@ -200,7 +199,6 @@ static void NormalizeDiscordImageUrl(char *pDst, int DstSize, const char *pSrc)
 	if(!Imgur)
 		return;
 
-	// Albums/galleries cannot be turned into a single image URL.
 	if(str_startswith_nocase(pPath, "/a/") || str_startswith_nocase(pPath, "/gallery/"))
 		return;
 
@@ -216,7 +214,6 @@ static void NormalizeDiscordImageUrl(char *pDst, int DstSize, const char *pSrc)
 		str_endswith_nocase(aId, ".jpeg") || str_endswith_nocase(aId, ".gif") || str_endswith_nocase(aId, ".webp"));
 	if(!HasImageExt)
 	{
-		// Drop unknown suffixes (e.g. .mp4) and force a still image Discord can proxy.
 		if(pExt)
 			*pExt = '\0';
 		if(aId[0] == '\0')
@@ -231,7 +228,6 @@ static void NormalizeDiscordImageUrl(char *pDst, int DstSize, const char *pSrc)
 void SixClientResolveDiscordImage(char *pDst, int DstSize, const char *pConfigured)
 {
 	TrimDiscordImage(pDst, DstSize, pConfigured);
-	// Empty / legacy portal key → hosted logo (Discord Application Art Assets are empty).
 	if(pDst[0] == '\0' || str_comp(pDst, SIXCLIENT_DISCORD_LEGACY_LARGE_IMAGE_KEY) == 0 || str_comp(pDst, SIXCLIENT_DISCORD_OLD_DEFAULT_LARGE_IMAGE) == 0)
 		str_copy(pDst, SIXCLIENT_DISCORD_DEFAULT_LARGE_IMAGE, DstSize);
 	else
@@ -244,14 +240,11 @@ static void PrepareDiscordImageUrl(char *pDst, int DstSize, const char *pSrc, un
 	if(pDst[0] == '\0' || CacheBust == 0 || !IsHttpDiscordImage(pDst))
 		return;
 
-	// Drop a previous sc= bust so query strings do not stack across rebuilds.
 	if(char *pSc = (char *)str_find(pDst, "?sc="))
 		*pSc = '\0';
 	else if(char *pScAnd = (char *)str_find(pDst, "&sc="))
 		*pScAnd = '\0';
 
-	// Discord proxies/caches external presence images aggressively; bust the URL on change.
-	// Put the bust in the path-ish query Discord's media-proxy hash includes.
 	char aBusted[512];
 	const char Sep = str_find(pDst, "?") ? '&' : '?';
 	str_format(aBusted, sizeof(aBusted), "%s%csc=%u", pDst, Sep, CacheBust);
@@ -264,8 +257,6 @@ static void CopyDiscordImage(char *pDst, int DstSize, const char *pSrc)
 	if(!pSrc || pSrc[0] == '\0')
 		return;
 
-	// Game SDK asset fields are tiny (128). Truncating an https URL makes Discord show "?".
-	// Prefer omitting the SDK field and letting IPC send the full URL from m_aLargeImage.
 	if(str_length(pSrc) >= DstSize)
 	{
 		dbg_msg("discord", "image value longer than %d chars; skipping Game SDK field (IPC keeps full URL)", DstSize - 1);
@@ -281,6 +272,7 @@ class CDiscord : public IDiscord
 	bool m_UpdateActivity = false;
 	int64_t m_LastActivityUpdate = 0;
 	int64_t m_LastConfigCheck = 0;
+	int64_t m_NextUpdate = 0;
 	int64_t m_PresenceSetAt = 0;
 	unsigned m_ConfigHash = 0;
 	unsigned m_ImageCacheBust = 1;
@@ -290,7 +282,7 @@ class CDiscord : public IDiscord
 	enum class EPresencePush
 	{
 		None,
-		NeedClear, // activity:null so Discord drops the previous mp:external overlay
+		NeedClear,
 		NeedSet,
 	};
 	EPresencePush m_PresencePush = EPresencePush::None;
@@ -364,13 +356,10 @@ class CDiscord : public IDiscord
 		const bool SmallImageChanged = str_comp(m_aLastSmallImageConfig, g_Config.m_ScDiscordSmallImage) != 0;
 		if(LargeImageChanged || SmallImageChanged)
 		{
-			// Timestamp bust beats Discord's media-proxy cache better than a small counter.
 			const unsigned Bust = (unsigned)time_timestamp();
 			m_ImageCacheBust = Bust != 0 ? Bust : (m_ImageCacheBust + 1);
 			str_copy(m_aLastLargeImageConfig, g_Config.m_ScDiscordLargeImage);
 			str_copy(m_aLastSmallImageConfig, g_Config.m_ScDiscordSmallImage);
-			// Clear first, then set — a mid-pass that omits only the image but keeps
-			// large_text/small_text lets Discord keep the previous mp:external overlay.
 			m_PresencePush = EPresencePush::NeedClear;
 		}
 
@@ -383,7 +372,6 @@ class CDiscord : public IDiscord
 		CopyDiscordImage(m_Activity.assets.large_image, sizeof(m_Activity.assets.large_image), m_aLargeImage);
 		SixClientFormatDiscordText(m_Activity.assets.large_text, sizeof(m_Activity.assets.large_text), g_Config.m_ScDiscordLargeText, Vars);
 		CopyDiscordImage(m_Activity.assets.small_image, sizeof(m_Activity.assets.small_image), m_aSmallImage);
-		// Key off the full IPC URL, not the 128-char SDK field (long Imgur URLs skip the SDK copy).
 		if(m_aSmallImage[0] != '\0')
 		{
 			SixClientFormatDiscordText(m_Activity.assets.small_text, sizeof(m_Activity.assets.small_text), g_Config.m_ScDiscordSmallText, Vars);
@@ -548,7 +536,6 @@ public:
 			Assets += pName;
 			Assets += "\":" + Quote(pValue);
 		};
-		// Never send orphan *_text without the matching image — Discord keeps the old overlay.
 		if(m_aLargeImage[0])
 		{
 			Asset("large_image", m_aLargeImage);
@@ -581,47 +568,54 @@ public:
 
 	void Update(bool Enabled) override
 	{
-		DiscordClientId ResolvedClientId = SIXCLIENT_DISCORD_APP_ID;
-		char aResolvedClientId[32];
-		ResolveDiscordClientId(ResolvedClientId, aResolvedClientId, sizeof(aResolvedClientId));
-
-		bool NeedsUpdate = m_Enabled != Enabled || str_comp(m_aActiveClientId, aResolvedClientId) != 0;
-		m_Enabled = Enabled;
-
-		if(NeedsUpdate)
+		if(!Enabled)
 		{
-			dbg_msg("discord", "rpc %s", m_Enabled ? "enabled" : "disabled");
-			InitDiscord();
-			if(!m_Enabled)
+			if(m_Enabled)
 			{
+				m_Enabled = false;
+				dbg_msg("discord", "rpc disabled");
+				InitDiscord();
 				m_Ipc.ClearActivity();
 				m_Ipc.Close();
 				m_IpcWasReady = false;
 				m_aActiveClientId[0] = '\0';
 			}
+			return;
 		}
 
-		if(m_Enabled)
+		const int64_t Now = time_get();
+		if(m_Enabled && Now < m_NextUpdate)
+			return;
+		m_NextUpdate = Now + time_freq() / 20;
+
+		DiscordClientId ResolvedClientId = SIXCLIENT_DISCORD_APP_ID;
+		char aResolvedClientId[32];
+		ResolveDiscordClientId(ResolvedClientId, aResolvedClientId, sizeof(aResolvedClientId));
+
+		if(!m_Enabled || str_comp(m_aActiveClientId, aResolvedClientId) != 0)
 		{
-			m_Ipc.Configure(aResolvedClientId);
-			m_Ipc.Update();
-			if(m_Ipc.Ready() != m_IpcWasReady)
-			{
-				m_IpcWasReady = m_Ipc.Ready();
-				m_UpdateActivity = true;
-				m_LastActivityUpdate = 0;
-			}
-			std::string JoinSecret;
-			while(m_Ipc.TakeJoinSecret(JoinSecret))
-			{
-				if(IClient *pClient = Kernel()->RequestInterface<IClient>())
-					pClient->Connect(JoinSecret.c_str());
-			}
+			m_Enabled = true;
+			dbg_msg("discord", "rpc enabled");
+			InitDiscord();
 		}
 
-		if((m_pCore || m_Ipc.Ready()) && m_Enabled)
+		m_Ipc.Configure(aResolvedClientId);
+		m_Ipc.Update();
+		if(m_Ipc.Ready() != m_IpcWasReady)
 		{
-			const int64_t Now = time_get();
+			m_IpcWasReady = m_Ipc.Ready();
+			m_UpdateActivity = true;
+			m_LastActivityUpdate = 0;
+		}
+		std::string JoinSecret;
+		while(m_Ipc.TakeJoinSecret(JoinSecret))
+		{
+			if(IClient *pClient = Kernel()->RequestInterface<IClient>())
+				pClient->Connect(JoinSecret.c_str());
+		}
+
+		if(m_pCore || m_Ipc.Ready())
+		{
 			if(Now > m_LastConfigCheck + time_freq() / 4)
 			{
 				m_LastConfigCheck = Now;
@@ -630,7 +624,6 @@ public:
 				{
 					m_ConfigHash = ConfigHash;
 					RebuildActivity();
-					// Push presence immediately when settings change (don't wait the 5s throttle).
 					m_LastActivityUpdate = 0;
 				}
 			}
@@ -646,7 +639,6 @@ public:
 					m_SdkActivitySet = false;
 				}
 				m_PresencePush = EPresencePush::NeedSet;
-				// Give Discord time to drop the previous media-proxy overlay before the new URL.
 				m_PresenceSetAt = Now + time_freq();
 				m_UpdateActivity = true;
 			}

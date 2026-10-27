@@ -164,4 +164,4 @@ private:
 	CButtonContainer m_ActionPresetLongButton;
 };
 
-#endif // GAME_CLIENT_COMPONENTS_667CLIENT_ADMIN_PANEL_H
+#endif

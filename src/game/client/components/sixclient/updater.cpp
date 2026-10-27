@@ -62,17 +62,6 @@ static std::string ToLowerAscii(const char *pStr)
 	return Lower;
 }
 
-static const char *GetReleaseVersionString(const json_value *pJson)
-{
-	if(!pJson || pJson->type != json_object)
-		return nullptr;
-
-	const char *pVersion = json_string_get(json_object_get(pJson, "tag_name"));
-	if(!pVersion)
-		pVersion = json_string_get(json_object_get(pJson, "name"));
-	return pVersion;
-}
-
 static void NormalizeVersionString(const char *pVersion, char *pBuf, int BufSize)
 {
 	if(BufSize <= 0)
@@ -333,8 +322,6 @@ static bool MacPathIsAppBundle(const char *pPath)
 	return pPath && pPath[0] != '\0' && str_endswith(pPath, ".app") && fs_is_dir(pPath);
 }
 
-// A CMake build tree holds the developer's own binaries: the portable apply would copy release
-// binaries over them, and the /Applications fallback would update an install that is not running.
 static bool MacIsDevelopmentBuild(IStorage *pStorage)
 {
 	char aExeDir[IO_MAX_PATH_LENGTH];
@@ -856,7 +843,7 @@ void CUpdater::ApplyUpdateAndRestart()
 	if(GetCurrentState() != IUpdater::NEED_RESTART || m_ApplyStarted)
 		return;
 
-	m_ApplyStarted = true; // 667client: OnQuit must not start a second updater on the same archive
+	m_ApplyStarted = true; // 667client
 	if(!LaunchApplyScriptAndQuit())
 	{
 		m_ApplyStarted = false;

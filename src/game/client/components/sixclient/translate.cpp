@@ -517,8 +517,6 @@ public:
 	}
 };
 
-// Google's unofficial translate_a endpoint is captcha-blocked from many networks.
-// Keep the "google" backend id for existing configs, but talk to MyMemory instead.
 class CTranslateBackendGoogle : public ITranslateBackendHttp
 {
 	std::string m_SourceText;
@@ -534,13 +532,10 @@ class CTranslateBackendGoogle : public ITranslateBackendHttp
 			return false;
 		}
 
-		// responseStatus is an integer on success but a string ("403") on errors.
 		const json_value *pStatus = json_object_get(pRoot, "responseStatus");
 		const int Status = pStatus->type == json_integer ? (int)pStatus->u.integer : (pStatus->type == json_string ? str_toint(pStatus->u.string.ptr) : 0);
 		const json_value *pDetails = json_object_get(pRoot, "responseDetails");
 		const char *pDetailsText = pDetails->type == json_string ? pDetails->u.string.ptr : "";
-		// Autodetected source equal to the target is rejected instead of echoed back. Treat it as an
-		// untranslated line: incoming chat then hides it (same text) and outgoing chat sends it as typed.
 		if(str_find_nocase(pDetailsText, "TWO DISTINCT LANGUAGES"))
 		{
 			str_copy(Out.m_Text, m_SourceText.c_str());
@@ -551,7 +546,6 @@ class CTranslateBackendGoogle : public ITranslateBackendHttp
 
 		const json_value *pData = json_object_get(pRoot, "responseData");
 		const json_value *pTranslated = pData->type == json_object ? json_object_get(pData, "translatedText") : &json_value_none;
-		// Quota warnings arrive as a "translation" with status 200.
 		if(Status != 200 || pTranslated->type != json_string || !pTranslated->u.string.ptr[0] || str_startswith(pTranslated->u.string.ptr, "MYMEMORY WARNING"))
 		{
 			const char *pError = pDetailsText[0] ? pDetailsText : (pTranslated->type == json_string && pTranslated->u.string.ptr[0] ? pTranslated->u.string.ptr : "Empty translation");
@@ -563,7 +557,6 @@ class CTranslateBackendGoogle : public ITranslateBackendHttp
 		str_copy(Out.m_Text, pTranslated->u.string.ptr);
 		NormalizeTranslatedText(Out.m_Text, sizeof(Out.m_Text));
 
-		// Autodetect reports the language in responseData; matches[].source is false for machine translations.
 		const json_value *pDetected = json_object_get(pData, "detectedLanguage");
 		if(pDetected->type == json_string && pDetected->u.string.ptr[0])
 		{
@@ -592,8 +585,6 @@ public:
 	}
 };
 
-// Google Translate itself; MyMemory above answers from a crowd memory and often sends back a
-// lightly edited copy of English lines. Where Google is blocked, MyMemory takes over.
 class CTranslateBackendGoogleTranslate : public ITranslateBackendHttp
 {
 	IHttp &m_Http;
@@ -786,7 +777,6 @@ void CTranslate::TranslateLine(CChat::CLine &Line, bool RespectIgnoredIncomingLa
 {
 	if(m_vJobs.size() >= 16 || (!Force && !CanStartRequest()))
 		return;
-	// The translate command detects the language itself, whatever the auto translation assumes.
 	auto pBackend = CreateBackend(Line.m_aText, Manual ? "auto" : IncomingSourceLanguage(), IncomingTargetLanguage());
 	if(!pBackend)
 		return;
@@ -837,7 +827,6 @@ int CTranslate::TranslateRecent(int Count, const char *pName, int ClientId, std:
 				return false;
 		return true;
 	};
-	// A name matches exactly, or as the start of a name when nobody has it exactly ("rai" for "rain cakir").
 	bool Prefix = false;
 	if(pName && pName[0])
 	{
@@ -886,7 +875,6 @@ void CTranslate::ConTranslate(IConsole::IResult *pResult, void *pUserData)
 			Count = std::clamp(str_toint(aArg), 1, 10);
 		else
 		{
-			// "translate rain cakir 3": the player's last 3 messages; without a number their last 5.
 			Count = 5;
 			bool WholeIsName = false;
 			for(const auto &Client : pSelf->GameClient()->m_aClients)
@@ -1112,7 +1100,6 @@ void CTranslate::OnRender()
 				str_copy(Job.m_pTranslateResponse->m_Text, aBuf);
 			}
 		}
-		// The chat box shows the translation under the line; the console gets it too for the command.
 		if(Job.m_Manual && Job.m_pTranslateResponse->m_Text[0])
 			log_info("translate", "%s: %s", Job.m_pLine->m_aName, Job.m_pTranslateResponse->m_Text);
 		Job.m_pLine->m_Time = Now;
@@ -1121,7 +1108,6 @@ void CTranslate::OnRender()
 	};
 	m_vJobs.erase(std::remove_if(m_vJobs.begin(), m_vJobs.end(), ForEach), m_vJobs.end());
 
-	// Once the command's lines are done, say why nothing showed up for some of them.
 	if(m_ManualAlreadyInTarget > 0 && std::none_of(m_vJobs.begin(), m_vJobs.end(), [](const CTranslateJob &Job) { return Job.m_Manual; }))
 	{
 		char aBuf[128];

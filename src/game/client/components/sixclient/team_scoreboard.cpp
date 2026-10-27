@@ -122,7 +122,6 @@ void CTeamScoreboard::OnNewSnapshot()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
-	// 667client: the per-player freeze and save tracking is only for the overlay
 	if(!g_Config.m_ScTeamScoreboard)
 		return;
 
@@ -151,8 +150,6 @@ void CTeamScoreboard::OnNewSnapshot()
 			}
 		}
 
-		// a save is usually hooking a frozen teammate out and waiting for the freeze to run out,
-		// so remember who helped while frozen instead of only looking at the unfreeze moment
 		if(Frozen || (State.m_WasFrozen && Active))
 		{
 			int Helper = CreditNearestHammerer(i, CurTick);
@@ -262,22 +259,21 @@ void CTeamScoreboard::OnRender()
 	Graphics()->DrawRect(StartX, StartY, PanelW, PanelH, ColorRGBA(0.04f, 0.04f, 0.06f, 0.72f), Corners, 4.0f * Scale);
 
 	const auto ColCenter = [&](int Col) { return ColStart + ColW * (Col + 0.5f); };
-	const auto TextCentered = [&](float CenterX, float Y, float Size, const char *pText) {
-		TextRender()->Text(CenterX - TextRender()->TextWidth(Size, pText) * 0.5f, Y, Size, pText, -1.0f);
-	};
 
 	float y = StartY + Pad;
-	TextRender()->TextColor(COLOR_HEADER);
-	TextRender()->Text(StartX + Pad + AccentW, y + (RowH - HeadSize) * 0.5f, HeadSize, "Player", -1.0f);
+	m_HeaderLabel.Update(TextRender(), "Player", HeadSize);
+	m_HeaderLabel.Render(TextRender(), vec2(StartX + Pad + AccentW, y + (RowH - HeadSize) * 0.5f), COLOR_HEADER);
 
 	const char *apIcons[NumCols] = {ICON_SNOWFLAKE, ICON_HAMMER, ICON_SKULL};
 	const ColorRGBA aColors[NumCols] = {COLOR_FREEZE, COLOR_SAVE, COLOR_DEATH};
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	for(int c = 0; c < NumCols; c++)
 	{
-		TextRender()->TextColor(aColors[c]);
-		TextCentered(ColCenter(c), y + (RowH - IconSize) * 0.5f, IconSize, apIcons[c]);
+		m_aHeaderIcons[c].Update(TextRender(), apIcons[c], IconSize);
+		m_aHeaderIcons[c].Render(TextRender(), vec2(ColCenter(c) - m_aHeaderIcons[c].Width() * 0.5f, y + (RowH - IconSize) * 0.5f), aColors[c]);
 	}
+	const float HeartSize = FontSize * 0.85f;
+	m_Heart.Update(TextRender(), ICON_HEART, HeartSize);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	y += RowH;
 
@@ -302,34 +298,49 @@ void CTeamScoreboard::OnRender()
 		float NameCursor = NameX;
 		if(Data.m_Friend)
 		{
-			const float HeartSize = FontSize * 0.85f;
-			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-			TextRender()->TextColor(COLOR_FRIEND);
-			TextRender()->Text(NameCursor, y + (RowH - HeartSize) * 0.5f, HeartSize, ICON_HEART, -1.0f);
-			NameCursor += TextRender()->TextWidth(HeartSize, ICON_HEART) + 1.5f * Scale;
-			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+			m_Heart.Render(TextRender(), vec2(NameCursor, y + (RowH - HeartSize) * 0.5f), COLOR_FRIEND);
+			NameCursor += m_Heart.Width() + 1.5f * Scale;
 		}
 
-		const float NameMaxW = ColStart - NameCursor - 1.5f * Scale;
-		char aName[MAX_NAME_LENGTH + 4];
-		str_copy(aName, Data.m_aName);
-		while(aName[0] != '\0' && TextRender()->TextWidth(FontSize, aName) > NameMaxW)
-			aName[str_length(aName) - 1] = '\0';
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-		TextRender()->Text(NameCursor, TextY, FontSize, aName, -1.0f);
+		CCachedText &Name = m_aNames[ClientId];
+		Name.Update(TextRender(), Data.m_aName, FontSize, ColStart - NameCursor - 1.5f * Scale, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
+		Name.Render(TextRender(), vec2(NameCursor, TextY), ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 
 		const int aValues[NumCols] = {State.m_Freezes, State.m_Saves, State.m_Deaths};
 		for(int c = 0; c < NumCols; c++)
 		{
 			char aNum[16];
 			str_format(aNum, sizeof(aNum), "%d", aValues[c]);
-			TextRender()->TextColor(aColors[c]);
-			TextCentered(ColCenter(c), TextY, FontSize, aNum);
+			CCachedText &Value = m_aaValues[ClientId][c];
+			Value.Update(TextRender(), aNum, FontSize);
+			Value.Render(TextRender(), vec2(ColCenter(c) - Value.Width() * 0.5f, TextY), aColors[c]);
 		}
 
 		y += RowH;
 	}
 
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Graphics()->MapScreen(PreviousScreen);
+}
+
+void CTeamScoreboard::ResetTexts()
+{
+	m_HeaderLabel.Reset(TextRender());
+	for(CCachedText &Icon : m_aHeaderIcons)
+		Icon.Reset(TextRender());
+	m_Heart.Reset(TextRender());
+	for(CCachedText &Name : m_aNames)
+		Name.Reset(TextRender());
+	for(auto &aValues : m_aaValues)
+		for(CCachedText &Value : aValues)
+			Value.Reset(TextRender());
+}
+
+void CTeamScoreboard::OnWindowResize()
+{
+	ResetTexts();
+}
+
+void CTeamScoreboard::OnShutdown()
+{
+	ResetTexts();
 }

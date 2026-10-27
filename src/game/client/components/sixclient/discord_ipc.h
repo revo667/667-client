@@ -11,8 +11,6 @@
 #include <string>
 #include <vector>
 
-// The Discord account logged into the local Discord app, from the IPC READY event.
-// Empty until Discord Rich Presence connected once this session.
 bool SixClientDiscordUser(std::string &Id, std::string &Name);
 
 class CDiscordIpc

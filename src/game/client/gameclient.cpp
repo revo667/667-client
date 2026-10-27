@@ -590,7 +590,7 @@ void CGameClient::OnUpdate()
 		m_Binds.m_MouseOnAction = false;
 	}
 
-	// 667client: timed for the beta reporter
+	// 667client
 	m_vComponentTimes.resize(m_vpAll.size());
 	const bool TimeComponents = g_Config.m_ScBetaReports != 0 && m_vTimedComponents.size() == m_vpAll.size();
 	const bool Perf = m_PerfMeasureStarted != 0;
@@ -964,7 +964,7 @@ void CGameClient::OnRender()
 	// 667client
 
 	// render all systems
-	// 667client: timed for the beta reporter
+	// 667client
 	m_vComponentTimes.resize(m_vpAll.size());
 	const bool TimeComponents = g_Config.m_ScBetaReports != 0 && m_vTimedComponents.size() == m_vpAll.size();
 	UpdatePerfMeasure();
@@ -1245,8 +1245,6 @@ ColorRGBA CGameClient::GetDDTeamColor(int DDTeam, float Lightness) const
 		return color_cast<ColorRGBA>(ColorHSLA(DDTeam / 64.0f, 1.0f, Lightness));
 
 	// 667client
-	// Super team always uses the same orange color as in Cecen Client 2.0 (team 64 golden angle),
-	// regardless of MAX_CLIENTS, so it stays recognizable on TClient 20.0 where TEAM_SUPER=128.
 	if(DDTeam == TEAM_SUPER)
 	{
 		const float SuperHue = std::fmod((64 - 1) * normalized_golden_angle, 1.0f);
@@ -1920,7 +1918,7 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	Info.m_PredictEvents = Vanilla;
 	Info.m_MinTeamSize = 0;
 	Info.m_MaxTeamSize = 0;
-	Info.m_NumDDRaceTeams = NUM_DDRACE_TEAMS; // `TEAM_SUPER + 1`, fallback for ddrace servers // 667client
+	Info.m_NumDDRaceTeams = NUM_DDRACE_TEAMS;
 	Info.m_OldLaser = false;
 
 	if(Version >= 0)
@@ -2758,7 +2756,7 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 	m_LastFollowFactor = FollowFactor;
 	m_LastDummyConnected = Client()->DummyConnected();
 
-	// 667client: timed for the beta reporter
+	// 667client
 	m_vComponentTimes.resize(m_vpAll.size());
 	const bool TimeComponents = g_Config.m_ScBetaReports != 0 && m_vTimedComponents.size() == m_vpAll.size();
 	for(size_t i = 0; i < m_vpAll.size(); i++)
@@ -3140,8 +3138,7 @@ void CGameClient::OnPredict()
 	int LocalTee = g_Config.m_ClDummy ^ m_IsDummySwapping;
 	int DummyTee = LocalTee ^ 1;
 
-	// 667client: where the tee was predicted one tick before the regular final tick, to see how
-	// far the newer snapshot moves it (the beta reporter counts these corrections)
+	// 667client
 	const int CorrectionTick = FinalTickRegular - 1;
 	const int CorrectionSlot = CorrectionTick > 0 ? CorrectionTick % 200 : 0;
 	const bool HadPredictionBefore = !PracticeActive && CorrectionTick > 0 && m_aClients[m_Snap.m_LocalClientId].m_aPredTick[CorrectionSlot] == CorrectionTick;
@@ -3292,7 +3289,6 @@ void CGameClient::OnPredict()
 				// 667client
 				if(PracticeActive && m_FastPractice.IsPracticeParticipant(i))
 					continue;
-				// meow input keeps the overrun ticks of other tees as well
 				if(!MeowInputMode && Tick > FinalTickOthers && !IsFastInputLocalClient(i))
 					continue;
 				// 667client
@@ -3357,7 +3353,6 @@ void CGameClient::OnPredict()
 	if(HadPredictionBefore && m_aClients[m_Snap.m_LocalClientId].m_aPredTick[CorrectionSlot] == CorrectionTick)
 	{
 		const float Correction = distance(PredictedBefore, m_aClients[m_Snap.m_LocalClientId].m_aPredPos[CorrectionSlot]);
-		// Under a tile is ordinary jitter; very far is a teleport, kill or respawn
 		if(Correction >= 32.0f && Correction < 800.0f)
 		{
 			m_BetaCorrections++;
@@ -5212,9 +5207,7 @@ vec2 CGameClient::GetFastInputPos(int ClientId)
 	const float FastInputOffsetTicks = ScInputs::EffectiveOffsetTicks();
 	const int FastInputTicks = ScInputs::PredictionTicks(FastInputOffsetTicks);
 	const bool FastInputOthers = ScInputs::AnyOthers();
-	// 667client: the predicted dummy is a fast input tee like ours, its overrun ticks are stored.
-	// Giving it the tick count of other tees rejected the shifted position whenever the shift
-	// crossed into the next tick, so the dummy flicked back and forth.
+	// 667client
 	const int FastInputTicksClient = IsFastInputLocalClient(ClientId) ? FastInputTicks : (FastInputOthers ? ScInputs::PredictionTicksOthers(FastInputOffsetTicks) : 0);
 	ScInputs::ApplyOffset(FastInputOffsetTicks, PredTick, PredIntraTick);
 
@@ -5310,7 +5303,6 @@ vec2 CGameClient::GetFreezePos(int ClientId)
 			float SmoothIntra;
 			Client()->GetSmoothFreezeTick(&SmoothTick, &SmoothIntra, MixAmount);
 
-			// trails read the unshifted x axis tick
 			if(i == 0)
 			{
 				m_SmoothTick = SmoothTick;
@@ -5328,7 +5320,7 @@ vec2 CGameClient::GetFreezePos(int ClientId)
 	const float FastInputOffsetTicks = ScInputs::EffectiveOffsetTicks();
 	const int FastInputTicks = ScInputs::PredictionTicks(FastInputOffsetTicks);
 	const bool FastInputOthers = ScInputs::AnyOthers();
-	const int FastInputTicksClient = IsFastInputLocalClient(ClientId) ? FastInputTicks : (FastInputOthers ? ScInputs::PredictionTicksOthers(FastInputOffsetTicks) : 0); // 667client: see GetFastInputPos
+	const int FastInputTicksClient = IsFastInputLocalClient(ClientId) ? FastInputTicks : (FastInputOthers ? ScInputs::PredictionTicksOthers(FastInputOffsetTicks) : 0); // 667client
 	if(ClientId != m_Snap.m_LocalClientId && FastInputTicksClient > 0 && ScInputs::ImmediateOthers())
 		return GetFastInputPos(ClientId);
 	vec2 Pos = mix(m_aClients[ClientId].m_PrevPredicted.m_Pos, m_aClients[ClientId].m_Predicted.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));

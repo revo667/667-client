@@ -273,6 +273,34 @@ jobs:
         fi
         gh release edit "$TAG" -R "$RELEASE_REPO" --draft=false --latest
 
+    - name: Announce on Discord
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        WEBHOOK: ${{ secrets.DISCORD_RELEASE_WEBHOOK }}
+        TAG: ${{ needs.version.outputs.tag }}
+        TITLE: ${{ needs.version.outputs.title }}
+      run: |
+        if [ -z "$WEBHOOK" ]; then
+          echo "DISCORD_RELEASE_WEBHOOK is not set, skipping"
+          exit 0
+        fi
+        NOTES=$(gh release view "$TAG" -R "$RELEASE_REPO" --json body --jq .body)
+        jq -n \
+          --arg title "$TITLE" \
+          --arg url "https://github.com/$RELEASE_REPO/releases/tag/$TAG" \
+          --arg notes "$NOTES" \
+          '{
+            username: "Cecen Client",
+            content: ("**" + $title + "** is out. Restart the game or press Update to get it."),
+            embeds: [{
+              title: $title,
+              url: $url,
+              description: ($notes | if length > 4000 then .[0:3997] + "..." else . end),
+              color: 8016608
+            }]
+          }' | curl -fsS -H "Content-Type: application/json" -d @- "$WEBHOOK"
+
   cleanup-draft:
     name: Cleanup Failed Draft
     if: always() && needs.version.result == 'success' && (needs.build-cmake.result != 'success' || needs.publish.result != 'success')

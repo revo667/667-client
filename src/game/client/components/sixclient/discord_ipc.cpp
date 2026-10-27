@@ -117,8 +117,6 @@ bool CDiscordIpc::Connect()
 		HANDLE Pipe = CreateFileW(aPath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
 		if(Pipe != INVALID_HANDLE_VALUE)
 		{
-			// 667client: writes run on the game thread. In blocking mode a Discord that stops reading
-			// fills the pipe and WriteFile hangs the game; non-blocking it returns and we reconnect.
 			DWORD Mode = PIPE_READMODE_BYTE | PIPE_NOWAIT;
 			SetNamedPipeHandleState(Pipe, &Mode, nullptr, nullptr);
 			m_Pipe = (void *)Pipe;
@@ -204,7 +202,6 @@ bool CDiscordIpc::Write(int Opcode, const std::string &Payload)
 		}
 		if(Written == 0)
 		{
-			// The pipe is full. Give Discord a moment, then drop the connection rather than wait.
 			if(++FullRetries > 5)
 			{
 				Close();
@@ -364,9 +361,12 @@ void CDiscordIpc::Update()
 		const int64_t Now = time_get();
 		if(Now < m_NextConnectAttempt)
 			return;
-		m_NextConnectAttempt = Now + time_freq() * 5;
 		if(!Connect())
+		{
+			m_NextConnectAttempt = Now + time_freq() * 30;
 			return;
+		}
+		m_NextConnectAttempt = Now + time_freq() * 5;
 	}
 	Read();
 }
@@ -386,7 +386,6 @@ bool CDiscordIpc::ClearActivity()
 		return false;
 	char aPid[16];
 	str_format(aPid, sizeof(aPid), "%d", (int)process_id());
-	// Explicit null activity is required; omitting the field is a no-op on some Discord builds.
 	return Write(OP_FRAME, "{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":" + std::string(aPid) + ",\"activity\":null},\"nonce\":\"" + NextNonce() + "\"}");
 }
 

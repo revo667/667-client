@@ -193,11 +193,10 @@ namespace
 		bool m_CanNext = false;
 		bool m_HasVisualizer = false;
 		SMusicArt m_Art;
-		std::string m_TrackUri; // "spotify:track:<id>" when the player exposes it
+		std::string m_TrackUri;
 		SixClientVisualizer::SVisualizerFrame m_Visualizer;
 	};
 
-	// Track URIs come from other players, and os_open_link/AppleScript must never see anything else.
 	static bool IsSpotifyTrackUri(const char *pUri)
 	{
 		static const char *s_pPrefix = "spotify:track:";
@@ -217,7 +216,6 @@ namespace
 #if defined(CONF_PLATFORM_LINUX) && SC_MUSICPLAYER_HAS_DBUS
 	static std::string SpotifyUriFromUrl(const std::string &Url)
 	{
-		// open.spotify.com/track/<id>?si=... (Linux MPRIS xesam:url) -> spotify:track:<id>
 		static const char *s_pPrefix = "https://open.spotify.com/track/";
 		if(!str_startswith(Url.c_str(), s_pPrefix))
 			return {};
@@ -257,7 +255,6 @@ namespace
 		return Hash;
 	}
 
-	// Smooth value noise in [0, 1]: random at integers, smoothstep in between.
 	static float VisualizerValueNoise(uint32_t Seed, float T)
 	{
 		auto Hash = [Seed](int i) {
@@ -276,9 +273,6 @@ namespace
 		return A + (Hash((int)Base + 1) - A) * Smooth;
 	}
 
-	// Without captured audio, imitate a mix: a per-track tempo drives kick (bass bars), snare
-	// on 2 and 4 (mid bars) and eighth-note hats (treble bars), plus slow per-bar melody noise.
-	// Beats follow the playback position, so pausing and seeking keep the groove consistent.
 	static float VisualizerBarTargetLevel(const SNowPlayingSnapshot &Snapshot, float TimeSeconds, float PositionSeconds, int BarIndex, int NumBars)
 	{
 		const uint32_t Seed = TrackAnimationSeed(Snapshot);
@@ -291,7 +285,6 @@ namespace
 		const float Snare = std::exp(-Fract((Beat - 1.0f) * 0.5f) * 2.0f * 3.0f);
 		const float Hat = std::exp(-Fract(Beat * 2.0f) * 4.5f);
 		const float Melody = VisualizerValueNoise(Seed + (uint32_t)BarIndex * 977u, TimeSeconds * 1.4f + BarIndex * 0.37f);
-		// Phrase-level dynamics: louder and quieter four-bar sections.
 		const float Section = 0.74f + 0.26f * VisualizerValueNoise(Seed ^ 0xa5a5u, Beat / 16.0f);
 
 		const float KickWeight = std::pow(1.0f - BarT, 1.6f);
@@ -312,7 +305,6 @@ namespace
 		virtual void Previous() = 0;
 		virtual void PlayPause() = 0;
 		virtual void Next() = 0;
-		// Listen along: start a Spotify track, then jump to a position.
 		virtual void PlayUri(const std::string &Uri, int64_t PositionMs)
 		{
 			(void)Uri;
@@ -998,7 +990,6 @@ namespace
 			DBusMessage *pMsg = dbus_message_new_method_call(m_CurrentService.c_str(), "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player", "Seek");
 			if(pMsg == nullptr)
 				return;
-			// MPRIS Seek is relative, in microseconds.
 			dbus_int64_t OffsetUs = (dbus_int64_t)(PositionMs - CurrentPositionMs) * 1000;
 			if(dbus_message_append_args(pMsg, DBUS_TYPE_INT64, &OffsetUs, DBUS_TYPE_INVALID) && dbus_connection_send(m_pConnection, pMsg, nullptr))
 				dbus_connection_flush(m_pConnection);
@@ -1022,10 +1013,9 @@ namespace
 		std::mutex m_Mutex;
 		std::condition_variable m_Cv;
 		bool m_Shutdown = false;
-		// 667client: lets the waits around a track switch end early, the destructor joins the worker
+		// 667client
 		std::atomic<bool> m_ShutdownFlag{false};
-		// 667client: cover bytes per track, so the 8 polls a second don't re-read the thumbnail
-		// stream of every session. Worker thread only.
+		// 667client
 		std::map<std::string, std::vector<unsigned char>> m_ThumbnailCache;
 		bool m_PollRequested = true;
 		bool m_RequestPrev = false;
@@ -1164,7 +1154,6 @@ namespace
 					else
 					{
 						vArtBytes = ReadThumbnailBytes(MediaProps.Thumbnail());
-						// An empty cover is retried: players often publish it a moment after the title.
 						if(!vArtBytes.empty())
 						{
 							if(m_ThumbnailCache.size() >= 8)
@@ -1464,7 +1453,6 @@ namespace
 
 				if(Manager && SeekTargetMs >= 0)
 					WithSession(Manager, CurrentSessionId, [&](auto &&Session) {
-						// Positions are in 100 ns ticks.
 						Session.TryChangePlaybackPositionAsync(SeekTargetMs * 10000).get();
 					});
 
@@ -1681,15 +1669,11 @@ namespace
 
 	static bool MacLooksLikeSpotifyService(const std::string &ServiceId)
 	{
-		// Never guess on an empty id: compiling a "tell Spotify" script without Spotify installed pops a "Where is Spotify?" dialog.
 		return ServiceId.find("spotify") != std::string::npos;
 	}
 
-	// Returns "<track name>\t<artwork url>\t<track id>" so callers can reject data that belongs to the previous track.
 	static std::string MacFetchSpotifyTrackInfo()
 	{
-		// "application is running" needs no Automation permission, unlike asking System Events.
-		// Compare player state as string — "is stopped" syntax breaks on current Spotify builds.
 		static const char *s_pScript =
 			"if application \"Spotify\" is not running then return \"\"\n"
 			"tell application \"Spotify\"\n"
@@ -1755,16 +1739,13 @@ namespace
 		std::string m_AppleScriptService;
 		bool m_LastPublishedPlaying = false;
 		double m_LastPublishedTimestampUs = 0.0;
-		// Replaces MediaRemote's stale timestamp after a resume until it sends a fresh one.
 		double m_ResumeTimestampUs = 0.0;
 
-		// Spotify cover URL and track URI lookup, only touched by the worker thread.
 		std::string m_SpotifyArtTrack;
 		std::string m_SpotifyArtUrl;
 		std::string m_SpotifyTrackUri;
 		int m_SpotifyArtAttempts = 0;
 		int64_t m_NextSpotifyArtAttempt = 0;
-		// AppleScript for listen along (play track, seek), run on the worker thread.
 		std::vector<std::string> m_vPendingScripts;
 
 		bool ShutdownRequested()
@@ -1793,8 +1774,6 @@ namespace
 			return vCommands;
 		}
 
-		// MediaRemote never sends Spotify's artworkData or track URI, so ask Spotify once per
-		// track for both. Returns true when new information was resolved.
 		bool ResolveSpotifyTrackInfo(const SState &State)
 		{
 			if(State.m_Title.empty() || !MacLooksLikeSpotifyService(State.m_Bundle))
@@ -1820,7 +1799,6 @@ namespace
 			const size_t Tab = Output.find('\t');
 			if(Tab == std::string::npos)
 				return false;
-			// Spotify's scripting state can lag MediaRemote on track changes; retry until it reports the same track.
 			if(Output.compare(0, Tab, State.m_Title) != 0)
 				return false;
 			const size_t IdTab = Output.find('\t', Tab + 1);
@@ -1906,9 +1884,6 @@ namespace
 				}
 			}
 
-			// On resume MediaRemote often flips "playing" before sending a fresh timestamp; the
-			// elapsed value is then still the pause position, so count from the resume instead of
-			// from the pause (which would run ahead by however long it was paused).
 			if(!State.m_Playing || State.m_TimestampUs != m_LastPublishedTimestampUs)
 				m_ResumeTimestampUs = 0.0;
 			if(State.m_Playing && !m_LastPublishedPlaying && State.m_TimestampUs == m_LastPublishedTimestampUs)
@@ -2003,7 +1978,6 @@ namespace
 						break;
 					if(Ready <= 0)
 					{
-						// The stream goes quiet while a track plays, so retry a pending cover lookup here.
 						if(GotData && ResolveSpotifyTrackInfo(State))
 							PublishAdapterState(State);
 						continue;
@@ -2226,9 +2200,6 @@ namespace
 		{
 			if(!IsSpotifyTrackUri(Uri.c_str()))
 				return;
-			// AppleScript never brings Spotify forward. Opening the URI does, and so does launching
-			// Spotify, so a closed Spotify is left closed.
-			// The short delay lets Spotify load the track before the seek, otherwise it is ignored.
 			char aScript[384];
 			str_format(aScript, sizeof(aScript),
 				"if application \"Spotify\" is running then\n"
@@ -2367,13 +2338,6 @@ namespace
 				Char = '8';
 		}
 		return Text;
-	}
-
-	static float ComputeMusicPlayerTextWidth(ITextRender *pTextRender, const std::string &Text, float FontSize)
-	{
-		if(pTextRender == nullptr)
-			return FontSize * 5.0f;
-		return pTextRender->TextWidth(FontSize, Text.c_str(), -1, -1.0f);
 	}
 
 	static float LyricsBelowTimerFont(float Scale, float TextScale)
@@ -2621,7 +2585,7 @@ namespace
 
 	static float ComputeTrackTitleTextSlotWidth(ITextRender *pTextRender, const SNowPlayingSnapshot &Snapshot, float TitleFont, float Scale, float WidthScale)
 	{
-		const float TextWidth = ComputeMusicPlayerTextWidth(pTextRender, MusicPlayerPrimaryText(Snapshot), TitleFont);
+		const float TextWidth = MusicPlayerTextWidth(pTextRender, TitleFont, MusicPlayerPrimaryText(Snapshot).c_str());
 		const float Raw = TextWidth + 3.4f * Scale * WidthScale;
 		const float MaxSlot = CMusicPlayerLyrics::LyricsTextSlotWidth(Scale, WidthScale) * 1.25f;
 		return std::clamp(Raw, 0.0f, MaxSlot);
@@ -2635,7 +2599,7 @@ namespace
 		if(GameTimer.m_Valid && !GameTimer.m_Text.empty())
 		{
 			const std::string Reference = MusicPlayerReferenceDigits(GameTimer.m_Text);
-			const float TextWidth = ComputeMusicPlayerTextWidth(pTextRender, Reference, TitleFont);
+			const float TextWidth = MusicPlayerTextWidth(pTextRender, TitleFont, Reference.c_str());
 			const float Padding = (Reference.size() > 5 ? 3.6f : 4.4f) * Scale * WidthScale;
 			return TextWidth + Padding;
 		}
@@ -2664,7 +2628,7 @@ namespace
 			Reference = MusicPlayerReferenceDigits(GameTimer.m_Text);
 
 		const bool WideTimer = Reference.size() > 5;
-		const float TextWidth = pTextRender->TextWidth(TitleFont, Reference.c_str(), -1, -1.0f);
+		const float TextWidth = MusicPlayerTextWidth(pTextRender, TitleFont, Reference.c_str());
 		const float Padding = (WideTimer ? 4.2f : 5.4f) * Scale * WidthScale;
 		return TextWidth + Padding;
 	}
@@ -3585,17 +3549,12 @@ public:
 	struct SVisualizerMotion
 	{
 		std::array<float, MUSIC_PLAYER_MAX_VISUALIZER_BARS> m_aVelocity{};
-		// Live spectra jitter frame to frame; this low-passed copy is what the springs chase.
 		std::array<float, MUSIC_PLAYER_MAX_VISUALIZER_BARS> m_aSmoothedTarget{};
-		// Slowly tracked loudness so quiet passages stay small instead of always filling the lane.
 		float m_LiveCeiling = 0.35f;
 	};
 
-	// Critically damped springs: bars glide to their target without snapping or overshooting.
-	// Rising uses a quicker spring than falling, which reads as "breathing" with the music.
 	static void ApplyVisualizerMotion(std::array<float, MUSIC_PLAYER_MAX_VISUALIZER_BARS> &aLevels, SVisualizerMotion &Motion, const std::array<float, MUSIC_PLAYER_MAX_VISUALIZER_BARS> &aTarget, float Delta, float RiseHz, float FallHz)
 	{
-		// Substeps keep the explicit integration stable when a frame takes long.
 		constexpr float MAX_STEP = 1.0f / 240.0f;
 		const int Steps = std::clamp((int)std::ceil(Delta / MAX_STEP), 1, 32);
 		const float Step = Delta / Steps;
@@ -3645,7 +3604,6 @@ public:
 			const float TargetBlend = 1.0f - std::exp(-Delta * 14.0f);
 			for(int i = 0; i < RequestedBars; ++i)
 			{
-				// Neighbour bleed keeps the shape flowing while bars still differ.
 				const float Prev = i > 0 ? aRaw[i - 1] : aRaw[i];
 				const float Next = i + 1 < RequestedBars ? aRaw[i + 1] : aRaw[i];
 				const float Shaped = Prev * 0.16f + aRaw[i] * 0.68f + Next * 0.16f;
@@ -3659,7 +3617,6 @@ public:
 
 		if(Status == SixClientVisualizer::EVisualizerBackendStatus::CONNECTING || Status == SixClientVisualizer::EVisualizerBackendStatus::SILENT)
 		{
-			// Real silence: let the bars settle onto small dots.
 			aTarget.fill(0.04f);
 			Motion.m_aSmoothedTarget.fill(0.04f);
 			ApplyVisualizerMotion(aLevels, Motion, aTarget, Delta, 2.0f, 1.2f);
@@ -3668,7 +3625,6 @@ public:
 
 		if(!Playing)
 		{
-			// Paused: a slow, low wave travelling across the bars.
 			for(int i = 0; i < RequestedBars; ++i)
 				aTarget[i] = 0.14f + 0.08f * (0.5f + 0.5f * std::sin(Input.m_TimeSeconds * 1.6f - i * 0.75f));
 			ApplyVisualizerMotion(aLevels, Motion, aTarget, Delta, 1.2f, 1.0f);
@@ -4414,7 +4370,6 @@ public:
 		m_pArtRequest = HttpGet(m_Snapshot.m_Art.m_Url.c_str());
 		m_pArtRequest->Timeout(CTimeout{4000, 12000, 500, 8});
 		m_pArtRequest->MaxResponseSize(8 * 1024 * 1024);
-		// Browser-like headers: some CDNs (Spotify i.scdn.co) are picky about bare client UAs.
 		m_pArtRequest->HeaderString("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15");
 		m_pArtRequest->HeaderString("Accept", "image/avif,image/webp,image/apng,image/jpeg,image/png,image/*,*/*;q=0.8");
 		if(m_Snapshot.m_Art.m_Url.find("scdn.co") != std::string::npos || m_Snapshot.m_Art.m_Url.find("spotifycdn.com") != std::string::npos)
@@ -4435,7 +4390,6 @@ public:
 
 	void UpdateArtwork(CMusicPlayer *pOwner)
 	{
-		// Clearing the key makes BeginArtLoad request the same cover again.
 		if(m_ArtRetryTick != 0 && !m_pArtRequest && time_get() >= m_ArtRetryTick)
 		{
 			m_ArtRetryTick = 0;
@@ -4766,7 +4720,7 @@ public:
 		{
 			const std::string TimerText = GameTimer.m_Valid ? GameTimer.m_Text : FormatMusicPositionMs(m_Snapshot.m_PositionMs);
 			const float TimerFont = LyricsBelowTimerFont(Metrics.m_Scale, TextScale);
-			const float TimerTextW = pOwner->TextRender() != nullptr ? pOwner->TextRender()->TextWidth(TimerFont, TimerText.c_str(), -1, -1.0f) : TimerFont * 5.0f;
+			const float TimerTextW = MusicPlayerTextWidth(pOwner->TextRender(), TimerFont, TimerText.c_str());
 			TimerWidthTarget = std::min(Metrics.m_ViewRect.w * 0.92f, TimerTextW + LyricsBelowTimerPadX(Metrics.m_Scale, CompactWidthScale) * 2.0f);
 			if(!WantLyricsTimer)
 				TimerWidthTarget = m_LyricsTimerWidthAnim > 0.0f ? m_LyricsTimerWidthAnim : TimerWidthTarget;
@@ -4941,8 +4895,6 @@ bool CMusicPlayer::GetSpotifyTrack(SSpotifyTrack &Out) const
 	Out = SSpotifyTrack();
 	CSpotifyConnect::SState Connect;
 	const bool HasConnect = m_pSpotifyConnect->GetState(Connect) && IsSpotifyTrackUri(Connect.m_Uri.c_str()) && !Connect.m_Title.empty();
-	// Connect knows the exact track and position, on every platform and on every device of the account.
-	// Spotify drops a paused player from Connect after a while; the desktop app still shows it then.
 	if(HasConnect && Connect.m_Active)
 	{
 		Out.m_Valid = true;
@@ -4971,8 +4923,6 @@ bool CMusicPlayer::GetSpotifyTrack(SSpotifyTrack &Out) const
 	Out.m_Artist = Snapshot.m_Artist;
 	Out.m_Album = Snapshot.m_Album;
 	Out.m_Uri = Snapshot.m_TrackUri;
-	// The raw provider position, not DisplayPositionMs: the HUD's smoothed clock never steps
-	// backwards and can run seconds ahead, which listen along must not inherit.
 	int64_t Position = Snapshot.m_PositionMs;
 	if(Out.m_Playing && m_pImpl->m_LastSnapshotTick > 0)
 		Position += (time_get() - m_pImpl->m_LastSnapshotTick) * 1000 / time_freq();
@@ -4980,7 +4930,6 @@ bool CMusicPlayer::GetSpotifyTrack(SSpotifyTrack &Out) const
 		Position = std::min(Position, Snapshot.m_DurationMs);
 	Out.m_PositionMs = std::max<int64_t>(0, Position);
 	Out.m_DurationMs = Snapshot.m_DurationMs;
-	// Windows never exposes the URI; Connect still knows it while the paused track is shown.
 	if(Out.m_Uri.empty() && HasConnect && str_comp_nocase(Connect.m_Title.c_str(), Out.m_Title.c_str()) == 0)
 		Out.m_Uri = Connect.m_Uri;
 	return true;
@@ -5042,7 +4991,6 @@ void CMusicPlayer::UpdateSpotifyConnect()
 		if(!m_SpotifyHelperChecked)
 		{
 			m_SpotifyHelperChecked = true;
-			// The helper ships next to the game executable (inside Contents/MacOS on macOS).
 			char aPath[IO_MAX_PATH_LENGTH];
 			if(fs_executable_path(aPath, sizeof(aPath)) == 0 && fs_parent_dir(aPath) == 0)
 			{
@@ -5136,60 +5084,6 @@ void CMusicPlayer::OnUpdate()
 		const BetaProbe::CPartScope ProbeScope(BetaProbe::PART_MUSIC_SERVICES); // 667client
 		m_pImpl->EnsureBackgroundServices();
 	}
-	const int64_t LayoutStart = time_get_impl(); // 667client: PART_MUSIC_LAYOUT
-	const float HudHeight = HudLayout::CANVAS_HEIGHT;
-	const float HudWidth = HudHeight * Graphics()->ScreenAspect();
-	const bool HasOverride = HudLayout::HasPositionOverride(HudLayout::MODULE_MUSIC_PLAYER);
-	const auto Layout = HudLayout::Get(HudLayout::MODULE_MUSIC_PLAYER, HudWidth, HudHeight);
-	const float TextScale = MusicPlayerTextScale();
-	const int64_t LayoutNow = time_get();
-	const bool LayoutChanged = g_Config.m_ScHudMusicPlayerLayoutMigrated < 5 ||
-				   m_pImpl->m_LayoutHudWidth != HudWidth ||
-				   m_pImpl->m_LayoutWindowWidth != Graphics()->WindowWidth() ||
-				   m_pImpl->m_LayoutTextScale != TextScale ||
-				   m_pImpl->m_LayoutHadOverride != HasOverride ||
-				   m_pImpl->m_LayoutResolved.m_X != Layout.m_X ||
-				   m_pImpl->m_LayoutResolved.m_Y != Layout.m_Y ||
-				   m_pImpl->m_LayoutResolved.m_Scale != Layout.m_Scale ||
-				   m_pImpl->m_LayoutResolved.m_Mode != Layout.m_Mode ||
-				   LayoutNow - m_pImpl->m_LayoutTick >= time_freq();
-	if(LayoutChanged)
-	{
-		m_pImpl->m_LayoutHudWidth = HudWidth;
-		m_pImpl->m_LayoutWindowWidth = Graphics()->WindowWidth();
-		m_pImpl->m_LayoutTextScale = TextScale;
-		m_pImpl->m_LayoutHadOverride = HasOverride;
-		m_pImpl->m_LayoutResolved = Layout;
-		m_pImpl->m_LayoutTick = LayoutNow;
-	}
-	struct SHudScreenScope
-	{
-		IGraphics *m_pGraphics;
-		CScreenRect m_Previous;
-		SHudScreenScope(IGraphics *pGraphics, float Width, float Height) :
-			m_pGraphics(pGraphics),
-			m_Previous(pGraphics->GetScreen())
-		{
-			pGraphics->MapScreenToSize(Width, Height);
-		}
-		~SHudScreenScope()
-		{
-			m_pGraphics->MapScreen(m_Previous);
-		}
-	} HudScreen(Graphics(), HudWidth, HudHeight);
-	if(LayoutChanged)
-		HudLayout::TryApplyMusicPlayerLegacyPositionFix(HudWidth, HudHeight, TextRender());
-	if(LayoutChanged && !HudLayout::HasPositionOverride(HudLayout::MODULE_MUSIC_PLAYER))
-	{
-		const float LayoutScale = std::clamp(Layout.m_Scale / 100.0f, 0.25f, 3.0f);
-		const float LayoutWidthScale = HudWidth / std::max(HudLayout::CANVAS_WIDTH, 0.001f);
-		const float MiniTitleFont = 6.0f * LayoutScale * TextScale;
-		const float PositionTextSlotWidth = ComputeStableMiniPositionTextSlotWidth(TextRender(), MiniTitleFont, LayoutScale, LayoutWidthScale);
-		const SMusicPlayerMetrics Metrics = ComputeMusicPlayerMetrics(Layout, HudWidth, HudHeight, 0.0f, PositionTextSlotWidth, PositionTextSlotWidth, TextScale);
-		const float Nudge = 2.5f * HudWidth / std::max(1.0f, (float)Graphics()->WindowWidth());
-		HudLayout::SetMusicPlayerResolvedDefaultX((HudWidth - Metrics.m_ExpandedW) * 0.5f + Nudge, HudWidth);
-	}
-	BetaProbe::AddPartTicks(BetaProbe::PART_MUSIC_LAYOUT, time_get_impl() - LayoutStart); // 667client
 	g_Config.m_ScMusicPlayerColorMode = std::clamp(g_Config.m_ScMusicPlayerColorMode, 0, 1);
 	if(m_pImpl->m_LastAppliedColorMode != g_Config.m_ScMusicPlayerColorMode ||
 		m_pImpl->m_LastAppliedStaticColor != g_Config.m_ScMusicPlayerStaticColor)
@@ -5250,17 +5144,75 @@ void CMusicPlayer::OnUpdate()
 	{
 		m_pImpl->m_Lyrics.Disable();
 	}
+}
+
+void CMusicPlayer::UpdateLayout()
+{
+	const float HudHeight = HudLayout::CANVAS_HEIGHT;
+	const float HudWidth = HudHeight * Graphics()->ScreenAspect();
+	const bool HasOverride = HudLayout::HasPositionOverride(HudLayout::MODULE_MUSIC_PLAYER);
+	const auto Layout = HudLayout::Get(HudLayout::MODULE_MUSIC_PLAYER, HudWidth, HudHeight);
+	const float TextScale = MusicPlayerTextScale();
+	const int64_t LayoutNow = time_get();
+	const bool LayoutChanged = g_Config.m_ScHudMusicPlayerLayoutMigrated < 5 ||
+				   m_pImpl->m_LayoutHudWidth != HudWidth ||
+				   m_pImpl->m_LayoutWindowWidth != Graphics()->WindowWidth() ||
+				   m_pImpl->m_LayoutTextScale != TextScale ||
+				   m_pImpl->m_LayoutHadOverride != HasOverride ||
+				   m_pImpl->m_LayoutResolved.m_X != Layout.m_X ||
+				   m_pImpl->m_LayoutResolved.m_Y != Layout.m_Y ||
+				   m_pImpl->m_LayoutResolved.m_Scale != Layout.m_Scale ||
+				   m_pImpl->m_LayoutResolved.m_Mode != Layout.m_Mode ||
+				   LayoutNow - m_pImpl->m_LayoutTick >= time_freq();
+	if(LayoutChanged)
 	{
-		const BetaProbe::CPartScope ProbeScope(BetaProbe::PART_MUSIC_LAYOUT); // 667client
-		m_pImpl->UpdateHudReservation(this);
+		m_pImpl->m_LayoutHudWidth = HudWidth;
+		m_pImpl->m_LayoutWindowWidth = Graphics()->WindowWidth();
+		m_pImpl->m_LayoutTextScale = TextScale;
+		m_pImpl->m_LayoutHadOverride = HasOverride;
+		m_pImpl->m_LayoutResolved = Layout;
+		m_pImpl->m_LayoutTick = LayoutNow;
 	}
+	struct SHudScreenScope
+	{
+		IGraphics *m_pGraphics;
+		CScreenRect m_Previous;
+		SHudScreenScope(IGraphics *pGraphics, float Width, float Height) :
+			m_pGraphics(pGraphics),
+			m_Previous(pGraphics->GetScreen())
+		{
+			pGraphics->MapScreenToSize(Width, Height);
+		}
+		~SHudScreenScope()
+		{
+			m_pGraphics->MapScreen(m_Previous);
+		}
+	} HudScreen(Graphics(), HudWidth, HudHeight);
+	if(LayoutChanged)
+		HudLayout::TryApplyMusicPlayerLegacyPositionFix(HudWidth, HudHeight, TextRender());
+	if(LayoutChanged && !HudLayout::HasPositionOverride(HudLayout::MODULE_MUSIC_PLAYER))
+	{
+		const float LayoutScale = std::clamp(Layout.m_Scale / 100.0f, 0.25f, 3.0f);
+		const float LayoutWidthScale = HudWidth / std::max(HudLayout::CANVAS_WIDTH, 0.001f);
+		const float MiniTitleFont = 6.0f * LayoutScale * TextScale;
+		const float PositionTextSlotWidth = ComputeStableMiniPositionTextSlotWidth(TextRender(), MiniTitleFont, LayoutScale, LayoutWidthScale);
+		const SMusicPlayerMetrics Metrics = ComputeMusicPlayerMetrics(Layout, HudWidth, HudHeight, 0.0f, PositionTextSlotWidth, PositionTextSlotWidth, TextScale);
+		const float Nudge = 2.5f * HudWidth / std::max(1.0f, (float)Graphics()->WindowWidth());
+		HudLayout::SetMusicPlayerResolvedDefaultX((HudWidth - Metrics.m_ExpandedW) * 0.5f + Nudge, HudWidth);
+	}
+	m_pImpl->UpdateHudReservation(this);
 }
 
 void CMusicPlayer::OnRender()
 {
-	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-		return;
 	if(!m_pImpl)
+		return;
+	if(g_Config.m_ScMusicPlayer != 0)
+	{
+		const BetaProbe::CPartScope ProbeScope(BetaProbe::PART_MUSIC_LAYOUT); // 667client
+		UpdateLayout();
+	}
+	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 	if(GameClient()->m_Menus.IsActive() && !GameClient()->m_Menus.IsIngameGamePage())
 		return;
@@ -5286,9 +5238,8 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 		return;
 	}
 
-	SNowPlayingSnapshot Snapshot = m_pImpl->m_Snapshot;
-	if(ForcePreview)
-		Snapshot = MusicPlayerPreviewSnapshot();
+	const SNowPlayingSnapshot PreviewSnapshot = ForcePreview ? MusicPlayerPreviewSnapshot() : SNowPlayingSnapshot();
+	const SNowPlayingSnapshot &Snapshot = ForcePreview ? PreviewSnapshot : m_pImpl->m_Snapshot;
 
 	const float Height = HudLayout::CANVAS_HEIGHT;
 	const float Width = Height * Graphics()->ScreenAspect();
@@ -5530,7 +5481,6 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 				i,
 				ContentAlpha);
 
-			// Loud bars bloom a little; quiet ones stay crisp.
 			if(Activity > 0.25f)
 			{
 				const float GlowAlpha = BarColor.a * 0.22f * (Activity - 0.25f) / 0.75f;
@@ -5538,7 +5488,6 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 				Graphics()->DrawRectExt(BX - GlowPad, BY - GlowPad, DrawW + GlowPad * 2.0f, FullH + GlowPad * 2.0f, BarRounding + GlowPad, IGraphics::CORNER_ALL);
 			}
 
-			// Brighter toward the tip, so motion reads at small sizes.
 			const ColorRGBA TipColor(std::min(1.0f, BarColor.r * 0.75f + 0.25f), std::min(1.0f, BarColor.g * 0.75f + 0.25f), std::min(1.0f, BarColor.b * 0.75f + 0.25f), BarColor.a);
 			Graphics()->SetColor(MixColor(BarColor, TipColor, Activity * 0.6f));
 			Graphics()->DrawRectExt(BX, BY, DrawW, FullH, BarRounding, IGraphics::CORNER_ALL);
@@ -5621,7 +5570,7 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 		if(ShowGameTimer && GameTimer.m_Warning)
 			TitleColor = ColorRGBA(1.0f, 0.25f, 0.25f, GameTimer.m_Blink ? 0.5f : 1.0f);
 		TextRender()->TextColor(TitleColor);
-		const float TitleWidth = TextRender()->TextWidth(UiTitleFont, Title.c_str(), -1, -1.0f);
+		const float TitleWidth = MusicPlayerTextWidth(TextRender(), UiTitleFont, Title.c_str());
 		if(ShowGameTimer)
 		{
 			if(CompactMiniLayout)
@@ -5695,7 +5644,7 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 		if(ShowBelowGameTimer && GameTimer.m_Warning)
 			BelowColor = ColorRGBA(1.0f, 0.25f, 0.25f, (GameTimer.m_Blink ? 0.5f : 1.0f) * HeightT);
 		TextRender()->TextColor(BelowColor);
-		const float BelowWidth = TextRender()->TextWidth(BelowFontUi, BelowTimerText.c_str(), -1, -1.0f);
+		const float BelowWidth = MusicPlayerTextWidth(TextRender(), BelowFontUi, BelowTimerText.c_str());
 		TextRender()->Text(
 			UiBelowTimer.x + (UiBelowTimer.w - BelowWidth) * 0.5f,
 			UiBelowTimer.y + (UiBelowTimer.h - BelowFontUi) * 0.5f,
@@ -5733,7 +5682,8 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 
 void CMusicPlayer::RenderMusicPlayerCard(bool ForcePreview)
 {
-	const SNowPlayingSnapshot Snapshot = ForcePreview ? MusicPlayerPreviewSnapshot() : m_pImpl->m_Snapshot;
+	const SNowPlayingSnapshot PreviewSnapshot = ForcePreview ? MusicPlayerPreviewSnapshot() : SNowPlayingSnapshot();
+	const SNowPlayingSnapshot &Snapshot = ForcePreview ? PreviewSnapshot : m_pImpl->m_Snapshot;
 	if(!Snapshot.m_Valid)
 		return;
 

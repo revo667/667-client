@@ -45,7 +45,7 @@ static const SModuleLayout gs_aModuleLayouts[MODULE_COUNT] = {
 	{84.5f, 152.0f, 100, 0, true, false, 0x66000000U, 100},
 	{484.0f, 172.0f, 100, 0, true, true, 0x66000000U, 100},
 	{250.0f, 258.0f, 100, 0, true, true, 0x66000000U, 100},
-	{5.0f, 200.0f, 100, 0, true, true, 0x66000000U, 100}, // listen along
+	{5.0f, 200.0f, 100, 0, true, true, 0x66000000U, 100},
 };
 
 static const char *gs_apModuleIds[MODULE_COUNT] = {

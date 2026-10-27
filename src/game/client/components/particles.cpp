@@ -150,7 +150,7 @@ void CParticles::OnRender()
 
 	set_new_tick();
 	const int64_t Now = time();
-	// 667client — still tick forced particles (e.g. atmosphere dust) when the optimizer is on
+	// 667client
 	if(GameClient()->OptimizerDisableParticles())
 	{
 		bool Any = false;
@@ -215,7 +215,7 @@ bool CParticles::ParticleIsVisibleOnScreen(const vec2 &CurPos, float CurSize) co
 
 void CParticles::RenderGroup(int Group)
 {
-	// 667client — allow rendering of forced particles (atmosphere dust) while optimizer is on
+	// 667client
 	if(GameClient()->OptimizerDisableParticles() && m_aFirstPart[Group] == -1)
 		return;
 	// 667client

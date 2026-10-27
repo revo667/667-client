@@ -369,7 +369,7 @@ int CMenus::DoButton_Favorite(const void *pButtonId, const void *pParentId, bool
 
 int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, const unsigned Flags)
 {
-	// 667client: the Cecen UI draws on/off options as switches
+	// 667client
 	if(SixClientUiTheme::IsCecenUiScope() && !SixClientUiTheme::IsCustomUiCheckbox() && (pBoxText[0] == '\0' || str_comp(pBoxText, "X") == 0))
 	{
 		const bool On = pBoxText[0] == 'X';
@@ -378,7 +378,6 @@ int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const c
 		Label.VSplitLeft(7.0f, nullptr, &Label);
 		Track.HMargin(pRect->h * 0.18f, &Track);
 
-		// The knob slides; its position is kept per option.
 		static std::unordered_map<const void *, float> s_KnobPositions;
 		float &Knob = s_KnobPositions.try_emplace(pId, On ? 1.0f : 0.0f).first->second;
 		const float Step = Client()->RenderFrameTime() * 9.0f;
