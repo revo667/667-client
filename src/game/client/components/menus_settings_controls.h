@@ -18,6 +18,7 @@ enum class EBindOptionGroup
 	VOTING,
 	CHAT,
 	DUMMY,
+	PRACTICE,
 	MISCELLANEOUS,
 	BEST_CLIENT, // 667client
 	BEST_CLIENT_PRACTICE, // 667client

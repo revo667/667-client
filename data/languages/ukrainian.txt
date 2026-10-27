@@ -2685,10 +2685,44 @@ All
 
 [AntiPing: predict other players]
 Interact
-== 
+== Взаємодії
 
 Always predict frozen players
-== 
+== Завжди передбачати заморожених гравців
 
 No country flags match your filter criteria
+== Немає прапорів країн, що відповідають вашим критеріям
+
+Hold Shift to be more precise.
+== 
+
+Dummy is not connected
+== 
+
+[Important alert message]
+Tap to dismiss…
+== 
+
+Initializing layers
+== 
+
+Credits
+== 
+
+Teleport to cursor
+== 
+
+Teleport dummy to cursor
+== 
+
+Practice
+== 
+
+Join
+== 
+
+not bound
+== 
+
+Show cursor
 == 

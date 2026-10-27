@@ -2691,4 +2691,38 @@ Always predict frozen players
 == 
 
 No country flags match your filter criteria
+== 필터에 일치하는 국기가 없음
+
+Hold Shift to be more precise.
+== 
+
+Dummy is not connected
+== 
+
+[Important alert message]
+Tap to dismiss…
+== 
+
+Initializing layers
+== 
+
+Credits
+== 
+
+Teleport to cursor
+== 
+
+Teleport dummy to cursor
+== 
+
+Practice
+== 
+
+Join
+== 
+
+not bound
+== 
+
+Show cursor
 == 

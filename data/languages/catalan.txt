@@ -1260,6 +1260,9 @@ Team successfully saved by %s. The database connection failed, using generated s
 Save failed!
 == 
 
+Hold Shift to be more precise.
+== 
+
 Auto-sync player camera
 == 
 
@@ -1314,6 +1317,9 @@ Loading commands…
 == 
 
 Loading maps…
+== 
+
+Dummy is not connected
 == 
 
 Position:
@@ -2427,6 +2433,12 @@ Loading assets
 Open the directory to add custom assets
 == 
 
+Teleport to cursor
+== 
+
+Teleport dummy to cursor
+== 
+
 Scoreboard cursor
 == 
 
@@ -2440,6 +2452,9 @@ Mouse
 == 
 
 Controller
+== 
+
+Practice
 == 
 
 Custom
@@ -2637,6 +2652,12 @@ Super
 == 
 
 Team %d (%d/%d)
+== 
+
+not bound
+== 
+
+Show cursor
 == 
 
 Unmute

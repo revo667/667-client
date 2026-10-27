@@ -19,12 +19,14 @@
 #include <game/client/components/scoreboard.h>
 #include <game/client/gameclient.h>
 #include <game/collision.h>
+#include <game/localization.h>
 
 #include <algorithm>
 
 CControls::CControls()
 {
 	mem_zero(&m_aLastData, sizeof(m_aLastData));
+	std::fill(std::begin(m_aMouseOnAction), std::end(m_aMouseOnAction), false);
 	std::fill(std::begin(m_aMousePos), std::end(m_aMousePos), vec2(0.0f, 0.0f));
 	std::fill(std::begin(m_aMousePosOnAction), std::end(m_aMousePosOnAction), vec2(0.0f, 0.0f));
 	std::fill(std::begin(m_aTargetPos), std::end(m_aTargetPos), vec2(0.0f, 0.0f));
@@ -71,6 +73,7 @@ struct CInputState
 	CControls *m_pControls;
 	int *m_apVariables[NUM_DUMMIES];
 	int m_Input;
+	bool m_IsMouseAction;
 };
 
 void CControls::ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
@@ -85,6 +88,10 @@ void CControls::ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
 	if(!Value && *pVariable && g_Config.m_ScInputDebounce && pState->m_Input >= 0)
 		pState->m_pControls->InputDebounce(g_Config.m_ClDummy, pState->m_Input);
 	*pVariable = Value;
+
+	if(Value != 0 && pState->m_IsMouseAction && g_Config.m_ClSubTickAiming && pState->m_pControls->GameClient()->m_Binds.m_HandlingNewBind)
+		pState->m_pControls->m_aMouseOnAction[g_Config.m_ClDummy] = true;
+
 	if(pState->m_Input >= 0)
 	{
 		CGameClient *pGameClient = pState->m_pControls->GameClient();
@@ -114,7 +121,11 @@ void CControls::ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
 	int *pVariable = pState->m_apVariables[g_Config.m_ClDummy];
 	const bool Pressed = pResult->GetInteger(0) != 0;
 	if(((*pVariable) & 1) != Pressed)
+	{
 		(*pVariable)++;
+		if(Pressed && pState->m_IsMouseAction && g_Config.m_ClSubTickAiming && pState->m_pControls->GameClient()->m_Binds.m_HandlingNewBind)
+			pState->m_pControls->m_aMouseOnAction[g_Config.m_ClDummy] = true;
+	}
 	*pVariable &= INPUT_STATE_MASK;
 	if(pVariable == &pState->m_pControls->m_aInputData[g_Config.m_ClDummy].m_Fire)
 	{
@@ -151,27 +162,27 @@ void CControls::OnConsoleInit()
 {
 	// game commands
 	{
-		static CInputState s_State = {this, {&m_aInputDirectionLeft[0], &m_aInputDirectionLeft[1]}, INPUT_LEFT};
+		static CInputState s_State = {this, {&m_aInputDirectionLeft[0], &m_aInputDirectionLeft[1]}, INPUT_LEFT, false};
 		Console()->Register("+left", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Move left");
 	}
 	{
-		static CInputState s_State = {this, {&m_aInputDirectionRight[0], &m_aInputDirectionRight[1]}, INPUT_RIGHT};
+		static CInputState s_State = {this, {&m_aInputDirectionRight[0], &m_aInputDirectionRight[1]}, INPUT_RIGHT, false};
 		Console()->Register("+right", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Move right");
 	}
 	{
-		static CInputState s_State = {this, {&m_aInputData[0].m_Jump, &m_aInputData[1].m_Jump}, INPUT_JUMP};
+		static CInputState s_State = {this, {&m_aInputData[0].m_Jump, &m_aInputData[1].m_Jump}, INPUT_JUMP, false};
 		Console()->Register("+jump", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Jump");
 	}
 	{
-		static CInputState s_State = {this, {&m_aInputData[0].m_Hook, &m_aInputData[1].m_Hook}, INPUT_HOOK};
+		static CInputState s_State = {this, {&m_aInputData[0].m_Hook, &m_aInputData[1].m_Hook}, INPUT_HOOK, true};
 		Console()->Register("+hook", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Hook");
 	}
 	{
-		static CInputState s_State = {this, {&m_aInputData[0].m_Fire, &m_aInputData[1].m_Fire}, -1};
+		static CInputState s_State = {this, {&m_aInputData[0].m_Fire, &m_aInputData[1].m_Fire}, -1, true};
 		Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, &s_State, "Fire");
 	}
 	{
-		static CInputState s_State = {this, {&m_aShowHookColl[0], &m_aShowHookColl[1]}, -1};
+		static CInputState s_State = {this, {&m_aShowHookColl[0], &m_aShowHookColl[1]}, -1, false};
 		Console()->Register("+showhookcoll", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Show Hook Collision");
 	}
 
@@ -204,6 +215,50 @@ void CControls::OnConsoleInit()
 		static CInputSet s_Set = {this, {&m_aInputData[0].m_PrevWeapon, &m_aInputData[1].m_PrevWeapon}, 0};
 		Console()->Register("+prevweapon", "", CFGFLAG_CLIENT, ConKeyInputNextPrevWeapon, &s_Set, "Switch to previous weapon");
 	}
+
+	Console()->Register("tp_to_cursor", "", CFGFLAG_CLIENT, ConTpToCursor, this, "Practice: teleport yourself to your cursor");
+	Console()->Register("tp_dummy_to_cursor", "", CFGFLAG_CLIENT, ConTpDummyToCursor, this, "Practice: teleport the other tee to your cursor");
+}
+
+void CControls::ConTpToCursor(IConsole::IResult *pResult, void *pUserData)
+{
+	CControls *pSelf = (CControls *)pUserData;
+	if(pSelf->Client()->State() != IClient::STATE_ONLINE)
+		return;
+
+	pSelf->SendPracticeTeleportToCursor(g_Config.m_ClDummy ? IClient::CONN_DUMMY : IClient::CONN_MAIN);
+}
+
+void CControls::ConTpDummyToCursor(IConsole::IResult *pResult, void *pUserData)
+{
+	CControls *pSelf = (CControls *)pUserData;
+	if(pSelf->Client()->State() != IClient::STATE_ONLINE)
+		return;
+
+	if(!pSelf->Client()->DummyConnected())
+	{
+		pSelf->GameClient()->Echo(Localize("Dummy is not connected"));
+		return;
+	}
+
+	// Send on the inactive connection; the server only teleports the sender.
+	pSelf->SendPracticeTeleportToCursor(g_Config.m_ClDummy ? IClient::CONN_MAIN : IClient::CONN_DUMMY);
+}
+
+vec2 CControls::CursorWorldPos() const
+{
+	const vec2 Center = GameClient()->m_Camera.m_Center;
+	const vec2 TargetPos = m_aTargetPos[g_Config.m_ClDummy];
+	return Center + (TargetPos - Center) * GameClient()->m_Camera.m_Zoom;
+}
+
+void CControls::SendPracticeTeleportToCursor(int Conn)
+{
+	const vec2 CursorPos = CursorWorldPos();
+	CNetMsg_Cl_PracticeTeleport Msg;
+	Msg.m_X = round_to_int(CursorPos.x);
+	Msg.m_Y = round_to_int(CursorPos.y);
+	Client()->SendPackMsg(Conn, &Msg, MSGFLAG_VITAL);
 }
 
 void CControls::OnMessage(int Msg, void *pRawMsg)

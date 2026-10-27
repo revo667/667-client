@@ -66,7 +66,7 @@ void CMenus::RenderSettingsSixClientDiscord(CUIRect &Column)
 		g_Config.m_ScDiscordShowParty = DefaultConfig::ScDiscordShowParty;
 		g_Config.m_ScDiscordAllowJoin = DefaultConfig::ScDiscordAllowJoin;
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_ResetButton, &ResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_ResetButton, &ResetButton, ScLocalize("Reset to defaults"));
 	Ui()->DoLabel(&Title, ScLocalize("Discord Rich Presence"), HeadlineFontSize, TEXTALIGN_ML);
 
 	CUIRect Line;

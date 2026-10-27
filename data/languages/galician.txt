@@ -1572,6 +1572,9 @@ Team successfully saved by %s. The database connection failed, using generated s
 Save failed!
 == 
 
+Hold Shift to be more precise.
+== 
+
 Auto-sync player camera
 == 
 
@@ -1626,6 +1629,9 @@ Loading commands…
 == 
 
 Loading maps…
+== 
+
+Dummy is not connected
 == 
 
 Multi-View
@@ -2525,7 +2531,16 @@ Dragger Outline Color
 Dragger Inner Color
 == 
 
+Teleport to cursor
+== 
+
+Teleport dummy to cursor
+== 
+
 Scoreboard cursor
+== 
+
+Practice
 == 
 
 Custom
@@ -2640,6 +2655,12 @@ Download
 == 
 
 Team %d (%d/%d)
+== 
+
+not bound
+== 
+
+Show cursor
 == 
 
 Unmute

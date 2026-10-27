@@ -212,7 +212,7 @@ void CMenus::RenderSettingsSixClientChatBlock(CUIRect &Column)
 	Label.VSplitRight(LineSize + 8.0f, &TitleLabel, &ResetButton);
 	static CButtonContainer s_ChatResetButton;
 	const bool ResetClicked = Ui()->DoButton_FontIcon(&s_ChatResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &ResetButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_ChatResetButton, &ResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_ChatResetButton, &ResetButton, ScLocalize("Reset to defaults"));
 	if(ResetClicked)
 	{
 		g_Config.m_ScSilentTyping = DefaultConfig::ScSilentTyping;
@@ -273,7 +273,7 @@ void CMenus::RenderSettingsSixClientChatBlock(CUIRect &Column)
 			g_Config.m_ScChatModernStyle = 0;
 		if(DoButton_Menu(&s_ModernChatButton, ScLocalize("Modern chat"), g_Config.m_ScChatModernStyle == 1, &ModernChatButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
 			g_Config.m_ScChatModernStyle = 1;
-		GameClient()->m_Tooltips.DoToolTip(&s_ModernChatButton, &ModernChatButton, ScLocalize("Every chat line gets its own rounded background with a colored bar on the left: green for server messages, white for players"));
+		Ui()->DoToolTip(&s_ModernChatButton, &ModernChatButton, ScLocalize("Every chat line gets its own rounded background with a colored bar on the left: green for server messages, white for players"));
 	}
 
 	if(ModernExpandedHeight <= 0.5f)
@@ -547,9 +547,9 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const float MarginBetweenViews = 30.0f;
 	const float BlockPadding = MarginBetweenViews * 0.6666f;
 	const auto DoHighFpsIntakeTooltip = [&](const void *pId, const CUIRect &Row) {
-		GameClient()->m_Tooltips.DoToolTip(pId, &Row, ScLocalize("high fps intake"));
-		GameClient()->m_Tooltips.SetFadeTime(pId, 0.0f);
-		GameClient()->m_Tooltips.SetTextColor(pId, ColorRGBA(1.0f, 0.55f, 0.16f, 1.0f));
+		Ui()->DoToolTip(pId, &Row, ScLocalize("high fps intake"));
+		Ui()->Tooltips()->SetFadeTime(pId, 0.0f);
+		Ui()->Tooltips()->SetTextColor(pId, ColorRGBA(1.0f, 0.55f, 0.16f, 1.0f));
 	};
 
 	{
@@ -563,8 +563,8 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 			SetActive(false);
 			GameClient()->m_HudEditor.Activate();
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_HudEditorButton, &HudButtonRow, CanOpen ? ScLocalize("Open in HUD editor") : ScLocalize("Join a game first"));
-		GameClient()->m_Tooltips.SetFadeTime(&s_HudEditorButton, 0.0f);
+		Ui()->DoToolTip(&s_HudEditorButton, &HudButtonRow, CanOpen ? ScLocalize("Open in HUD editor") : ScLocalize("Join a game first"));
+		Ui()->Tooltips()->SetFadeTime(&s_HudEditorButton, 0.0f);
 	}
 
 	static CScrollRegion s_VisualsScrollRegion;
@@ -657,7 +657,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	Label.VSplitRight(LineSize + 8.0f, &CornerIndicatorTitleLabel, &CornerIndicatorResetButton);
 	static CButtonContainer s_CornerIndicatorResetButton;
 	const bool CornerIndicatorResetClicked = Ui()->DoButton_FontIcon(&s_CornerIndicatorResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &CornerIndicatorResetButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_CornerIndicatorResetButton, &CornerIndicatorResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_CornerIndicatorResetButton, &CornerIndicatorResetButton, ScLocalize("Reset to defaults"));
 	if(CornerIndicatorResetClicked)
 	{
 		g_Config.m_ScCornerIndicatorOnlyInTeam = DefaultConfig::ScCornerIndicatorOnlyInTeam;
@@ -842,7 +842,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	Label.VSplitRight(LineSize + 8.0f, &ChatBubblesTitleLabel, &ChatBubblesResetButton);
 	static CButtonContainer s_ChatBubblesResetButton;
 	const bool ChatBubblesResetClicked = Ui()->DoButton_FontIcon(&s_ChatBubblesResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &ChatBubblesResetButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_ChatBubblesResetButton, &ChatBubblesResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_ChatBubblesResetButton, &ChatBubblesResetButton, ScLocalize("Reset to defaults"));
 	if(ChatBubblesResetClicked)
 	{
 		g_Config.m_ScChatBubblesSelf = DefaultConfig::ScChatBubblesSelf;
@@ -1067,7 +1067,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 	MainView.HSplitTop(LineSize, &Button, &MainView);
 	Ui()->DoScrollbarOption(&g_Config.m_ScGameMediaBackgroundOffset, &g_Config.m_ScGameMediaBackgroundOffset, &Button, ScLocalize("Map offset"), 0, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScGameMediaBackgroundOffset, &Button, ScLocalize("0 keeps the image fixed to the screen. Higher values add camera parallax. Move the camera to see the effect."));
+	Ui()->DoToolTip(&g_Config.m_ScGameMediaBackgroundOffset, &Button, ScLocalize("0 keeps the image fixed to the screen. Higher values add camera parallax. Move the camera to see the effect."));
 
 	MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 	MainView.HSplitTop(LineSize, &Button, &MainView);
@@ -1164,8 +1164,8 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 			g_Config.m_ScUiStyle = 0;
 		if(DoButton_Menu(&s_CecenUiButton, ScLocalize("Cecen UI"), g_Config.m_ScUiStyle == 1, &NewButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
 			g_Config.m_ScUiStyle = 1;
-		GameClient()->m_Tooltips.DoToolTip(&s_OldUiButton, &OldButton, ScLocalize("Classic settings layout with tabs"));
-		GameClient()->m_Tooltips.DoToolTip(&s_CecenUiButton, &NewButton, ScLocalize("Settings hub with categories"));
+		Ui()->DoToolTip(&s_OldUiButton, &OldButton, ScLocalize("Classic settings layout with tabs"));
+		Ui()->DoToolTip(&s_CecenUiButton, &NewButton, ScLocalize("Settings hub with categories"));
 	}
 
 	const float ColorPickerLineSize = 25.0f;
@@ -1224,7 +1224,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	Label.VSplitRight(LineSize + 8.0f, &UiThemesTitleLabel, &UiThemesResetButton);
 	static CButtonContainer s_UiThemesResetButton;
 	const bool UiThemesResetClicked = Ui()->DoButton_FontIcon(&s_UiThemesResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &UiThemesResetButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_UiThemesResetButton, &UiThemesResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_UiThemesResetButton, &UiThemesResetButton, ScLocalize("Reset to defaults"));
 	if(UiThemesResetClicked)
 	{
 		g_Config.m_ScUiThemeElement = 0;
@@ -1516,7 +1516,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 			Input()->SetClipboardText(aBuf);
 			s_UiThemeExportFeedbackTime = Now;
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_UiThemeExportButton, &ExportButton, ScLocalize("Copy theme to clipboard"));
+		Ui()->DoToolTip(&s_UiThemeExportButton, &ExportButton, ScLocalize("Copy theme to clipboard"));
 		if(DoButton_Menu(&s_UiThemeImportButton, pImportLabel, 0, &ImportButton, BUTTONFLAG_LEFT))
 		{
 			const std::string Clipboard = Input()->GetClipboardText();
@@ -1530,7 +1530,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 				s_UiThemeImportFeedbackTime = Now;
 			}
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_UiThemeImportButton, &ImportButton, ScLocalize("Paste theme from clipboard"));
+		Ui()->DoToolTip(&s_UiThemeImportButton, &ImportButton, ScLocalize("Paste theme from clipboard"));
 
 		Ui()->ClipDisable();
 	}
@@ -1560,7 +1560,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	Label.VSplitRight(LineSize + 8.0f, &AnimationsTitleLabel, &AnimationsResetButton);
 	static CButtonContainer s_AnimationsResetButton;
 	const bool AnimationsResetClicked = Ui()->DoButton_FontIcon(&s_AnimationsResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &AnimationsResetButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_AnimationsResetButton, &AnimationsResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_AnimationsResetButton, &AnimationsResetButton, ScLocalize("Reset to defaults"));
 	if(AnimationsResetClicked)
 	{
 		g_Config.m_ScAnimations = DefaultConfig::ScAnimations;
@@ -1658,12 +1658,12 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		g_Config.m_ScMusicPlayerShowCurrentTime = DefaultConfig::ScMusicPlayerShowCurrentTime;
 		g_Config.m_ScMusicDock = DefaultConfig::ScMusicDock;
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_MusicPlayerResetButton, &MusicPlayerResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_MusicPlayerResetButton, &MusicPlayerResetButton, ScLocalize("Reset to defaults"));
 	static CButtonContainer s_MusicPlayerHudEditorButton;
 	const bool MusicPlayerCanOpenHudEditor = Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK;
 	const bool MusicPlayerHudEditorClicked = Ui()->DoButton_FontIcon(&s_MusicPlayerHudEditorButton, FontIcon::UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER, MusicPlayerCanOpenHudEditor ? 0 : -1, &MusicPlayerHudEditorButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_MusicPlayerHudEditorButton, &MusicPlayerHudEditorButton, MusicPlayerCanOpenHudEditor ? ScLocalize("Open in HUD editor") : ScLocalize("Join a game first"));
-	GameClient()->m_Tooltips.SetFadeTime(&s_MusicPlayerHudEditorButton, 0.0f);
+	Ui()->DoToolTip(&s_MusicPlayerHudEditorButton, &MusicPlayerHudEditorButton, MusicPlayerCanOpenHudEditor ? ScLocalize("Open in HUD editor") : ScLocalize("Join a game first"));
+	Ui()->Tooltips()->SetFadeTime(&s_MusicPlayerHudEditorButton, 0.0f);
 	if(MusicPlayerHudEditorClicked && MusicPlayerCanOpenHudEditor)
 	{
 		SetActive(false);
@@ -1697,7 +1697,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 				g_Config.m_ScMusicPlayerStyle = 0;
 			if(DoButton_Menu(&s_MusicPlayerStyleCard, ScLocalize("Card"), g_Config.m_ScMusicPlayerStyle == 1, &MusicPlayerCardButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
 				g_Config.m_ScMusicPlayerStyle = 1;
-			GameClient()->m_Tooltips.DoToolTip(&s_MusicPlayerStyleCard, &MusicPlayerCardButton, ScLocalize("A card with the cover, title, artist and progress in the top right corner"));
+			Ui()->DoToolTip(&s_MusicPlayerStyleCard, &MusicPlayerCardButton, ScLocalize("A card with the cover, title, artist and progress in the top right corner"));
 			MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 		}
 
@@ -2113,7 +2113,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			const int NewSelected = Ui()->DoDropDown(&ModeSelect, Selected, apModeNames, (int)std::size(apModeNames), s_InputsModeState);
 			if(NewSelected != Selected && NewSelected >= 0 && NewSelected < (int)std::size(s_aModes))
 				g_Config.m_ScInputs = s_aModes[NewSelected];
-			GameClient()->m_Tooltips.DoToolTip(&s_InputsModeState.m_ButtonContainer, &ModeSelect, apModeTips[Selected]);
+			Ui()->DoToolTip(&s_InputsModeState.m_ButtonContainer, &ModeSelect, apModeTips[Selected]);
 		}
 
 		if(InputsMode == SC_INPUTS_SIX)
@@ -2121,31 +2121,31 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			DoTickAmountSlider(&g_Config.m_ScSixInputAmount, &Button, ScLocalize("Max prediction offset"), 0, 300);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSixInputAmount, &Button, ScLocalize("The highest prediction offset 667 input may use, in ticks (1.00 = 20 ms). Higher feels more instant, but on a bad connection the tee gets corrected back more often."));
+			Ui()->DoToolTip(&g_Config.m_ScSixInputAmount, &Button, ScLocalize("The highest prediction offset 667 input may use, in ticks (1.00 = 20 ms). Higher feels more instant, but on a bad connection the tee gets corrected back more often."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			Ui()->DoScrollbarOption(&g_Config.m_ScSixInputSmoothing, &g_Config.m_ScSixInputSmoothing, &Button, ScLocalize("Correction smoothing"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "ms");
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSixInputSmoothing, &Button, ScLocalize("When the server disagrees with the prediction, the difference is faded out over this many milliseconds instead of snapping. 0 snaps instantly."));
+			Ui()->DoToolTip(&g_Config.m_ScSixInputSmoothing, &Button, ScLocalize("When the server disagrees with the prediction, the difference is faded out over this many milliseconds instead of snapping. 0 snaps instantly."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSixInputAdaptive, &Content, ScLocalize("Lowers the offset automatically while the server keeps correcting your predictions, and raises it again once the connection is stable."));
+			Ui()->DoToolTip(&g_Config.m_ScSixInputAdaptive, &Content, ScLocalize("Lowers the offset automatically while the server keeps correcting your predictions, and raises it again once the connection is stable."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSixInputAdaptive, ScLocalize("Adaptive offset"), &g_Config.m_ScSixInputAdaptive, &Content, LineSize);
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSixInputSubTick, &Content, ScLocalize("Starts the response from the exact moment inside the tick the key was pressed, instead of from the start of the next tick."));
+			Ui()->DoToolTip(&g_Config.m_ScSixInputSubTick, &Content, ScLocalize("Starts the response from the exact moment inside the tick the key was pressed, instead of from the start of the next tick."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSixInputSubTick, ScLocalize("Sub-tick input timing"), &g_Config.m_ScSixInputSubTick, &Content, LineSize);
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSixInputJumpEase, &Content, ScLocalize("Spreads the position change of a jump over one tick instead of showing it as a single jump."));
+			Ui()->DoToolTip(&g_Config.m_ScSixInputJumpEase, &Content, ScLocalize("Spreads the position change of a jump over one tick instead of showing it as a single jump."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSixInputJumpEase, ScLocalize("Smooth jump start"), &g_Config.m_ScSixInputJumpEase, &Content, LineSize);
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSixInputOthers, &Content, ScLocalize("Also shows other players predicted ahead with 667 input."));
+			Ui()->DoToolTip(&g_Config.m_ScSixInputOthers, &Content, ScLocalize("Also shows other players predicted ahead with 667 input."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSixInputOthers, ScLocalize("667 input others"), &g_Config.m_ScSixInputOthers, &Content, LineSize);
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
@@ -2173,7 +2173,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 				if(InputLog.Calibrating() && Client()->State() == IClient::STATE_ONLINE)
 					SetActive(false);
 			}
-			GameClient()->m_Tooltips.DoToolTip(&s_CalibrateButton, &Button, ScLocalize("Play normally for two minutes of movement. Cecen Client measures your inputs and connection and suggests the most stable 667 input settings for you."));
+			Ui()->DoToolTip(&s_CalibrateButton, &Button, ScLocalize("Play normally for two minutes of movement. Cecen Client measures your inputs and connection and suggests the most stable 667 input settings for you."));
 
 			const CFastInputLog::SResult &Result = InputLog.Result();
 			if(Result.m_Valid)
@@ -2219,11 +2219,11 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			DoSliderWithScaledValue(&g_Config.m_TcFastInputAmount, &g_Config.m_TcFastInputAmount, &Button, ScLocalize("Prediction offset"), 1, 40, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_TcFastInputAmount, &Button, ScLocalize("How far ahead your movement is predicted, in ms. Higher feels faster, but the tee jumps back more when the server corrects it."));
+			Ui()->DoToolTip(&g_Config.m_TcFastInputAmount, &Button, ScLocalize("How far ahead your movement is predicted, in ms. Higher feels faster, but the tee jumps back more when the server corrects it."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_TcFastInputOthers, &Content, ScLocalize("Also predicts other players ahead by the same amount."));
+			Ui()->DoToolTip(&g_Config.m_TcFastInputOthers, &Content, ScLocalize("Also predicts other players ahead by the same amount."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInputOthers, ScLocalize("Fast Input others"), &g_Config.m_TcFastInputOthers, &Content, LineSize);
 		}
 		else if(InputsMode == SC_INPUTS_BEST)
@@ -2231,17 +2231,17 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			DoTickAmountSlider(&g_Config.m_ScBestInputAmount, &Button, ScLocalize("Prediction offset"), 0, 1000);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBestInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
+			Ui()->DoToolTip(&g_Config.m_ScBestInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			Ui()->DoScrollbarOption(&g_Config.m_ScBestInputSmoothing, &g_Config.m_ScBestInputSmoothing, &Button, ScLocalize("Smoothing"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBestInputSmoothing, &Button, ScLocalize("Lowers the offset for a calmer tee: 100% halves it."));
+			Ui()->DoToolTip(&g_Config.m_ScBestInputSmoothing, &Button, ScLocalize("Lowers the offset for a calmer tee: 100% halves it."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			Ui()->DoScrollbarOption(&g_Config.m_ScBestInputLatencyComp, &g_Config.m_ScBestInputLatencyComp, &Button, ScLocalize("Latency compensation"), 0, 50, &CUi::ms_LinearScrollbarScale, 0, "%");
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBestInputLatencyComp, &Button, ScLocalize("Raises the offset by this much to make up for a slow connection."));
+			Ui()->DoToolTip(&g_Config.m_ScBestInputLatencyComp, &Button, ScLocalize("Raises the offset by this much to make up for a slow connection."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
@@ -2255,12 +2255,12 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 				s_BestInterpolationState.m_SelectionPopupContext.m_pScrollRegion = &s_BestInterpolationScrollRegion;
 				const int Current = std::clamp(g_Config.m_ScBestInputInterpolation, 1, 3) - 1;
 				g_Config.m_ScBestInputInterpolation = Ui()->DoDropDown(&InterpolationSelect, Current, apInterpolation, (int)std::size(apInterpolation), s_BestInterpolationState) + 1;
-				GameClient()->m_Tooltips.DoToolTip(&s_BestInterpolationState.m_ButtonContainer, &InterpolationSelect, ScLocalize("How the tee moves between ticks: linear, cubic (eases in and out), or smooth (cubic only when moving fast)."));
+				Ui()->DoToolTip(&s_BestInterpolationState.m_ButtonContainer, &InterpolationSelect, ScLocalize("How the tee moves between ticks: linear, cubic (eases in and out), or smooth (cubic only when moving fast)."));
 			}
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBestInputOthers, &Content, ScLocalize("Also predicts other players ahead with Best input."));
+			Ui()->DoToolTip(&g_Config.m_ScBestInputOthers, &Content, ScLocalize("Also predicts other players ahead with Best input."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScBestInputOthers, ScLocalize("Best input others"), &g_Config.m_ScBestInputOthers, &Content, LineSize);
 		}
 		else if(InputsMode == SC_INPUTS_SAIKO)
@@ -2268,11 +2268,11 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			DoTickAmountSlider(&g_Config.m_ScSaikoInputAmount, &Button, ScLocalize("Prediction offset"), 0, 500);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSaikoInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
+			Ui()->DoToolTip(&g_Config.m_ScSaikoInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScSaikoInputOthers, &Content, ScLocalize("Also predicts other players ahead with Saiko input."));
+			Ui()->DoToolTip(&g_Config.m_ScSaikoInputOthers, &Content, ScLocalize("Also predicts other players ahead with Saiko input."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSaikoInputOthers, ScLocalize("Saiko input others"), &g_Config.m_ScSaikoInputOthers, &Content, LineSize);
 		}
 		else if(InputsMode == SC_INPUTS_CLOUD)
@@ -2280,11 +2280,11 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			DoTickAmountSlider(&g_Config.m_ScCloudInputAmount, &Button, ScLocalize("Prediction offset"), 0, 500);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScCloudInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
+			Ui()->DoToolTip(&g_Config.m_ScCloudInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScCloudInputOthers, &Content, ScLocalize("Also shows other players one tick ahead."));
+			Ui()->DoToolTip(&g_Config.m_ScCloudInputOthers, &Content, ScLocalize("Also shows other players one tick ahead."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScCloudInputOthers, ScLocalize("Cloud input others"), &g_Config.m_ScCloudInputOthers, &Content, LineSize);
 		}
 		else if(InputsMode == SC_INPUTS_MEOW)
@@ -2292,11 +2292,11 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 			DoTickAmountSlider(&g_Config.m_ScMeowInputAmount, &Button, ScLocalize("Prediction offset"), 0, 5000, 1000);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScMeowInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
+			Ui()->DoToolTip(&g_Config.m_ScMeowInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
 
 			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-			GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScMeowInputOthers, &Content, ScLocalize("Also predicts other players ahead with Meow input."));
+			Ui()->DoToolTip(&g_Config.m_ScMeowInputOthers, &Content, ScLocalize("Also predicts other players ahead with Meow input."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMeowInputOthers, ScLocalize("Meow input others"), &g_Config.m_ScMeowInputOthers, &Content, LineSize);
 		}
 
@@ -2305,25 +2305,25 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 
 	InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 	InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ClSubTickAiming, &Content, ScLocalize("Sends your exact mouse position between ticks, so hook and fire aim where the cursor was when you clicked."));
+	Ui()->DoToolTip(&g_Config.m_ClSubTickAiming, &Content, ScLocalize("Sends your exact mouse position between ticks, so hook and fire aim where the cursor was when you clicked."));
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClSubTickAiming, ScLocalize("Sub-Tick aiming"), &g_Config.m_ClSubTickAiming, &Content, LineSize);
 
 	if(!g_Config.m_ClSubTickAiming)
 	{
 		InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 		InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_TcFastInputRepredictHook, &Content, ScLocalize("Repredicts when you change the hook direction in the middle of a tick. Hooks are more accurate, but it can cost FPS."));
+		Ui()->DoToolTip(&g_Config.m_TcFastInputRepredictHook, &Content, ScLocalize("Repredicts when you change the hook direction in the middle of a tick. Hooks are more accurate, but it can cost FPS."));
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInputRepredictHook, ScLocalize("Repredict on mid-tick hook direction change (may lag)"), &g_Config.m_TcFastInputRepredictHook, &Content, LineSize);
 	}
 
 	InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 	InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScAutoMargin, &Content, ScLocalize("Adjusts the prediction margin from your ping automatically, so you get fewer corrections without extra delay. Your old margin comes back when you turn it off."));
+	Ui()->DoToolTip(&g_Config.m_ScAutoMargin, &Content, ScLocalize("Adjusts the prediction margin from your ping automatically, so you get fewer corrections without extra delay. Your old margin comes back when you turn it off."));
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScAutoMargin, ScLocalize("Auto margin"), &g_Config.m_ScAutoMargin, &Content, LineSize);
 
 	InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 	InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScInputDebounce, &Content, ScLocalize("Keeps key presses shorter than one game tick (20 ms), so very fast taps of A, D, jump or hook are never lost."));
+	Ui()->DoToolTip(&g_Config.m_ScInputDebounce, &Content, ScLocalize("Keeps key presses shorter than one game tick (20 ms), so very fast taps of A, D, jump or hook are never lost."));
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScInputDebounce, ScLocalize("Input Debounce"), &g_Config.m_ScInputDebounce, &Content, LineSize);
 
 	LeftColumn.HSplitTop(MarginBetweenViews, nullptr, &LeftColumn);
@@ -2624,7 +2624,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	static CButtonContainer s_LowLatencyPresetButton;
 	if(DoButton_Menu(&s_LowLatencyPresetButton, ScLocalize("Apply low latency preset"), 0, &LowLatencyButton))
 		GameClient()->m_SystemTuning.ApplyLowLatencyPreset();
-	GameClient()->m_Tooltips.DoToolTip(&s_LowLatencyPresetButton, &LowLatencyButton, ScLocalize("Turns off V-Sync, removes the update rate limit and enables the low latency options above"));
+	Ui()->DoToolTip(&s_LowLatencyPresetButton, &LowLatencyButton, ScLocalize("Turns off V-Sync, removes the update rate limit and enables the low latency options above"));
 	static CButtonContainer s_MaxFpsPresetButton;
 	if(DoButton_Menu(&s_MaxFpsPresetButton, ScLocalize("Max FPS preset"), 0, &MaxFpsButton))
 	{
@@ -2637,7 +2637,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			g_Config.m_GfxFsaaSamples = 0;
 		}
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_MaxFpsPresetButton, &MaxFpsButton, ScLocalize("Low latency preset plus no FPS limit, no FSAA, no high detail, no particles and no frozen tee HUD"));
+	Ui()->DoToolTip(&s_MaxFpsPresetButton, &MaxFpsButton, ScLocalize("Low latency preset plus no FPS limit, no FSAA, no high detail, no particles and no frozen tee HUD"));
 
 	CUIRect RightColumn = RightView;
 	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
@@ -2689,7 +2689,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			g_Config.m_ScBetterSpectate ^= 1;
 			GameClient()->m_SpecPauseRadio.SyncSpectateBinds(g_Config.m_ScBetterSpectate != 0);
 		}
-		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBetterSpectate, &BetterSpectateRow, ScLocalize("Replace your say /pause bind (default: Q) with +specpause (pause/spec radio)"));
+		Ui()->DoToolTip(&g_Config.m_ScBetterSpectate, &BetterSpectateRow, ScLocalize("Replace your say /pause bind (default: Q) with +specpause (pause/spec radio)"));
 	}
 	if(g_Config.m_ScBetterSpectate)
 	{
@@ -2999,8 +2999,8 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	static CButtonContainer s_FinishPredictionHudEditorButton;
 	const bool FinishPredictionCanOpenHudEditor = Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK;
 	const bool FinishPredictionHudEditorClicked = Ui()->DoButton_FontIcon(&s_FinishPredictionHudEditorButton, FontIcon::UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER, FinishPredictionCanOpenHudEditor ? 0 : -1, &FinishPredictionHudEditorButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_FinishPredictionHudEditorButton, &FinishPredictionHudEditorButton, FinishPredictionCanOpenHudEditor ? ScLocalize("Open in HUD editor") : ScLocalize("Join a game first"));
-	GameClient()->m_Tooltips.SetFadeTime(&s_FinishPredictionHudEditorButton, 0.0f);
+	Ui()->DoToolTip(&s_FinishPredictionHudEditorButton, &FinishPredictionHudEditorButton, FinishPredictionCanOpenHudEditor ? ScLocalize("Open in HUD editor") : ScLocalize("Join a game first"));
+	Ui()->Tooltips()->SetFadeTime(&s_FinishPredictionHudEditorButton, 0.0f);
 	if(FinishPredictionHudEditorClicked && FinishPredictionCanOpenHudEditor)
 	{
 		SetActive(false);
@@ -3163,7 +3163,7 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 		CUIRect BetaRow;
 		BetaBlock.HSplitTop(LineSize, &BetaRow, &BetaBlock);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScBetaReports, ScLocalize("Send crash, freeze and stutter reports"), &g_Config.m_ScBetaReports, &BetaRow, LineSize);
-		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScBetaReports, &BetaRow, ScLocalize("While Cecen Client is in beta, crashes, freezes, stutters and lag are sent to the Cecen team with your name, the server, the map, your system and a few settings, so they can be fixed"));
+		Ui()->DoToolTip(&g_Config.m_ScBetaReports, &BetaRow, ScLocalize("While Cecen Client is in beta, crashes, freezes, stutters and lag are sent to the Cecen team with your name, the server, the map, your system and a few settings, so they can be fixed"));
 		Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 	}
 
@@ -3633,7 +3633,7 @@ void CMenus::RenderSettingsSixClientWeaponGlow(CUIRect &Column)
 	CUIRect ResetButton;
 	Row.VSplitRight(LineSize + 8.0f, &Row, &ResetButton);
 	const bool ResetClicked = Ui()->DoButton_FontIcon(&s_ResetButton, FontIcon::ARROW_ROTATE_LEFT, 0, &ResetButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_ResetButton, &ResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_ResetButton, &ResetButton, ScLocalize("Reset to defaults"));
 	Ui()->DoLabel(&Row, apTitles[s_Weapon], 20.0f, TEXTALIGN_ML);
 	Block.HSplitTop(MarginSmall, nullptr, &Block);
 	Block.HSplitTop(LineSize, &Row, &Block);
@@ -3812,7 +3812,7 @@ void CMenus::RenderSettingsSixClientParticles3D(CUIRect &Column)
 		g_Config.m_Bc3dParticlesColor = DefaultConfig::Bc3dParticlesColor;
 		g_Config.m_Bc3dParticlesGlow = DefaultConfig::Bc3dParticlesGlow;
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_3DParticlesResetButton, &Particles3DResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_3DParticlesResetButton, &Particles3DResetButton, ScLocalize("Reset to defaults"));
 	Ui()->DoLabel(&Particles3DTitleLabel, ScLocalize("3D Particles"), HeadlineFontSize, TEXTALIGN_ML);
 	MainView.HSplitTop(MarginSmall, nullptr, &MainView);
 
@@ -4056,9 +4056,9 @@ void CMenus::RenderSettingsSixClientKeystrokes(CUIRect &Column)
 	const float BlockPadding = MarginBetweenViews * 0.6666f;
 	CUIRect Content, Label, Button;
 	const auto DoHighFpsIntakeTooltip = [&](const void *pId, const CUIRect &Row) {
-		GameClient()->m_Tooltips.DoToolTip(pId, &Row, ScLocalize("high fps intake"));
-		GameClient()->m_Tooltips.SetFadeTime(pId, 0.0f);
-		GameClient()->m_Tooltips.SetTextColor(pId, ColorRGBA(1.0f, 0.55f, 0.16f, 1.0f));
+		Ui()->DoToolTip(pId, &Row, ScLocalize("high fps intake"));
+		Ui()->Tooltips()->SetFadeTime(pId, 0.0f);
+		Ui()->Tooltips()->SetTextColor(pId, ColorRGBA(1.0f, 0.55f, 0.16f, 1.0f));
 	};
 
 	const bool KeystrokesIsMinecraft = g_Config.m_ScKeystrokesStyle == 1;
@@ -4103,12 +4103,12 @@ void CMenus::RenderSettingsSixClientKeystrokes(CUIRect &Column)
 		g_Config.m_ScKeystrokesMcShowSpace = DefaultConfig::ScKeystrokesMcShowSpace;
 		g_Config.m_ScKeystrokesMcPressedOpacity = DefaultConfig::ScKeystrokesMcPressedOpacity;
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_KeystrokesResetButton, &KeystrokesResetButton, ScLocalize("Reset to defaults"));
+	Ui()->DoToolTip(&s_KeystrokesResetButton, &KeystrokesResetButton, ScLocalize("Reset to defaults"));
 	static CButtonContainer s_KeystrokesHudEditorButton;
 	const bool KeystrokesCanOpenHudEditor = Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK;
 	const bool KeystrokesHudEditorClicked = Ui()->DoButton_FontIcon(&s_KeystrokesHudEditorButton, FontIcon::UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER, KeystrokesCanOpenHudEditor ? 0 : -1, &KeystrokesHudEditorButton, BUTTONFLAG_LEFT);
-	GameClient()->m_Tooltips.DoToolTip(&s_KeystrokesHudEditorButton, &KeystrokesHudEditorButton, KeystrokesCanOpenHudEditor ? ScLocalize("Open in HUD editor") : ScLocalize("Join a game first"));
-	GameClient()->m_Tooltips.SetFadeTime(&s_KeystrokesHudEditorButton, 0.0f);
+	Ui()->DoToolTip(&s_KeystrokesHudEditorButton, &KeystrokesHudEditorButton, KeystrokesCanOpenHudEditor ? ScLocalize("Open in HUD editor") : ScLocalize("Join a game first"));
+	Ui()->Tooltips()->SetFadeTime(&s_KeystrokesHudEditorButton, 0.0f);
 	if(KeystrokesHudEditorClicked && KeystrokesCanOpenHudEditor)
 	{
 		SetActive(false);

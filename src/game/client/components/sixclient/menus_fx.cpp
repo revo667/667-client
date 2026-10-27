@@ -85,7 +85,7 @@ void CMenus::RenderSettingsSixClientFx(CUIRect &Column, bool HookColumn)
 			g_Config.m_ScGatheredEnergyBurst = DefaultConfig::ScGatheredEnergyBurst;
 			g_Config.m_ScGatheredEnergyAmount = DefaultConfig::ScGatheredEnergyAmount;
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_EffectsReset, &EffectsResetButton, ScLocalize("Reset to defaults"));
+		Ui()->DoToolTip(&s_EffectsReset, &EffectsResetButton, ScLocalize("Reset to defaults"));
 		static CButtonContainer s_EffectsAuthor;
 		DrawFxTitle(EffectsTitle, ScLocalize("Hook effects"), &s_EffectsAuthor);
 		static CButtonContainer s_EffectsColor;
@@ -156,7 +156,7 @@ void CMenus::RenderSettingsSixClientFx(CUIRect &Column, bool HookColumn)
 				g_Config.m_ScWeatherDustSize = DefaultConfig::ScWeatherDustSize;
 				g_Config.m_ScWeatherDustSpeed = DefaultConfig::ScWeatherDustSpeed;
 			}
-			GameClient()->m_Tooltips.DoToolTip(&s_WeatherReset, &WeatherResetButton, ScLocalize("Reset to defaults"));
+			Ui()->DoToolTip(&s_WeatherReset, &WeatherResetButton, ScLocalize("Reset to defaults"));
 			static CButtonContainer s_WeatherAuthor;
 			DrawFxTitle(WeatherTitle, ScLocalize("Weather"), &s_WeatherAuthor);
 			WeatherBlock.HSplitTop(MarginSmall, nullptr, &WeatherBlock);

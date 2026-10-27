@@ -1322,8 +1322,8 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	static CButtonContainer s_ExportButton;
 	if(Ui()->DoButton_FontIcon(&s_ExportButton, RIGHT_FROM_BRACKET, 0, &ExportButton, BUTTONFLAG_LEFT))
 		AssetsEditorExport();
-	GameClient()->m_Tooltips.DoToolTip(&s_ReloadButton, &ReloadButton, Localize("Reload"));
-	GameClient()->m_Tooltips.DoToolTip(&s_ExportButton, &ExportButton, Localize("Export"));
+	Ui()->DoToolTip(&s_ReloadButton, &ReloadButton, Localize("Reload"));
+	Ui()->DoToolTip(&s_ExportButton, &ExportButton, Localize("Export"));
 
 	static CButtonContainer s_ResetAllButton;
 	if(Ui()->DoButton_FontIcon(&s_ResetAllButton, ARROW_ROTATE_LEFT, 0, &ResetButton, BUTTONFLAG_LEFT))
@@ -1346,7 +1346,7 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 		m_AssetsEditorState.m_DirtyPreview = true;
 		m_AssetsEditorState.m_HasUnsavedChanges = true;
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_ResetAllButton, &ResetButton, Localize("Reset All"));
+	Ui()->DoToolTip(&s_ResetAllButton, &ResetButton, Localize("Reset All"));
 
 	ContentView.HSplitTop(MarginSmall, nullptr, &ContentView);
 	CUIRect LeftPanel, ArrowColumn, RightPanel;

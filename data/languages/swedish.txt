@@ -2467,6 +2467,12 @@ Team successfully saved by %s. The database connection failed, using generated s
 Save failed!
 == 
 
+Hold Shift to be more precise.
+== 
+
+Dummy is not connected
+== 
+
 [Important alert message]
 Press Esc or Tab to dismiss…
 == 
@@ -2645,7 +2651,16 @@ When a Tee is hookable
 Hook collision line tip
 == 
 
+Teleport to cursor
+== 
+
+Teleport dummy to cursor
+== 
+
 Scoreboard cursor
+== 
+
+Practice
 == 
 
 Show background quads
@@ -2679,6 +2694,15 @@ Save power by lowering update rate (higher input latency)
 == 
 
 No country flags match your filter criteria
+== 
+
+Join
+== 
+
+not bound
+== 
+
+Show cursor
 == 
 
 Unmute

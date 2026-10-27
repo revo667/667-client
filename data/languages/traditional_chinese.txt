@@ -2664,6 +2664,19 @@ Prediction margin
 Predict events (experimental)
 == 預測事件（實驗性）
 
+Hold Shift to be more precise.
+== 
+
+Dummy is not connected
+== 
+
+[Important alert message]
+Tap to dismiss…
+== 
+
+Initializing layers
+== 
+
 [Direct touch input]
 Relative aim
 == 
@@ -2673,6 +2686,18 @@ Joystick Relative Aim
 == 
 
 Virtual joystick which only aims and moves the mouse pointer relatively.
+== 
+
+Credits
+== 
+
+Teleport to cursor
+== 
+
+Teleport dummy to cursor
+== 
+
+Practice
 == 
 
 [AntiPing: predict other players]
@@ -2691,4 +2716,13 @@ Always predict frozen players
 == 
 
 No country flags match your filter criteria
+== 
+
+Join
+== 
+
+not bound
+== 
+
+Show cursor
 == 

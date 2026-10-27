@@ -234,7 +234,7 @@ CUi::EPopupMenuFunctionResult CDemoTeeEditor::PopupEditor(void *pContext, CUIRec
 	pUi->DoEditBox(&Editor.m_ClanInput, &Input, 13.0f);
 
 	static CButtonContainer s_PreviewButton;
-	pGameClient->m_Tooltips.DoToolTip(&s_PreviewButton, &Preview, Localize("Choose a skin"));
+	pGameClient->Ui()->DoToolTip(&s_PreviewButton, &Preview, Localize("Choose a skin"));
 	if(pUi->DoButtonLogic(&s_PreviewButton, 0, &Preview, BUTTONFLAG_LEFT))
 	{
 		Editor.m_SkinSearchInput.Clear();

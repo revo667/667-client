@@ -91,8 +91,10 @@ class CScoreboard : public CComponent
 	{
 	public:
 		char m_PlayerButtonId;
+		char m_TimeTooltipId;
 		char m_SpectatorSecondLineButtonId;
 		char m_SpotifyButtonId; // 667client
+		char m_aTimeTooltip[32];
 
 		CCachedText m_Score;
 		CCachedText m_ScoreMillis;

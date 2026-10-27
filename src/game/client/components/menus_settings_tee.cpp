@@ -15,7 +15,6 @@
 #include <game/client/components/console.h>
 #include <game/client/components/emoticon.h>
 #include <game/client/components/skins.h>
-#include <game/client/components/tooltips.h>
 #include <game/client/gameclient.h>
 #include <game/client/skin.h>
 #include <game/client/ui.h>
@@ -189,7 +188,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			s_AppliedSkinMaxWidth = g_Config.m_ClSkinMaxWidth;
 			GameClient()->RefreshSkins(CSkinDescriptor::FLAG_SIX | CSkinDescriptor::FLAG_SEVEN);
 		}
-		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ClSkinMaxWidth, &Button, Localize("Maximum skin texture size. Lower this if VRAM runs out with many high-resolution skins."));
+		Ui()->DoToolTip(&g_Config.m_ClSkinMaxWidth, &Button, Localize("Maximum skin texture size. Lower this if VRAM runs out with many high-resolution skins."));
 
 		if(QualityWarningHeight > 0.0f)
 		{
@@ -303,7 +302,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			if((int)m_Dummy == g_Config.m_ClDummy)
 				GameClient()->m_Emoticon.EyeEmote(*pEmote);
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_InteractiveTeeButtonId, &TeePreview, Localize("Choose default eyes when joining a server"));
+		Ui()->DoToolTip(&s_InteractiveTeeButtonId, &TeePreview, Localize("Choose default eyes when joining a server"));
 	} // 667client
 
 	// Skin loading status
@@ -347,7 +346,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			{
 				pErrorTooltip = Localize("Skin could not be found.");
 			}
-			GameClient()->m_Tooltips.DoToolTip(pStatusTooltipId, &StatusIcon, pErrorTooltip);
+			Ui()->DoToolTip(pStatusTooltipId, &StatusIcon, pErrorTooltip);
 		}
 	};
 	static char s_StatusTooltipId;
@@ -375,7 +374,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		s_PopupCountryContext.m_New = true;
 		Ui()->DoPopupMenu(&s_PopupCountryId, FlagButton.x, FlagButton.y + FlagButton.h, 490.0f, 210.0f, &s_PopupCountryContext, PopupSettingsCountrySelection);
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_FlagButton, &FlagButton, Localize("Choose country flag"));
+	Ui()->DoToolTip(&s_FlagButton, &FlagButton, Localize("Choose country flag"));
 
 	CUIRect FlagIcon = FlagButton;
 	const float OldFlagWidth = FlagIcon.w;
@@ -407,7 +406,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	}
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-	GameClient()->m_Tooltips.DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
+	Ui()->DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
 
 	// Custom colors button
 	if(DoButton_CheckBox(pUseCustomColor, Localize("Custom colors"), *pUseCustomColor, &CustomColorsButton))
@@ -502,10 +501,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		{
 			CTeeRenderInfo Info = OwnSkinInfo;
 			Info.Apply(pSkin);
-			vec2 OffsetToMid;
-			CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &Info, OffsetToMid);
-			const vec2 TeeRenderPos = vec2(Button.x + Button.w / 2.0f, Button.y + Button.h / 2 + OffsetToMid.y);
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, *pEmote, vec2(1.0f, 0.0f), TeeRenderPos);
+			RenderTools()->RenderIdleTeeAtCenter(&Info, vec2(Button.x + Button.w / 2.0f, Button.y + Button.h / 2), *pEmote);
 		}
 
 		{
@@ -594,7 +590,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		Storage()->CreateFolder("skins", IStorage::TYPE_SAVE);
 		Client()->ViewFile(aBuf);
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_DirectoryButton, &DirectoryButton, Localize("Open the directory to add custom skins"));
+	Ui()->DoToolTip(&s_DirectoryButton, &DirectoryButton, Localize("Open the directory to add custom skins"));
 
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);

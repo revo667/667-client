@@ -457,7 +457,7 @@ void CMenus::RenderFrozenSkinSettings(CUIRect &View)
 	View.HSplitTop(20.0f, &Button, &View);
 	static CLineInput s_FrozenSkinInput(g_Config.m_ScFrozenSkin, sizeof(g_Config.m_ScFrozenSkin));
 	Ui()->DoClearableEditBox(&s_FrozenSkinInput, &Button, 14.0f);
-	GameClient()->m_Tooltips.DoToolTip(&s_FrozenSkinInput, &Button, Localize("Skin to show on frozen players, empty keeps the default behavior"));
+	Ui()->DoToolTip(&s_FrozenSkinInput, &Button, Localize("Skin to show on frozen players, empty keeps the default behavior"));
 
 	View.HSplitTop(2.0f, nullptr, &View);
 	View.HSplitTop(40.0f, &Button, &View);
