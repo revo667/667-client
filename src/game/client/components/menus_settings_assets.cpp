@@ -1519,7 +1519,7 @@ void CMenus::RenderSettingsAssets(CUIRect MainView)
 				str_format(aBuf, sizeof(aBuf), Localize("Are you sure that you want to delete '%s'?"), pItem->m_aName);
 				PopupConfirm(Localize("Delete asset"), aBuf, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDeleteAsset);
 			}
-			GameClient()->m_Tooltips.DoToolTip(&pItem->m_DeleteButtonId, &DeleteButton, Localize("Delete this asset from your assets directory."));
+			Ui()->DoToolTip(&pItem->m_DeleteButtonId, &DeleteButton, Localize("Delete this asset from your assets directory."));
 		}
 
 		if(DoButton_Favorite(&pItem->m_FavoriteButtonId, pItem, Favorite, &FavoriteButton))
@@ -1529,7 +1529,7 @@ void CMenus::RenderSettingsAssets(CUIRect MainView)
 			else
 				AddFavoriteAsset(s_CurCustomTab, pItem->m_aName);
 		}
-		GameClient()->m_Tooltips.DoToolTip(&pItem->m_FavoriteButtonId, &FavoriteButton,
+		Ui()->DoToolTip(&pItem->m_FavoriteButtonId, &FavoriteButton,
 			Favorite ? Localize("Click to remove this item from your favorites.") : Localize("Click to add this item to your favorites."));
 	}
 
@@ -1625,7 +1625,7 @@ void CMenus::RenderSettingsAssets(CUIRect MainView)
 		static CButtonContainer s_BetterPreviewToggleId;
 		if(DoButton_Menu(&s_BetterPreviewToggleId, g_Config.m_ScBetterPreview ? FontIcon::EYE : FontIcon::IMAGE, g_Config.m_ScBetterPreview, &ToggleRect))
 			g_Config.m_ScBetterPreview ^= 1;
-		GameClient()->m_Tooltips.DoToolTip(&s_BetterPreviewToggleId, &ToggleRect, Localize("Toggle between composed preview and raw texture"));
+		Ui()->DoToolTip(&s_BetterPreviewToggleId, &ToggleRect, Localize("Toggle between composed preview and raw texture"));
 	}
 	if(!EditorExplore)
 	{
@@ -1643,7 +1643,7 @@ void CMenus::RenderSettingsAssets(CUIRect MainView)
 				s_CurrentDie = rand() % std::size(s_apDice);
 			}
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_RandomAssetButton, &RandomAssetButton, Localize("Select a random asset"));
+		Ui()->DoToolTip(&s_RandomAssetButton, &RandomAssetButton, Localize("Select a random asset"));
 	}
 	{
 		CUIRect RightCluster, AssetsEditorButton;
@@ -1663,7 +1663,7 @@ void CMenus::RenderSettingsAssets(CUIRect MainView)
 			m_AssetsEditorState.m_Open = true;
 			m_AssetsEditorState.m_ExploreSide = -1;
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_AssetsEditorButton, &AssetsEditorButton, Localize("Assets editor"));
+		Ui()->DoToolTip(&s_AssetsEditorButton, &AssetsEditorButton, Localize("Assets editor"));
 	}
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
@@ -1696,7 +1696,7 @@ void CMenus::RenderSettingsAssets(CUIRect MainView)
 		Storage()->CreateFolder(aBufFull, IStorage::TYPE_SAVE);
 		Client()->ViewFile(aBuf);
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_AssetsDirId, &DirectoryButton, Localize("Open the directory to add custom assets"));
+	Ui()->DoToolTip(&s_AssetsDirId, &DirectoryButton, Localize("Open the directory to add custom assets"));
 
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);

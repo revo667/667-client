@@ -15,7 +15,6 @@
 #include <game/client/components/console.h>
 #include <game/client/components/skins7.h>
 #include <game/client/components/sounds.h>
-#include <game/client/components/tooltips.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
@@ -113,7 +112,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 		s_PopupCountryContext.m_New = true;
 		Ui()->DoPopupMenu(&s_PopupCountryId, FlagButton.x, FlagButton.y + FlagButton.h, 490.0f, 210.0f, &s_PopupCountryContext, PopupSettingsCountrySelection);
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_FlagButton, &FlagButton, Localize("Choose country flag"));
+	Ui()->DoToolTip(&s_FlagButton, &FlagButton, Localize("Choose country flag"));
 	CUIRect FlagIcon = FlagButton;
 	const float OldFlagWidth = FlagIcon.w;
 	FlagIcon.w = FlagIcon.h * 2.0f;
@@ -255,7 +254,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 		Storage()->CreateFolder("skins7", IStorage::TYPE_SAVE);
 		Client()->ViewFile(aBuf);
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_DirectoryButton, &DirectoryButton, Localize("Open the directory to add custom skins"));
+	Ui()->DoToolTip(&s_DirectoryButton, &DirectoryButton, Localize("Open the directory to add custom skins"));
 
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
@@ -347,7 +346,7 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView)
 	}
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-	GameClient()->m_Tooltips.DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
+	Ui()->DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
 }
 
 void CMenus::RenderSkinSelection7(CUIRect MainView)
@@ -404,9 +403,7 @@ void CMenus::RenderSkinSelection7(CUIRect MainView)
 		{
 			// interactive tee: tee is happy to be selected
 			int TeeEmote = (Item.m_Selected && s_LastSelectionTime + 0.75f > Client()->GlobalTime()) ? EMOTE_HAPPY : EMOTE_NORMAL;
-			vec2 OffsetToMid;
-			CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &Info, OffsetToMid);
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, TeeEmote, vec2(1.0f, 0.0f), TeePreview.Center() + OffsetToMid);
+			RenderTools()->RenderIdleTeeAtCenter(&Info, TeePreview.Center(), TeeEmote);
 		}
 
 		SLabelProperties Props;
@@ -489,19 +486,16 @@ void CMenus::RenderSkinPartSelection7(CUIRect MainView)
 		}
 		Info.m_Size = 50.0f;
 
-		vec2 OffsetToMid;
-		CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &Info, OffsetToMid);
-		const vec2 TeePos = Item.m_Rect.Center() + OffsetToMid;
 		if(m_TeePartSelected == protocol7::SKINPART_HANDS)
 		{
-			// RenderTools()->RenderTeeHand(&Info, TeePos, vec2(1.0f, 0.0f), -pi*0.5f, vec2(18, 0));
+			// RenderTools()->RenderTeeHand(&Info, Item.m_Rect.Center(), vec2(1.0f, 0.0f), -pi*0.5f, vec2(18, 0));
 		}
 		int TeePartEmote = EMOTE_NORMAL;
 		if(m_TeePartSelected == protocol7::SKINPART_EYES)
 		{
 			TeePartEmote = (int)(Client()->GlobalTime() * 0.5f) % NUM_EMOTES;
 		}
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, TeePartEmote, vec2(1.0f, 0.0f), TeePos);
+		RenderTools()->RenderIdleTeeAtCenter(&Info, Item.m_Rect.Center(), TeePartEmote);
 
 		Ui()->DoLabel(&Label, pPart->m_aName, 12.0f, TEXTALIGN_MC);
 	}

@@ -7,7 +7,6 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
-#include <game/client/components/tooltips.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
@@ -217,12 +216,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		GameClient()->m_Optimizer.OnGfxHighDetailToggled();
 		// 667client
 	}
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_GfxHighDetail, &Button, Localize("Allows maps to render with more detail"));
+	Ui()->DoToolTip(&g_Config.m_GfxHighDetail, &Button, Localize("Allows maps to render with more detail"));
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_ClShowfps, Localize("Show FPS"), g_Config.m_ClShowfps, &Button))
 		g_Config.m_ClShowfps ^= 1;
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ClShowfps, &Button, Localize("Renders your frame rate in the top right"));
+	Ui()->DoToolTip(&g_Config.m_ClShowfps, &Button, Localize("Renders your frame rate in the top right"));
 
 	// 667client
 	if(g_Config.m_ClShowfps)
@@ -231,7 +230,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Button.VSplitLeft(20.0f, nullptr, &Button);
 		if(DoButton_CheckBox(&g_Config.m_ScDisplayMaxFps, Localize("Show max FPS"), g_Config.m_ScDisplayMaxFps, &Button))
 			g_Config.m_ScDisplayMaxFps ^= 1;
-		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ScDisplayMaxFps, &Button, Localize("Shows the fastest frame of every half second instead of the average frame rate"));
+		Ui()->DoToolTip(&g_Config.m_ScDisplayMaxFps, &Button, Localize("Shows the fastest frame of every half second instead of the average frame rate"));
 	}
 	// 667client
 

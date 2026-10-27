@@ -2625,6 +2625,37 @@ Prediction margin
 Predict events (experimental)
 == Przewiduj wydarzenia (eksperymentalne)
 
+[AntiPing: predict other players]
+Off
+== Wyłączone
+
+[AntiPing: predict other players]
+All
+== Wszystkich
+
+[AntiPing: predict other players]
+Interact
+== Interakcja
+
+Always predict frozen players
+== Zawsze przewiduj zamrożonych graczy
+
+No country flags match your filter criteria
+== Żadna flaga nie odpowiada twoim kryteriom
+
+Hold Shift to be more precise.
+== 
+
+Dummy is not connected
+== 
+
+[Important alert message]
+Tap to dismiss…
+== 
+
+Initializing layers
+== 
+
 [Direct touch input]
 Relative aim
 == 
@@ -2675,20 +2706,20 @@ Virtual joystick which always uses hook.
 The extra menu with the given number is activated.
 == 
 
-[AntiPing: predict other players]
-Off
+Teleport to cursor
 == 
 
-[AntiPing: predict other players]
-All
+Teleport dummy to cursor
 == 
 
-[AntiPing: predict other players]
-Interact
+Practice
 == 
 
-Always predict frozen players
+Join
 == 
 
-No country flags match your filter criteria
+not bound
+== 
+
+Show cursor
 == 

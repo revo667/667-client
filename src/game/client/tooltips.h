@@ -1,5 +1,5 @@
-#ifndef GAME_CLIENT_COMPONENTS_TOOLTIPS_H
-#define GAME_CLIENT_COMPONENTS_TOOLTIPS_H
+#ifndef GAME_CLIENT_TOOLTIPS_H
+#define GAME_CLIENT_TOOLTIPS_H
 
 // 667client
 #include <base/color.h>
@@ -13,12 +13,18 @@
 #include <optional>
 #include <unordered_map>
 
-struct CTooltip
+class CTooltip
 {
+public:
+	CTooltip(const void *pId, const CUIRect &Rect, const char *pText, float WidthHint, float FontSize, bool Truncated) :
+		m_pId(pId), m_Rect(Rect), m_pText(pText), m_WidthHint(WidthHint), m_FontSize(FontSize), m_Truncated(Truncated), m_OnScreen(false) {}
+
 	const void *m_pId;
 	CUIRect m_Rect;
 	const char *m_pText;
 	float m_WidthHint;
+	float m_FontSize;
+	bool m_Truncated;
 	bool m_OnScreen; // used to know if the tooltip should be rendered.
 	float m_FadeTime = 0.75f;
 	// 667client
@@ -27,12 +33,15 @@ struct CTooltip
 	// 667client
 };
 
+class CUi;
+class ITextRender;
+
 /**
  * A component that manages and renders UI tooltips.
  *
  * Should be among the last components to render.
  */
-class CTooltips : public CComponent
+class CTooltips
 {
 	std::unordered_map<uintptr_t, CTooltip> m_Tooltips;
 	std::optional<std::reference_wrapper<CTooltip>> m_ActiveTooltip;
@@ -45,26 +54,19 @@ class CTooltips : public CComponent
 	void SetActiveTooltip(CTooltip &Tooltip);
 
 	inline void ClearActiveTooltip();
+	CUi *m_pUi;
+	ITextRender *m_pTextRender;
+	CUi *Ui() { return m_pUi; }
+	ITextRender *TextRender() { return m_pTextRender; }
 
 public:
-	CTooltips();
-	int Sizeof() const override { return sizeof(*this); }
+	CTooltips() = default;
+	void Init(CUi *pUi, ITextRender *pTextRender);
 
-	/**
-	 * Adds the tooltip to a cache and renders it when active.
-	 *
-	 * On the first call to this function, the data passed is cached, afterwards the calls are used to detect if the tooltip should be activated.
-	 * If multiple tooltips cover the same rect or the rects intersect, then the tooltip that is added later has priority.
-	 *
-	 * @param pId The ID of the tooltip. Usually a reference to some g_Config value.
-	 * @param pNearRect Place the tooltip near this rect.
-	 * @param pText The text to display in the tooltip.
-	 * @param WidthHint The maximum width of the tooltip, or -1.0f for unlimited.
-	 */
-	void DoToolTip(const void *pId, const CUIRect *pNearRect, const char *pText, float WidthHint = -1.0f);
+	void DoToolTip(const CTooltip &Tooltip);
 
-	void OnReset() override;
-	void OnRender() override;
+	void OnReset();
+	void OnRender();
 
 	// TClient
 	void SetFadeTime(const void *pId, float Time);

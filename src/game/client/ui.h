@@ -4,12 +4,14 @@
 #define GAME_CLIENT_UI_H
 
 #include "lineinput.h"
+#include "tooltips.h"
 #include "ui_rect.h"
 
 #include <engine/input.h>
 #include <engine/textrender.h>
 
 #include <chrono>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,6 +19,7 @@ class CScrollRegion;
 class IClient;
 class IGraphics;
 class IKernel;
+class CTooltip;
 
 enum class EEditState
 {
@@ -220,6 +223,7 @@ struct SLabelProperties
 	bool m_EnableWidthCheck = true;
 	float m_MinimumFontSize = 5.0f;
 	std::vector<STextColorSplit> m_vColorSplits;
+	void *m_pTooltipId = nullptr;
 
 	void SetColor(const ColorRGBA &Color);
 };
@@ -325,6 +329,7 @@ class CCachedText
 	// 667client
 	bool m_Colored = false;
 	// 667client
+	float m_AlignedFontSize = 0.0f;
 
 public:
 	CCachedText() = default;
@@ -341,6 +346,7 @@ public:
 
 	float Width() const { return m_BoundingBox.m_W; }
 	float MaxCharacterHeight() const { return m_MaxCharacterHeight; }
+	float AlignedFontSize() const { return m_AlignedFontSize; }
 };
 
 class CUi
@@ -512,6 +518,7 @@ private:
 
 	std::vector<CUIElement *> m_vpOwnUIElements; // ui elements maintained by CUi class
 	std::vector<CUIElement *> m_vpUIElements;
+	std::unique_ptr<CTooltips> m_pTooltips;
 
 public:
 	static const CLinearScrollbarScale ms_LinearScrollbarScale;
@@ -893,6 +900,24 @@ public:
 	// 667client
 	int DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State, bool OpenUpward);
 	// 667client
+
+	// tooltips
+	/**
+	 * Adds the tooltip to a cache and renders it when active.
+	 *
+	 * On the first call to this function, the data passed is cached, afterwards the calls are used to detect if the tooltip should be activated.
+	 * If multiple tooltips cover the same rect or the rects intersect, then the tooltip that is added later has priority.
+	 *
+	 * @param pId The ID of the tooltip. Usually a reference to some g_Config value.
+	 * @param pNearRect Place the tooltip near this rect.
+	 * @param pText The text to display in the tooltip.
+	 * @param WidthHint The maximum width of the tooltip, or -1.0f for unlimited.
+	 */
+	void DoToolTip(const void *pId, const CUIRect *pNearRect, const char *pText, float WidthHint = -1.0f) const;
+	void DoToolTip(const CTooltip &Tooltip) const;
+	void OnRenderTooltip() const { m_pTooltips->OnRender(); }
+	void OnReset() const { m_pTooltips->OnReset(); }
+	CTooltips *Tooltips() const { return m_pTooltips.get(); }
 };
 
 #endif

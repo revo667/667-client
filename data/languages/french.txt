@@ -2016,6 +2016,9 @@ Team successfully saved by %s. The database connection failed, using generated s
 Save failed!
 == 
 
+Hold Shift to be more precise.
+== 
+
 Auto-sync player camera
 == 
 
@@ -2040,6 +2043,9 @@ Active
 == 
 
 Loading maps…
+== 
+
+Dummy is not connected
 == 
 
 [Spectating]
@@ -2618,7 +2624,16 @@ Dragger Outline Color
 Dragger Inner Color
 == 
 
+Teleport to cursor
+== 
+
+Teleport dummy to cursor
+== 
+
 Scoreboard cursor
+== 
+
+Practice
 == 
 
 Show background quads
@@ -2679,6 +2694,12 @@ No skins match your filter criteria
 == 
 
 Download
+== 
+
+not bound
+== 
+
+Show cursor
 == 
 
 Unmute

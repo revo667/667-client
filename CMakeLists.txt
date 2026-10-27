@@ -456,6 +456,7 @@ if(NOT MSVC AND NOT HAIKU)
   add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wthread-safety)
   add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wthread-safety-negative)
   add_linker_flag_if_supported(OUR_FLAGS_LINK -Wno-alloc-size-larger-than) # save.cpp with LTO
+  add_linker_flag_if_supported(OUR_FLAGS_LINK -Wno-stringop-overflow) # str_copy with LTO
   # tidy-alphabetical-end
   # add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wdouble-promotion) # Many occurrences
   # add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN -Wnull-dereference) # Many occurrences
@@ -3238,8 +3239,6 @@ if(CLIENT)
     components/tclient/trails.h
     components/tclient/warlist.cpp
     components/tclient/warlist.h
-    components/tooltips.cpp
-    components/tooltips.h
     components/touch_controls.cpp
     components/touch_controls.h
     components/voting.cpp
@@ -3285,6 +3284,8 @@ if(CLIENT)
     sixup_translate_snapshot.cpp
     skin.cpp
     skin.h
+    tooltips.cpp
+    tooltips.h
     ui.cpp
     ui.h
     ui_listbox.cpp
@@ -4851,7 +4852,7 @@ source_group_tree(src)
 
 if(ANTIBOT)
   # Allow the antibot library to use functions from the server binary.
-  add_cxx_compiler_flag_if_supported(OUR_FLAGS_LINK -rdynamic)
+  add_linker_flag_if_supported(OUR_FLAGS_LINK -rdynamic)
   set_own_rpath(game-server)
 endif()
 

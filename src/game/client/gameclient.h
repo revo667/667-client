@@ -130,7 +130,6 @@
 #include "components/tclient/tclient.h"
 #include "components/tclient/trails.h"
 #include "components/tclient/warlist.h"
-#include "components/tooltips.h"
 #include "components/touch_controls.h"
 #include "components/voting.h"
 
@@ -313,9 +312,6 @@ public:
 
 	CRaceDemo m_RaceDemo;
 	CGhost m_Ghost;
-
-	CTooltips m_Tooltips;
-
 	CLocalServer m_LocalServer;
 
 	// TClient Components
