@@ -45,6 +45,9 @@ class CSixClient : public CComponent
 	std::shared_ptr<IHttpRequest> m_pFindHoursTask;
 	char m_aFindHoursPlayer[MAX_NAME_LENGTH]{};
 
+	char m_aaFollowedFoeNames[MAX_CLIENTS][MAX_NAME_LENGTH]{};
+	char m_aaFollowedFoeClans[MAX_CLIENTS][MAX_CLAN_LENGTH]{};
+
 	void UpdateFindHours();
 	void ResetFindHours();
 
@@ -73,6 +76,7 @@ public:
 	void RenderSpecMovedNotify();
 
 	void OnClientNameChanged(int ClientId, const char *pNewName, const char *pNewClan);
+	bool IsFollowedFoe(int ClientId) const;
 
 	void CopyPlayerSkin(int ClientId);
 	void FetchFindHours(const char *pName);

@@ -282,14 +282,31 @@ namespace MediaDecoder
 		int VideoStream = -1;
 		int SrcW = 0;
 		int SrcH = 0;
+		int SwsSrcW = 0;
+		int SwsSrcH = 0;
+		AVPixelFormat SwsSrcFormat = AV_PIX_FMT_NONE;
 		size_t FrameBytes = 0;
+
+		auto MatchFrameSource = [&](int ScaleW, int ScaleH) -> bool {
+			if(pFrame->width == SwsSrcW && pFrame->height == SwsSrcH && pFrame->format == SwsSrcFormat)
+				return pSwsCtx != nullptr;
+			if(pFrame->width <= 0 || pFrame->height <= 0 || pFrame->width > MEDIA_MAX_DIMENSION || pFrame->height > MEDIA_MAX_DIMENSION || pFrame->format < 0)
+				return false;
+			SwsSrcW = pFrame->width;
+			SwsSrcH = pFrame->height;
+			SwsSrcFormat = (AVPixelFormat)pFrame->format;
+			pSwsCtx = sws_getCachedContext(pSwsCtx, SwsSrcW, SwsSrcH, SwsSrcFormat, ScaleW, ScaleH, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
+			return pSwsCtx != nullptr;
+		};
 
 		auto CopyCurrentFrame = [&]() -> bool {
 			if(!pFrame || !pFrameRgba || !pSwsCtx || SrcW <= 0 || SrcH <= 0)
 				return false;
+			if(!MatchFrameSource(SrcW, SrcH))
+				return false;
 			if(av_frame_make_writable(pFrameRgba) < 0)
 				return false;
-			const int ScaledLines = sws_scale(pSwsCtx, pFrame->data, pFrame->linesize, 0, SrcH, pFrameRgba->data, pFrameRgba->linesize);
+			const int ScaledLines = sws_scale(pSwsCtx, pFrame->data, pFrame->linesize, 0, pFrame->height, pFrameRgba->data, pFrameRgba->linesize);
 			if(ScaledLines <= 0 || pFrameRgba->linesize[0] <= 0 || (size_t)pFrameRgba->linesize[0] < (size_t)SrcW * 4ull)
 				return false;
 
@@ -338,7 +355,10 @@ namespace MediaDecoder
 			if(FrameBytes == 0 || FrameBytes > MEDIA_MAX_ANIMATED_MEMORY_BYTES)
 				break;
 
-			pSwsCtx = sws_getContext(SrcW, SrcH, pCodecCtx->pix_fmt, SrcW, SrcH, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
+			SwsSrcW = SrcW;
+			SwsSrcH = SrcH;
+			SwsSrcFormat = pCodecCtx->pix_fmt;
+			pSwsCtx = sws_getContext(SwsSrcW, SwsSrcH, SwsSrcFormat, SrcW, SrcH, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
 			if(!pSwsCtx)
 				break;
 
@@ -455,6 +475,9 @@ namespace MediaDecoder
 		AVStream *pStream = nullptr;
 		int SrcW = 0;
 		int SrcH = 0;
+		int SwsSrcW = 0;
+		int SwsSrcH = 0;
+		AVPixelFormat SwsSrcFormat = AV_PIX_FMT_NONE;
 		int DstW = 0;
 		int DstH = 0;
 		int64_t LastValidPts = AV_NOPTS_VALUE;
@@ -511,8 +534,22 @@ namespace MediaDecoder
 				DecodedTimelineMs += ClampFrameDurationMs(Frame.m_DurationMs);
 		};
 
+		auto MatchFrameSource = [&](int ScaleW, int ScaleH) -> bool {
+			if(pFrame->width == SwsSrcW && pFrame->height == SwsSrcH && pFrame->format == SwsSrcFormat)
+				return pSwsCtx != nullptr;
+			if(pFrame->width <= 0 || pFrame->height <= 0 || pFrame->width > MEDIA_MAX_DIMENSION || pFrame->height > MEDIA_MAX_DIMENSION || pFrame->format < 0)
+				return false;
+			SwsSrcW = pFrame->width;
+			SwsSrcH = pFrame->height;
+			SwsSrcFormat = (AVPixelFormat)pFrame->format;
+			pSwsCtx = sws_getCachedContext(pSwsCtx, SwsSrcW, SwsSrcH, SwsSrcFormat, ScaleW, ScaleH, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
+			return pSwsCtx != nullptr;
+		};
+
 		auto AddFrame = [&](int DurationMs) {
 			if(FrameBytes == 0 || DstW <= 0 || DstH <= 0 || !pFrame || !pFrame->data[0] || !pFrameRgba || !pSwsCtx || !pFrameRgba->data[0])
+				return false;
+			if(!MatchFrameSource(DstW, DstH))
 				return false;
 
 			SMediaRawFrame Frame;
@@ -529,7 +566,7 @@ namespace MediaDecoder
 				return false;
 			}
 
-			const int ScaledLines = sws_scale(pSwsCtx, pFrame->data, pFrame->linesize, 0, SrcH, pFrameRgba->data, pFrameRgba->linesize);
+			const int ScaledLines = sws_scale(pSwsCtx, pFrame->data, pFrame->linesize, 0, pFrame->height, pFrameRgba->data, pFrameRgba->linesize);
 			if(ScaledLines <= 0)
 				return false;
 			if(pFrameRgba->linesize[0] <= 0 || (size_t)pFrameRgba->linesize[0] < (size_t)DstW * 4ull)
@@ -702,7 +739,10 @@ namespace MediaDecoder
 			if(FrameBytes == 0 || FrameBytes > Limits.m_MaxTotalBytes)
 				break;
 
-			pSwsCtx = sws_getContext(SrcW, SrcH, pCodecCtx->pix_fmt, DstW, DstH, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
+			SwsSrcW = SrcW;
+			SwsSrcH = SrcH;
+			SwsSrcFormat = pCodecCtx->pix_fmt;
+			pSwsCtx = sws_getContext(SwsSrcW, SwsSrcH, SwsSrcFormat, DstW, DstH, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
 			if(!pSwsCtx)
 				break;
 

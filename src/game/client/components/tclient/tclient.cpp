@@ -153,7 +153,7 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		int ClientId = pMsg->m_ClientId;
 
-		if(ClientId < 0 || ClientId > MAX_CLIENTS)
+		if(ClientId < 0 || ClientId >= MAX_CLIENTS)
 			return;
 		int LocalId = GameClient()->m_Snap.m_LocalClientId;
 		if(ClientId == LocalId)

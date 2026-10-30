@@ -43,6 +43,7 @@ namespace
 		case SC_INPUTS_FAST: return "fast";
 		case SC_INPUTS_BEST: return "best";
 		case SC_INPUTS_SAIKO: return "saiko";
+		case SC_INPUTS_F: return "f";
 		case SC_INPUTS_CLOUD: return "cloud";
 		case SC_INPUTS_SIX: return "667";
 		case SC_INPUTS_MEOW: return "meow";
@@ -62,7 +63,7 @@ void CFastInputLog::OnConsoleInit()
 void CFastInputLog::ConchainInputs(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
-	if(g_Config.m_ScInputs == SC_INPUTS_REMOVED_DELTA || g_Config.m_ScInputs == SC_INPUTS_REMOVED_F)
+	if(g_Config.m_ScInputs == SC_INPUTS_REMOVED_DELTA)
 		g_Config.m_ScInputs = SC_INPUTS_FAST;
 }
 

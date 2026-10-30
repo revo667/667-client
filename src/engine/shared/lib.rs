@@ -15,7 +15,9 @@
 extern crate ddnet_test;
 
 mod config;
+mod ed25519;
 mod rust_version;
 
 pub use config::*;
+pub use ed25519::*;
 pub use rust_version::*;

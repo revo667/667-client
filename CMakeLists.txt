@@ -2631,6 +2631,7 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   demo.h
   econ.cpp
   econ.h
+  ed25519.h
   engine.cpp
   fifo.cpp
   fifo.h

@@ -13,6 +13,7 @@
 #include <engine/external/json-parser/json.h>
 #include <engine/http.h>
 #include <engine/shared/config.h>
+#include <engine/shared/ed25519.h>
 #include <engine/shared/json.h>
 #include <engine/storage.h>
 
@@ -23,6 +24,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <iterator>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -36,6 +38,13 @@ static bool StrEndsWithNoCase(const char *pStr, const char *pSuffix)
 		return false;
 	return str_comp_nocase(pStr + StrLen - SuffixLen, pSuffix) == 0;
 }
+
+static constexpr const char *UPDATE_MANIFEST_NAME = "CecenClient-update.txt";
+static constexpr const char *UPDATE_SIGNATURE_NAME = "CecenClient-update.txt.sig";
+static constexpr unsigned char UPDATE_PUBLIC_KEY[ED25519_PUBLIC_KEY_LENGTH] = {
+	0x1a, 0xd5, 0x90, 0x0d, 0x23, 0xe1, 0x05, 0x66, 0x5f, 0x05, 0x80, 0x3c,
+	0x07, 0x26, 0x1c, 0x78, 0xd3, 0xfb, 0x92, 0x34, 0xe0, 0xd7, 0x23, 0xbb,
+	0x8e, 0xe3, 0x92, 0x19, 0xd5, 0x85, 0x19, 0xb3};
 
 static constexpr const char *GITHUB_RELEASES_URL = "https://api.github.com/repos/revo667/cecen-client-releases/releases?per_page=10";
 #if defined(CONF_PLATFORM_LINUX)
@@ -205,7 +214,16 @@ static bool ReleaseIsDraft(const json_value *pJson)
 	return pDraft && pDraft->type == json_boolean && pDraft->u.boolean;
 }
 
-static bool ParseReleaseObject(const json_value *pJson, char *pVersion, int VersionSize, char *pArchiveName, int ArchiveNameSize, char *pArchiveUrl, int ArchiveUrlSize)
+struct SReleaseInfo
+{
+	char m_aVersion[64] = "";
+	char m_aArchiveName[128] = "";
+	char m_aArchiveUrl[2048] = "";
+	char m_aManifestUrl[2048] = "";
+	char m_aSignatureUrl[2048] = "";
+};
+
+static bool ParseReleaseObject(const json_value *pJson, SReleaseInfo *pInfo)
 {
 	if(!pJson || pJson->type != json_object)
 		return false;
@@ -222,9 +240,8 @@ static bool ParseReleaseObject(const json_value *pJson, char *pVersion, int Vers
 	if(!pAssets || pAssets->type != json_array)
 		return false;
 
+	SReleaseInfo Info;
 	int BestScore = -1;
-	char aBestName[128] = "";
-	char aBestUrl[2048] = "";
 
 	for(int i = 0; i < json_array_length(pAssets); ++i)
 	{
@@ -234,62 +251,109 @@ static bool ParseReleaseObject(const json_value *pJson, char *pVersion, int Vers
 
 		const char *pName = json_string_get(json_object_get(pAsset, "name"));
 		const char *pUrl = json_string_get(json_object_get(pAsset, "browser_download_url"));
+		if(!pName || !pUrl)
+			continue;
+		if(str_comp(pName, UPDATE_MANIFEST_NAME) == 0)
+		{
+			str_copy(Info.m_aManifestUrl, pUrl, sizeof(Info.m_aManifestUrl));
+			continue;
+		}
+		if(str_comp(pName, UPDATE_SIGNATURE_NAME) == 0)
+		{
+			str_copy(Info.m_aSignatureUrl, pUrl, sizeof(Info.m_aSignatureUrl));
+			continue;
+		}
+
 		const int Score = ScoreArchiveAsset(pName);
-		if(!pName || !pUrl || Score < BestScore)
+		if(Score < BestScore)
 			continue;
 
 		BestScore = Score;
-		str_copy(aBestName, pName, sizeof(aBestName));
-		str_copy(aBestUrl, pUrl, sizeof(aBestUrl));
+		str_copy(Info.m_aArchiveName, pName, sizeof(Info.m_aArchiveName));
+		str_copy(Info.m_aArchiveUrl, pUrl, sizeof(Info.m_aArchiveUrl));
 	}
 
-	if(BestScore < 0)
+	if(BestScore < 0 || Info.m_aManifestUrl[0] == '\0' || Info.m_aSignatureUrl[0] == '\0')
 		return false;
 
-	str_copy(pVersion, pReleaseVersion, VersionSize);
-	str_copy(pArchiveName, aBestName, ArchiveNameSize);
-	str_copy(pArchiveUrl, aBestUrl, ArchiveUrlSize);
+	str_copy(Info.m_aVersion, pReleaseVersion, sizeof(Info.m_aVersion));
+	*pInfo = Info;
 	return true;
 }
 
-static bool ParseLatestRelease(json_value *pJson, char *pVersion, int VersionSize, char *pArchiveName, int ArchiveNameSize, char *pArchiveUrl, int ArchiveUrlSize)
+static bool ParseLatestRelease(json_value *pJson, SReleaseInfo *pInfo)
 {
 	if(!pJson)
 		return false;
 
 	if(pJson->type == json_object)
-		return ParseReleaseObject(pJson, pVersion, VersionSize, pArchiveName, ArchiveNameSize, pArchiveUrl, ArchiveUrlSize);
+		return ParseReleaseObject(pJson, pInfo);
 
 	if(pJson->type == json_array)
 	{
-		char aBestVersion[64] = "";
-		char aBestName[128] = "";
-		char aBestUrl[2048] = "";
+		SReleaseInfo Best;
 		bool Found = false;
 		for(int i = 0; i < json_array_length(pJson); ++i)
 		{
-			const json_value *pRelease = json_array_get(pJson, i);
-			char aVersion[64] = "";
-			char aName[128] = "";
-			char aUrl[2048] = "";
-			if(!ParseReleaseObject(pRelease, aVersion, sizeof(aVersion), aName, sizeof(aName), aUrl, sizeof(aUrl)))
+			SReleaseInfo Info;
+			if(!ParseReleaseObject(json_array_get(pJson, i), &Info))
 				continue;
-			if(Found && CompareVersionStrings(aVersion, aBestVersion) <= 0)
+			if(Found && CompareVersionStrings(Info.m_aVersion, Best.m_aVersion) <= 0)
 				continue;
 			Found = true;
-			str_copy(aBestVersion, aVersion, sizeof(aBestVersion));
-			str_copy(aBestName, aName, sizeof(aBestName));
-			str_copy(aBestUrl, aUrl, sizeof(aBestUrl));
+			Best = Info;
 		}
 		if(!Found)
 			return false;
-		str_copy(pVersion, aBestVersion, VersionSize);
-		str_copy(pArchiveName, aBestName, ArchiveNameSize);
-		str_copy(pArchiveUrl, aBestUrl, ArchiveUrlSize);
+		*pInfo = Best;
 		return true;
 	}
 
 	return false;
+}
+
+static bool ParseUpdateManifest(const std::string &Manifest, const char *pVersion, const char *pArchiveName, SHA256_DIGEST *pSha256)
+{
+	char aWantVersion[64];
+	NormalizeVersionString(pVersion, aWantVersion, sizeof(aWantVersion));
+
+	std::istringstream Stream(Manifest);
+	std::string Line;
+	bool HeaderSeen = false;
+	bool VersionMatches = false;
+	bool HashFound = false;
+	while(std::getline(Stream, Line))
+	{
+		if(!Line.empty() && Line.back() == '\r')
+			Line.pop_back();
+		std::istringstream Fields(Line);
+		std::string Key, Value, Name, Extra;
+		Fields >> Key >> Value;
+		if(!HeaderSeen)
+		{
+			if(Key != "cecen-update" || Value != "1")
+				return false;
+			HeaderSeen = true;
+			continue;
+		}
+
+		if(Key == "version")
+		{
+			char aVersion[64];
+			NormalizeVersionString(Value.c_str(), aVersion, sizeof(aVersion));
+			VersionMatches = str_comp(aVersion, aWantVersion) == 0;
+		}
+		else if(Key == "sha256")
+		{
+			Fields >> Name;
+			if(Fields >> Extra || Name != pArchiveName)
+				continue;
+			if(Value.size() != 2 * SHA256_DIGEST_LENGTH || sha256_from_str(pSha256, Value.c_str()) != 0)
+				return false;
+			HashFound = true;
+		}
+	}
+	return HeaderSeen && VersionMatches && HashFound;
 }
 
 static void StripFilename(char *pPath)
@@ -309,14 +373,6 @@ static void StripFilename(char *pPath)
 }
 
 #if defined(CONF_PLATFORM_MACOS)
-static void MacTempPath(const char *pName, char *pBuf, int BufSize)
-{
-	const char *pTmp = getenv("TMPDIR");
-	if(!pTmp || pTmp[0] == '\0')
-		pTmp = "/tmp/";
-	str_format(pBuf, BufSize, "%s%s%s", pTmp, str_endswith(pTmp, "/") ? "" : "/", pName);
-}
-
 static bool MacPathIsAppBundle(const char *pPath)
 {
 	return pPath && pPath[0] != '\0' && str_endswith(pPath, ".app") && fs_is_dir(pPath);
@@ -383,10 +439,10 @@ static bool MacAppBundlePath(IStorage *pStorage, char *pBuf, int BufSize)
 static constexpr const char *MAC_APPLY_SCRIPT =
 	"#!/bin/sh\n"
 	"trap '' HUP\n"
-	"LOG=/tmp/cecenclient-update.log\n"
+	"PID=\"$1\"; DMG=\"$2\"; APP=\"$3\"; RELAUNCH=\"$4\"\n"
+	"LOG=\"$(dirname \"$DMG\")/cecenclient-update.log\"\n"
 	"exec >>\"$LOG\" 2>&1\n"
 	"set -x\n"
-	"PID=\"$1\"; DMG=\"$2\"; APP=\"$3\"; RELAUNCH=\"$4\"\n"
 	"echo \"apply start pid=$PID dmg=$DMG app=$APP relaunch=$RELAUNCH\"\n"
 	"while kill -0 \"$PID\" 2>/dev/null; do sleep 0.2; done\n"
 	"MNT=$(mktemp -d /tmp/cecenclient-update.XXXXXX) || exit 1\n"
@@ -466,10 +522,10 @@ static constexpr const char *MAC_APPLY_SCRIPT =
 static constexpr const char *MAC_PORTABLE_APPLY_SCRIPT =
 	"#!/bin/sh\n"
 	"trap '' HUP\n"
-	"LOG=/tmp/cecenclient-update.log\n"
+	"PID=\"$1\"; DMG=\"$2\"; EXE_DIR=\"$3\"; EXE_PATH=\"$4\"; RELAUNCH=\"$5\"\n"
+	"LOG=\"$(dirname \"$DMG\")/cecenclient-update.log\"\n"
 	"exec >>\"$LOG\" 2>&1\n"
 	"set -x\n"
-	"PID=\"$1\"; DMG=\"$2\"; EXE_DIR=\"$3\"; EXE_PATH=\"$4\"; RELAUNCH=\"$5\"\n"
 	"echo \"portable start pid=$PID dmg=$DMG dir=$EXE_DIR exe=$EXE_PATH relaunch=$RELAUNCH\"\n"
 	"while kill -0 \"$PID\" 2>/dev/null; do sleep 0.2; done\n"
 	"MNT=$(mktemp -d /tmp/cecenclient-update.XXXXXX) || exit 1\n"
@@ -539,6 +595,8 @@ CUpdater::CUpdater()
 	m_aLatestVersion[0] = '\0';
 	m_aArchiveName[0] = '\0';
 	m_aArchiveUrl[0] = '\0';
+	m_aManifestUrl[0] = '\0';
+	m_aSignatureUrl[0] = '\0';
 	str_copy(m_aArchivePath, UPDATE_ARCHIVE_PATH, sizeof(m_aArchivePath));
 }
 
@@ -639,29 +697,63 @@ void CUpdater::ParseReleaseTask()
 		return;
 	}
 
-	char aVersion[64] = "";
-	char aArchiveName[128] = "";
-	char aArchiveUrl[2048] = "";
-
-	const bool Parsed = ParseLatestRelease(pJson, aVersion, sizeof(aVersion), aArchiveName, sizeof(aArchiveName), aArchiveUrl, sizeof(aArchiveUrl));
+	SReleaseInfo Info;
+	const bool Parsed = ParseLatestRelease(pJson, &Info);
 	json_value_free(pJson);
 
-	if(!Parsed || CompareVersionStrings(aVersion, SIXCLIENT_VERSION) <= 0)
+	if(!Parsed || CompareVersionStrings(Info.m_aVersion, SIXCLIENT_VERSION) <= 0)
 	{
 		m_aLatestVersion[0] = '\0';
 		m_aArchiveName[0] = '\0';
 		m_aArchiveUrl[0] = '\0';
+		m_aManifestUrl[0] = '\0';
+		m_aSignatureUrl[0] = '\0';
 		SetStatus("No update available");
 		SetCurrentState(IUpdater::CLEAN);
 		return;
 	}
 
-	log_info("updater", "found %s (running %s), asset %s", aVersion, SIXCLIENT_VERSION, aArchiveName);
-	str_copy(m_aLatestVersion, aVersion, sizeof(m_aLatestVersion));
-	str_copy(m_aArchiveName, aArchiveName, sizeof(m_aArchiveName));
-	str_copy(m_aArchiveUrl, aArchiveUrl, sizeof(m_aArchiveUrl));
+	log_info("updater", "found %s (running %s), asset %s", Info.m_aVersion, SIXCLIENT_VERSION, Info.m_aArchiveName);
+	str_copy(m_aLatestVersion, Info.m_aVersion, sizeof(m_aLatestVersion));
+	str_copy(m_aArchiveName, Info.m_aArchiveName, sizeof(m_aArchiveName));
+	str_copy(m_aArchiveUrl, Info.m_aArchiveUrl, sizeof(m_aArchiveUrl));
+	str_copy(m_aManifestUrl, Info.m_aManifestUrl, sizeof(m_aManifestUrl));
+	str_copy(m_aSignatureUrl, Info.m_aSignatureUrl, sizeof(m_aSignatureUrl));
 	SetStatus("Update available");
 	SetCurrentState(IUpdater::VERSION_AVAILABLE);
+}
+
+void CUpdater::StartManifestFetch(bool Signature)
+{
+	ResetTask();
+	SetStatus("Checking update signature");
+	SetPercent(0);
+	SetCurrentState(IUpdater::DOWNLOADING);
+
+	m_TaskKind = Signature ? ETaskKind::FETCH_SIGNATURE : ETaskKind::FETCH_MANIFEST;
+	m_pCurrentTask = HttpGet(Signature ? m_aSignatureUrl : m_aManifestUrl);
+	m_pCurrentTask->HeaderString("User-Agent", CLIENT_NAME);
+	m_pCurrentTask->Timeout(CTimeout{10000, 0, 500, 10});
+	m_pCurrentTask->MaxResponseSize(64 * 1024);
+	m_pCurrentTask->IpResolve(IPRESOLVE::V4);
+	m_pHttp->Run(m_pCurrentTask);
+}
+
+bool CUpdater::VerifyManifest()
+{
+	unsigned char *pSignature = nullptr;
+	size_t SignatureLength = 0;
+	m_pCurrentTask->Result(&pSignature, &SignatureLength);
+	if(!pSignature || SignatureLength != ED25519_SIGNATURE_LENGTH)
+		return false;
+	if(!ed25519_verify(UPDATE_PUBLIC_KEY, reinterpret_cast<const unsigned char *>(m_Manifest.data()), m_Manifest.size(), pSignature))
+		return false;
+
+	SHA256_DIGEST Sha256;
+	if(!ParseUpdateManifest(m_Manifest, m_aLatestVersion, m_aArchiveName, &Sha256))
+		return false;
+	m_ArchiveSha256 = Sha256;
+	return true;
 }
 
 void CUpdater::StartArchiveDownload()
@@ -688,6 +780,7 @@ void CUpdater::StartArchiveDownload()
 	m_pCurrentTask = HttpGetFile(m_aArchiveUrl, m_pStorage, m_aArchivePath, IStorage::TYPE_ABSOLUTE);
 #endif
 	m_pCurrentTask->HeaderString("User-Agent", CLIENT_NAME);
+	m_pCurrentTask->ExpectSha256(m_ArchiveSha256);
 	m_pCurrentTask->Timeout(CTimeout{30000, 0, 500, 20});
 	m_pCurrentTask->IpResolve(IPRESOLVE::V4);
 	m_pHttp->Run(m_pCurrentTask);
@@ -721,7 +814,9 @@ bool CUpdater::LaunchApply(bool Relaunch)
 	char aAppPath[IO_MAX_PATH_LENGTH];
 	const bool HasAppBundle = MacAppBundlePath(m_pStorage, aAppPath, sizeof(aAppPath));
 	char aScriptPath[IO_MAX_PATH_LENGTH];
-	MacTempPath("cecenclient-update.sh", aScriptPath, sizeof(aScriptPath));
+	str_copy(aScriptPath, aArchivePath, sizeof(aScriptPath));
+	StripFilename(aScriptPath);
+	str_append(aScriptPath, "/cecenclient-update.sh", sizeof(aScriptPath));
 	IOHANDLE Script = io_open(aScriptPath, IOFLAG_WRITE);
 	if(!Script)
 	{
@@ -820,6 +915,8 @@ void CUpdater::CheckForUpdate()
 	m_aLatestVersion[0] = '\0';
 	m_aArchiveName[0] = '\0';
 	m_aArchiveUrl[0] = '\0';
+	m_aManifestUrl[0] = '\0';
+	m_aSignatureUrl[0] = '\0';
 	StartReleaseFetch();
 }
 
@@ -831,7 +928,8 @@ void CUpdater::InitiateUpdate()
 
 	if((State == IUpdater::VERSION_AVAILABLE || State == IUpdater::FAIL) && m_aArchiveUrl[0] != '\0')
 	{
-		StartArchiveDownload();
+		m_DownloadRetries = 0;
+		StartManifestFetch(false);
 		return;
 	}
 
@@ -899,6 +997,32 @@ void CUpdater::Update()
 	{
 		ParseReleaseTask();
 		ResetTask();
+		return;
+	}
+
+	if(m_TaskKind == ETaskKind::FETCH_MANIFEST)
+	{
+		unsigned char *pManifest = nullptr;
+		size_t ManifestLength = 0;
+		m_pCurrentTask->Result(&pManifest, &ManifestLength);
+		m_Manifest.assign(reinterpret_cast<const char *>(pManifest), pManifest ? ManifestLength : 0);
+		StartManifestFetch(true);
+		return;
+	}
+
+	if(m_TaskKind == ETaskKind::FETCH_SIGNATURE)
+	{
+		const bool Verified = VerifyManifest();
+		m_Manifest.clear();
+		if(!Verified)
+		{
+			log_error("updater", "update %s failed the signature check", m_aLatestVersion);
+			ResetTask();
+			SetStatus("Update signature check failed");
+			SetCurrentState(IUpdater::FAIL);
+			return;
+		}
+		StartArchiveDownload();
 		return;
 	}
 

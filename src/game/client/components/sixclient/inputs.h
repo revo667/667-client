@@ -20,6 +20,7 @@ namespace ScInputs
 	bool FastOthers();
 	bool BestOthers();
 	bool SaikoOthers();
+	bool FOthers();
 	bool CloudOthers();
 	bool SixOthers();
 	bool MeowOthers();

@@ -15,6 +15,7 @@ ddnet-base = { path = "../../base" }
 ddnet-engine = { path = ".." }
 
 cxx = { workspace = true }
+ed25519-dalek = { version = "2.1", default-features = false, features = ["std"] }
 
 [dev-dependencies]
 ddnet-test = { path = "../../rust-bridge/test", features = ["link-test-libraries"] }

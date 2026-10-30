@@ -13,6 +13,9 @@
 #include <engine/shared/protocol.h>
 #include <engine/storage.h>
 
+#include <algorithm>
+#include <string>
+
 CConfig g_Config;
 
 // ----------------------- Config Variables
@@ -494,6 +497,13 @@ void CConfigManager::RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData,
 
 void CConfigManager::WriteLine(const char *pLine, ConfigDomain ConfigDomain)
 {
+	std::string SingleLine;
+	if(str_find(pLine, "\n") || str_find(pLine, "\r"))
+	{
+		SingleLine = pLine;
+		std::replace_if(SingleLine.begin(), SingleLine.end(), [](char c) { return c == '\n' || c == '\r'; }, ' ');
+		pLine = SingleLine.c_str();
+	}
 	if(!m_aConfigFile[ConfigDomain] ||
 		io_write(m_aConfigFile[ConfigDomain], pLine, str_length(pLine)) != static_cast<unsigned>(str_length(pLine)) ||
 		!io_write_newline(m_aConfigFile[ConfigDomain]))

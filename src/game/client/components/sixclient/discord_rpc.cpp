@@ -611,6 +611,8 @@ public:
 		std::string JoinSecret;
 		while(m_Ipc.TakeJoinSecret(JoinSecret))
 		{
+			if(!g_Config.m_ScDiscordAllowJoin)
+				continue;
 			if(IClient *pClient = Kernel()->RequestInterface<IClient>())
 				pClient->Connect(JoinSecret.c_str());
 		}
@@ -729,6 +731,9 @@ public:
 	static void DISCORD_CALLBACK OnActivityJoin(void *pEventData, const char *pSecret)
 	{
 		if(!pEventData || !pSecret || pSecret[0] == '\0')
+			return;
+
+		if(!g_Config.m_ScDiscordAllowJoin)
 			return;
 
 		CDiscord *pSelf = static_cast<CDiscord *>(pEventData);

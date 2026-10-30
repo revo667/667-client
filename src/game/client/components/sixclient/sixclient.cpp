@@ -193,6 +193,11 @@ void CSixClient::OnShutdown()
 void CSixClient::OnReset()
 {
 	ResetFindHours();
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		m_aaFollowedFoeNames[ClientId][0] = '\0';
+		m_aaFollowedFoeClans[ClientId][0] = '\0';
+	}
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
 	{
 		m_aAutoTeamLockLastTeam[Dummy] = TEAM_FLOCK;
@@ -227,11 +232,19 @@ void CSixClient::OnClientNameChanged(int ClientId, const char *pNewName, const c
 		return;
 
 	IFriends *pFoes = GameClient()->Foes();
-	if(!pFoes || !pFoes->IsFriend(ClientData.m_aName, ClientData.m_aClan, true))
+	if(!IsFollowedFoe(ClientId) && (!pFoes || !pFoes->IsFriend(ClientData.m_aName, ClientData.m_aClan, true)))
 		return;
 
-	pFoes->RemoveFriend(ClientData.m_aName, ClientData.m_aClan);
-	pFoes->AddFriend(pNewName, pNewClan);
+	str_copy(m_aaFollowedFoeNames[ClientId], pNewName);
+	str_copy(m_aaFollowedFoeClans[ClientId], pNewClan);
+}
+
+bool CSixClient::IsFollowedFoe(int ClientId) const
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || m_aaFollowedFoeNames[ClientId][0] == '\0')
+		return false;
+	const CGameClient::CClientData &ClientData = GameClient()->m_aClients[ClientId];
+	return str_comp(ClientData.m_aName, m_aaFollowedFoeNames[ClientId]) == 0 && str_comp(ClientData.m_aClan, m_aaFollowedFoeClans[ClientId]) == 0;
 }
 
 void CSixClient::UpdateAutoTeamLock()

@@ -23,6 +23,7 @@
 #include <cerrno>
 #include <fcntl.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
 #endif
@@ -106,6 +107,20 @@ void CDiscordIpc::Close()
 	m_vReadBuffer.clear();
 }
 
+#if defined(CONF_FAMILY_WINDOWS)
+static bool PipeServerInOwnSession(HANDLE Pipe)
+{
+	ULONG ServerPid = 0;
+	DWORD ServerSession = 0;
+	DWORD OwnSession = 0;
+	if(!GetNamedPipeServerProcessId(Pipe, &ServerPid))
+		return false;
+	if(!ProcessIdToSessionId(ServerPid, &ServerSession) || !ProcessIdToSessionId(GetCurrentProcessId(), &OwnSession))
+		return false;
+	return ServerSession == OwnSession;
+}
+#endif
+
 bool CDiscordIpc::Connect()
 {
 	Close();
@@ -114,7 +129,12 @@ bool CDiscordIpc::Connect()
 	{
 		wchar_t aPath[64];
 		_snwprintf(aPath, 64, L"\\\\?\\pipe\\discord-ipc-%d", i);
-		HANDLE Pipe = CreateFileW(aPath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+		HANDLE Pipe = CreateFileW(aPath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION, nullptr);
+		if(Pipe != INVALID_HANDLE_VALUE && !PipeServerInOwnSession(Pipe))
+		{
+			CloseHandle(Pipe);
+			continue;
+		}
 		if(Pipe != INVALID_HANDLE_VALUE)
 		{
 			DWORD Mode = PIPE_READMODE_BYTE | PIPE_NOWAIT;
@@ -140,6 +160,9 @@ bool CDiscordIpc::Connect()
 			{
 				char aPath[sizeof(sockaddr_un::sun_path)];
 				str_format(aPath, sizeof(aPath), "%s%s%sdiscord-ipc-%d", Base.c_str(), str_endswith(Base.c_str(), "/") ? "" : "/", pSubdir, i);
+				struct stat Stat;
+				if(lstat(aPath, &Stat) != 0 || !S_ISSOCK(Stat.st_mode) || Stat.st_uid != getuid())
+					continue;
 				const int Socket = socket(AF_UNIX, SOCK_STREAM, 0);
 				if(Socket < 0)
 					continue;

@@ -1,12 +1,14 @@
 #ifndef GAME_CLIENT_COMPONENTS_SIXCLIENT_UPDATER_H
 #define GAME_CLIENT_COMPONENTS_SIXCLIENT_UPDATER_H
 
+#include <base/hash.h>
 #include <base/lock.h>
 #include <base/types.h>
 
 #include <engine/updater.h>
 
 #include <memory>
+#include <string>
 
 class IHttpRequest;
 
@@ -16,6 +18,8 @@ class CUpdater : public IUpdater
 	{
 		NONE,
 		FETCH_RELEASE,
+		FETCH_MANIFEST,
+		FETCH_SIGNATURE,
 		DOWNLOAD_ARCHIVE,
 	};
 
@@ -38,11 +42,17 @@ class CUpdater : public IUpdater
 	char m_aLatestVersion[64];
 	char m_aArchiveName[128];
 	char m_aArchiveUrl[2048];
+	char m_aManifestUrl[2048];
+	char m_aSignatureUrl[2048];
 	char m_aArchivePath[IO_MAX_PATH_LENGTH];
+	std::string m_Manifest;
+	SHA256_DIGEST m_ArchiveSha256 = {};
 
 	void ResetTask() REQUIRES(!m_Lock);
 	void StartReleaseFetch() REQUIRES(!m_Lock);
 	void ParseReleaseTask() REQUIRES(!m_Lock);
+	void StartManifestFetch(bool Signature) REQUIRES(!m_Lock);
+	bool VerifyManifest();
 	void StartArchiveDownload() REQUIRES(!m_Lock);
 	bool LaunchApplyScriptAndQuit() REQUIRES(!m_Lock);
 	bool LaunchApply(bool Relaunch) REQUIRES(!m_Lock);

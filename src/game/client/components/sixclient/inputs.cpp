@@ -40,6 +40,13 @@ namespace
 		return g_Config.m_ScSaikoInputAmount / 100.0f;
 	}
 
+	float FModeOffsetTicks()
+	{
+		if(g_Config.m_ScInputs != SC_INPUTS_F || g_Config.m_ScFInputAmount <= 0)
+			return 0.0f;
+		return g_Config.m_ScFInputAmount / 1000.0f;
+	}
+
 	float MeowModeOffsetTicks()
 	{
 		if(g_Config.m_ScInputs != SC_INPUTS_MEOW || g_Config.m_ScMeowInputAmount <= 0)
@@ -55,6 +62,7 @@ float ScInputs::EffectiveOffsetTicks()
 	case SC_INPUTS_FAST: return FastModeOffsetTicks();
 	case SC_INPUTS_BEST: return BestModeOffsetTicks();
 	case SC_INPUTS_SAIKO: return SaikoModeOffsetTicks();
+	case SC_INPUTS_F: return FModeOffsetTicks();
 	case SC_INPUTS_MEOW: return MeowModeOffsetTicks();
 	case SC_INPUTS_SIX: return gs_SixOffsetTicks;
 	default: return 0.0f;
@@ -139,6 +147,11 @@ bool ScInputs::SaikoOthers()
 	return g_Config.m_ScInputs == SC_INPUTS_SAIKO && g_Config.m_ScSaikoInputOthers != 0;
 }
 
+bool ScInputs::FOthers()
+{
+	return g_Config.m_ScInputs == SC_INPUTS_F && g_Config.m_ScFInputOthers != 0;
+}
+
 bool ScInputs::CloudOthers()
 {
 	return g_Config.m_ScInputs == SC_INPUTS_CLOUD && g_Config.m_ScCloudInputOthers != 0;
@@ -156,7 +169,7 @@ bool ScInputs::MeowOthers()
 
 bool ScInputs::AnyOthers()
 {
-	return FastOthers() || BestOthers() || SaikoOthers() || CloudOthers() || SixOthers() || MeowOthers();
+	return FastOthers() || BestOthers() || SaikoOthers() || FOthers() || CloudOthers() || SixOthers() || MeowOthers();
 }
 
 bool ScInputs::ImmediateOthers()

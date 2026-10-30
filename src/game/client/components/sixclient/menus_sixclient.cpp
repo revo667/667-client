@@ -2091,13 +2091,14 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 		InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
 		{
-			static const int s_aModes[] = {SC_INPUTS_SIX, SC_INPUTS_FAST, SC_INPUTS_BEST, SC_INPUTS_SAIKO, SC_INPUTS_CLOUD, SC_INPUTS_MEOW};
-			const char *apModeNames[] = {"667 Input", ScLocalize("Fast Input"), ScLocalize("Best Input"), ScLocalize("Saiko Input"), ScLocalize("Cloud Input"), ScLocalize("Meow Input")};
+			static const int s_aModes[] = {SC_INPUTS_SIX, SC_INPUTS_FAST, SC_INPUTS_BEST, SC_INPUTS_SAIKO, SC_INPUTS_F, SC_INPUTS_CLOUD, SC_INPUTS_MEOW};
+			const char *apModeNames[] = {"667 Input", ScLocalize("Fast Input"), ScLocalize("Best Input"), ScLocalize("Saiko Input"), ScLocalize("F Input"), ScLocalize("Cloud Input"), ScLocalize("Meow Input")};
 			const char *apModeTips[] = {
 				ScLocalize("667 input: predicts your own tee ahead by an amount that follows your connection, up to the max offset. Inputs are sent the moment they change and server corrections are blended out."),
 				ScLocalize("Fast input (TClient): predicts your movement a fixed number of milliseconds ahead so it feels more instant."),
 				ScLocalize("Best input (BestClient): predicts your tee ahead by the offset, with smoothing, latency compensation and a choice of how positions are interpolated."),
 				ScLocalize("Saiko input: sends your input as soon as a key changes instead of waiting for the next tick, and predicts your tee ahead by the offset."),
+				ScLocalize("F input (BestClient): predicts up to two ticks ahead and carries the rest of the offset on with your tee's speed, smoothed so it doesn't jitter."),
 				ScLocalize("Cloud input: keeps its own copy of your input and repredicts every frame from it. Other players are shown at most one tick ahead."),
 				ScLocalize("Meow input (MeowClient): keeps its own copy of your input, repredicts as soon as it changes and shows your tee ahead by the offset.")};
 			int Selected = 0;
@@ -2274,6 +2275,18 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
 			Ui()->DoToolTip(&g_Config.m_ScSaikoInputOthers, &Content, ScLocalize("Also predicts other players ahead with Saiko input."));
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScSaikoInputOthers, ScLocalize("Saiko input others"), &g_Config.m_ScSaikoInputOthers, &Content, LineSize);
+		}
+		else if(InputsMode == SC_INPUTS_F)
+		{
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Button, &InputsBlock);
+			DoTickAmountSlider(&g_Config.m_ScFInputAmount, &Button, ScLocalize("Prediction offset"), 0, 5000, 1000);
+			Ui()->DoToolTip(&g_Config.m_ScFInputAmount, &Button, ScLocalize("Prediction offset in ticks (1.00 = 20 ms)."));
+
+			InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
+			InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
+			Ui()->DoToolTip(&g_Config.m_ScFInputOthers, &Content, ScLocalize("Also predicts other players ahead with F input."));
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScFInputOthers, ScLocalize("F input others"), &g_Config.m_ScFInputOthers, &Content, LineSize);
 		}
 		else if(InputsMode == SC_INPUTS_CLOUD)
 		{

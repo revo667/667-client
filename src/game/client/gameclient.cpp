@@ -2531,7 +2531,7 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 		m_aClients[i].m_Friend = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Friends()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
 
 		// update foe state
-		m_aClients[i].m_Foe = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !Foes()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true));
+		m_aClients[i].m_Foe = !(i == m_Snap.m_LocalClientId || !m_Snap.m_apPlayerInfos[i] || !(Foes()->IsFriend(m_aClients[i].m_aName, m_aClients[i].m_aClan, true) || m_SixClient.IsFollowedFoe(i)));
 	}
 
 	// check if we received all finish times
@@ -5205,6 +5205,84 @@ vec2 CGameClient::GetFastInputPos(int ClientId)
 		m_CloudInput.ApplyOffset(*this, ClientId, PredTick, PredIntraTick);
 		m_CloudInput.TryGetPredPos(*this, ClientId, PredTick, PredIntraTick, Pos);
 		return Pos;
+	}
+
+	if(g_Config.m_ScInputs == SC_INPUTS_F)
+	{
+		static vec2 s_OffsetSmooth[MAX_CLIENTS];
+		static bool s_OffsetInit[MAX_CLIENTS];
+		static int s_OffsetTick[MAX_CLIENTS];
+		static float s_OffsetLastTime[MAX_CLIENTS];
+
+		float PredIntraTick = Client()->PredIntraGameTick(g_Config.m_ClDummy);
+		int PredTick = Client()->PredGameTick(g_Config.m_ClDummy);
+
+		vec2 Pos = mix(m_aClients[ClientId].m_PrevPredicted.m_Pos, m_aClients[ClientId].m_Predicted.m_Pos, PredIntraTick);
+
+		const float fFastInput = g_Config.m_ScFInputAmount / 1000.0f;
+		float FastInputIntPart;
+		std::modf(fFastInput, &FastInputIntPart);
+		const int FastInputTicks = static_cast<int>(FastInputIntPart);
+
+		static constexpr int SAFE_HORIZON = 2;
+		const int SafeHorizonInt = std::min(FastInputTicks, SAFE_HORIZON);
+		const int SafeTick = PredTick + SafeHorizonInt;
+		const float ExtraTime = fFastInput - static_cast<float>(SafeHorizonInt);
+
+		if(SafeTick <= 0 ||
+			m_aClients[ClientId].m_aPredTick[(SafeTick - 1) % 200] < Client()->PrevGameTick(g_Config.m_ClDummy) ||
+			m_aClients[ClientId].m_aPredTick[SafeTick % 200] > Client()->PredGameTick(g_Config.m_ClDummy) + static_cast<int>(std::ceil(fFastInput)))
+		{
+			s_OffsetInit[ClientId] = false;
+			return Pos;
+		}
+
+		const vec2 Pos0 = m_aClients[ClientId].m_aPredPos[(SafeTick - 1) % 200];
+		const vec2 Pos1 = m_aClients[ClientId].m_aPredPos[SafeTick % 200];
+
+		vec2 ExtrapVel = Pos1 - Pos0;
+		if(SafeHorizonInt >= 2 && ExtraTime > 0.0f)
+		{
+			const int PrevPrevTick = SafeTick - 2;
+			if(m_aClients[ClientId].m_aPredTick[PrevPrevTick % 200] >= Client()->PrevGameTick(g_Config.m_ClDummy))
+				ExtrapVel = (Pos1 - m_aClients[ClientId].m_aPredPos[PrevPrevTick % 200]) * 0.5f;
+		}
+
+		const vec2 BasePos = mix(Pos0, Pos1, PredIntraTick);
+
+		if(ExtraTime <= 0.0f)
+		{
+			s_OffsetInit[ClientId] = false;
+			return BasePos;
+		}
+
+		const vec2 RawOffset = ExtrapVel * ExtraTime;
+		const int GameTick = Client()->GameTick(g_Config.m_ClDummy);
+		const float Now = Client()->LocalTime();
+		const bool ValidPrev = s_OffsetInit[ClientId] && s_OffsetTick[ClientId] >= GameTick - 3;
+
+		vec2 SmoothedOffset;
+		if(ValidPrev)
+		{
+			const float AlphaRef = 1.0f / (1.0f + ExtraTime * 0.5f);
+			constexpr float RefFrameDt = 1.0f / 144.0f;
+			const float Tau = -RefFrameDt / std::log(std::max(1.0f - AlphaRef, 0.0001f));
+
+			const float Dt = std::clamp(Now - s_OffsetLastTime[ClientId], 0.0f, 0.1f);
+			const float Alpha = 1.0f - std::exp(-Dt / Tau);
+			SmoothedOffset = mix(s_OffsetSmooth[ClientId], RawOffset, Alpha);
+		}
+		else
+		{
+			SmoothedOffset = RawOffset;
+		}
+
+		s_OffsetSmooth[ClientId] = SmoothedOffset;
+		s_OffsetInit[ClientId] = true;
+		s_OffsetTick[ClientId] = GameTick;
+		s_OffsetLastTime[ClientId] = Now;
+
+		return BasePos + SmoothedOffset;
 	}
 
 	float PredIntraTick = Client()->PredIntraGameTick(g_Config.m_ClDummy);
