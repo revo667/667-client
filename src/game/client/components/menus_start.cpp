@@ -175,7 +175,7 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 		const bool Telegram = FoxLayout ? Menus.DoButton_StartMenu(&s_TelegramButton, Localize("Telegram"), FontIcon::PAPER_PLANE, nullptr, &TelegramRect, nullptr, NoTint) : Menus.DoButton_Menu(&s_TelegramButton, Localize("Telegram"), 0, &TelegramRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ExtColor);
 		const bool CheckUpdate = FoxLayout ? Menus.DoButton_StartMenu(&s_CheckUpdateButton, ScLocalize("Check update"), FontIcon::ARROWS_ROTATE, nullptr, &UpdateRect, nullptr, NoTint) : Menus.DoButton_Menu(&s_CheckUpdateButton, ScLocalize("Check update"), 0, &UpdateRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ExtColor);
 		if(Discord)
-			Client()->ViewLink("https://discord.gg/667");
+			Client()->ViewLink("https://discord.gg/ujZ7h9eEXu");
 		if(Telegram)
 			Client()->ViewLink("https://t.me/loresche");
 		if(CheckUpdate)
