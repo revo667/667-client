@@ -52,6 +52,74 @@ enum
 };
 
 static int s_CurSixClientTab = SIXCLIENT_TAB_VISUALS;
+
+class CSixClientColumnSplit
+{
+	std::vector<float> m_vHeights;
+	std::vector<bool> m_vLeft;
+	int64_t m_LastRender = 0;
+	bool m_NeedSplit = true;
+
+	float Cost(float Gap) const
+	{
+		float Left = 0.0f;
+		float Right = 0.0f;
+		for(size_t i = 0; i < m_vHeights.size(); i++)
+			(m_vLeft[i] ? Left : Right) += m_vHeights[i] + Gap;
+		return std::max(Left, Right);
+	}
+
+public:
+	void Begin(int NumBlocks, int DefaultSplit, float Gap, int RightFirst = -1)
+	{
+		const int64_t Now = time_get();
+		if(Now - m_LastRender > time_freq() / 4)
+			m_NeedSplit = true;
+		m_LastRender = Now;
+		if((int)m_vHeights.size() != NumBlocks)
+		{
+			m_vHeights.assign(NumBlocks, -1.0f);
+			m_vLeft.assign(NumBlocks, false);
+			for(int i = 0; i < NumBlocks; i++)
+				m_vLeft[i] = i < DefaultSplit;
+			m_NeedSplit = true;
+		}
+		if(!m_NeedSplit || std::any_of(m_vHeights.begin(), m_vHeights.end(), [](float Height) { return Height < 0.0f; }))
+			return;
+		std::vector<bool> vBest = m_vLeft;
+		float BestCost = -1.0f;
+		const auto Try = [&]() {
+			const float TryCost = Cost(Gap);
+			if(BestCost < 0.0f || TryCost < BestCost)
+			{
+				BestCost = TryCost;
+				vBest = m_vLeft;
+			}
+		};
+		if(RightFirst < 0)
+		{
+			for(int Split = 1; Split < NumBlocks; Split++)
+			{
+				for(int i = 0; i < NumBlocks; i++)
+					m_vLeft[i] = i < Split;
+				Try();
+			}
+		}
+		else
+		{
+			for(int Spill = 0; Spill < NumBlocks - RightFirst; Spill++)
+			{
+				for(int i = 0; i < NumBlocks; i++)
+					m_vLeft[i] = i < RightFirst || i >= NumBlocks - Spill;
+				Try();
+			}
+		}
+		m_vLeft = vBest;
+		m_NeedSplit = false;
+	}
+	bool IsLeft(int Index) const { return m_vLeft[Index]; }
+	void Record(int Index, float Height) { m_vHeights[Index] = Height; }
+};
 static bool s_ShowSixClientFun = false;
 
 void CMenus::SetSixClientSettingsTab(int Tab)
@@ -594,13 +662,34 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 
 	Column = LeftView;
 	Column.HSplitTop(10.0f, nullptr, &Column);
+	CUIRect RightColumn = RightView;
+	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
+	const float LeftColumnStartY = Column.y;
+	const float RightColumnStartY = RightColumn.y;
+
+	static CSixClientColumnSplit s_VisualsColumns;
+	s_VisualsColumns.Begin(13, 8, MarginBetweenViews, 8);
+	int VisualsBlockIndex = 0;
+	const auto NextVisualsColumn = [&]() -> CUIRect & {
+		const bool Left = s_VisualsColumns.IsLeft(VisualsBlockIndex++);
+		CUIRect &Target = Left ? Column : RightColumn;
+		if(Target.y > (Left ? LeftColumnStartY : RightColumnStartY))
+			Target.HSplitTop(MarginBetweenViews, nullptr, &Target);
+		return Target;
+	};
+	const auto NextVisualsBlock = [&](float Height) {
+		CUIRect &Target = NextVisualsColumn();
+		CUIRect Block;
+		Target.HSplitTop(Height, &Block, &Target);
+		s_VisualsColumns.Record(VisualsBlockIndex - 1, Height);
+		return Block;
+	};
 
 	const float VisualsQoLBlockHeight =
 		LineSize + MarginSmall +
 		4.0f * LineSize +
 		3.0f * LineSize;
-	CUIRect VisualsQoLBlock;
-	Column.HSplitTop(VisualsQoLBlockHeight, &VisualsQoLBlock, &Column);
+	CUIRect VisualsQoLBlock = NextVisualsBlock(VisualsQoLBlockHeight);
 
 	CUIRect VisualsQoLBlockBg = VisualsQoLBlock;
 	VisualsQoLBlockBg.w += BlockPadding;
@@ -634,7 +723,6 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	VisualsQoLBlock.HSplitTop(LineSize, &Button, &VisualsQoLBlock);
 	Ui()->DoScrollbarOption(&g_Config.m_UiScale, &g_Config.m_UiScale, &Button, ScLocalize("UI scale"), 50, 110, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "%");
 
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
 	const bool CornerIndicatorEnabled = g_Config.m_ScCornerIndicator != 0;
 	const bool CornerIndicatorBlocked = GameClient()->m_AspectRatio.IsBlockedByFng();
@@ -649,8 +737,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const float CornerIndicatorExpandedHeight = SC_MODULE_REVEAL(CornerIndicatorEnabled, CornerIndicatorExpandedTargetHeight, Client()->RenderFrameTime());
 	const float CornerIndicatorBlockedHintHeight = CornerIndicatorBlocked ? (MarginSmall + LineSize) : 0.0f;
 	const float CornerIndicatorBlockHeight = LineSize + MarginSmall + LineSize + CornerIndicatorExpandedHeight + CornerIndicatorBlockedHintHeight;
-	CUIRect CornerIndicatorBlock;
-	Column.HSplitTop(CornerIndicatorBlockHeight, &CornerIndicatorBlock, &Column);
+	CUIRect CornerIndicatorBlock = NextVisualsBlock(CornerIndicatorBlockHeight);
 
 	CUIRect CornerIndicatorBlockBg = CornerIndicatorBlock;
 	CornerIndicatorBlockBg.w += BlockPadding;
@@ -765,15 +852,13 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
 
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
 	{
 		const bool TsEnabled = g_Config.m_ScTeamScoreboard != 0;
 		const float TsExpandedTarget = 3.0f * (MarginSmall + LineSize);
 		const float TsExpanded = SC_MODULE_REVEAL(TsEnabled, TsExpandedTarget, Client()->RenderFrameTime());
 		const float TsBlockHeight = LineSize + MarginSmall + LineSize + TsExpanded;
-		CUIRect TsBlock;
-		Column.HSplitTop(TsBlockHeight, &TsBlock, &Column);
+		CUIRect TsBlock = NextVisualsBlock(TsBlockHeight);
 
 		CUIRect TsBlockBg = TsBlock;
 		TsBlockBg.w += BlockPadding;
@@ -813,15 +898,19 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		}
 	}
 
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
+	{
+		CUIRect &Target = NextVisualsColumn();
+		const float StartY = Target.y;
+		RenderSettingsSixClientChatBlock(Target);
+		s_VisualsColumns.Record(VisualsBlockIndex - 1, Target.y - StartY);
+	}
 
-	RenderSettingsSixClientChatBlock(Column);
-
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
-
-	RenderSettingsSixClientChatMediaBlock(Column);
-
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
+	{
+		CUIRect &Target = NextVisualsColumn();
+		const float StartY = Target.y;
+		RenderSettingsSixClientChatMediaBlock(Target);
+		s_VisualsColumns.Record(VisualsBlockIndex - 1, Target.y - StartY);
+	}
 
 	const bool ChatBubblesExpanded = g_Config.m_ScChatBubbles != 0;
 	const bool ChatBubblesShowCustomColors = ChatBubblesExpanded && g_Config.m_ScChatBubbleCustomColors != 0;
@@ -833,8 +922,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const float ChatBubblesExpandedHeight = SC_MODULE_REVEAL(ChatBubblesExpanded, ChatBubblesExpandedTargetHeight, Client()->RenderFrameTime());
 	const float ChatBubblesBlockHeight = LineSize + MarginSmall + LineSize + ChatBubblesExpandedHeight;
 
-	CUIRect ChatBubblesBlock;
-	Column.HSplitTop(ChatBubblesBlockHeight, &ChatBubblesBlock, &Column);
+	CUIRect ChatBubblesBlock = NextVisualsBlock(ChatBubblesBlockHeight);
 
 	CUIRect ChatBubblesBlockBg = ChatBubblesBlock;
 	ChatBubblesBlockBg.w += BlockPadding;
@@ -931,12 +1019,10 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
 	const float MediaBackgroundBlockHeight = LineSize + MarginSmall + LineSize + MarginSmall + LineSize + MarginSmall + LineSize + MarginSmall + LineSize + MarginSmall + LineSize;
 
-	CUIRect MediaBackgroundBlock;
-	Column.HSplitTop(MediaBackgroundBlockHeight, &MediaBackgroundBlock, &Column);
+	CUIRect MediaBackgroundBlock = NextVisualsBlock(MediaBackgroundBlockHeight);
 
 	CUIRect MediaBackgroundBlockBg = MediaBackgroundBlock;
 	MediaBackgroundBlockBg.w += BlockPadding;
@@ -1097,14 +1183,12 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	Ui()->DoLabel(&Button, pMediaStatusText, 11.0f, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
 	{
 		const bool RainEnabled = g_Config.m_ScMenuRainBackground != 0;
 		const float RainExpanded = SC_MODULE_REVEAL(RainEnabled, MarginSmall + LineSize, Client()->RenderFrameTime());
 		const float RainBlockHeight = LineSize + MarginSmall + LineSize + RainExpanded + 2.0f * (MarginSmall + LineSize);
-		CUIRect RainBlock;
-		Column.HSplitTop(RainBlockHeight, &RainBlock, &Column);
+		CUIRect RainBlock = NextVisualsBlock(RainBlockHeight);
 
 		CUIRect RainBlockBg = RainBlock;
 		RainBlockBg.w += BlockPadding;
@@ -1129,7 +1213,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 			Ui()->ClipEnable(&RainVisible);
 			RainView.HSplitTop(MarginSmall, nullptr, &RainView);
 			RainView.HSplitTop(LineSize, &RainContent, &RainView);
-			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMenuRainTone, ScLocalize("Violet tone"), &g_Config.m_ScMenuRainTone, &RainContent, LineSize);
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScMenuRainTone, ScLocalize("Red tone"), &g_Config.m_ScMenuRainTone, &RainContent, LineSize);
 			Ui()->ClipDisable();
 		}
 
@@ -1143,16 +1227,10 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScStartMenuMonoImages, ScLocalize("Black and white menu images"), &g_Config.m_ScStartMenuMonoImages, &RainContent, LineSize);
 	}
 
-	const float LeftColumnEndY = Column.y;
-
-	CUIRect RightColumn = RightView;
-	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
 
 	{
 		const float SwitchHeight = 24.0f;
-		CUIRect CecenUiBlock;
-		RightColumn.HSplitTop(LineSize + MarginSmall + SwitchHeight, &CecenUiBlock, &RightColumn);
-		RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
+		CUIRect CecenUiBlock = NextVisualsBlock(LineSize + MarginSmall + SwitchHeight);
 		CUIRect CecenUiBlockBg = CecenUiBlock;
 		CecenUiBlockBg.w += BlockPadding;
 		CecenUiBlockBg.h += BlockPadding;
@@ -1216,8 +1294,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const float UiThemesExpandedTargetHeight = UiThemesCustomHeight + UiThemesBackgroundHeight + UiThemesExportImportHeight;
 	const float UiThemesExpandedHeight = SC_MODULE_REVEAL(UiThemesExpanded, UiThemesExpandedTargetHeight, Client()->RenderFrameTime());
 	const float UiThemesBlockHeight = UiThemesHeaderHeight + UiThemesExpandedHeight;
-	CUIRect UiThemesBlock;
-	RightColumn.HSplitTop(UiThemesBlockHeight, &UiThemesBlock, &RightColumn);
+	CUIRect UiThemesBlock = NextVisualsBlock(UiThemesBlockHeight);
 
 	CUIRect UiThemesBlockBg = UiThemesBlock;
 	UiThemesBlockBg.w += BlockPadding;
@@ -1544,15 +1621,13 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
 
 	const bool AnimationsExpanded = g_Config.m_ScAnimations != 0;
 	const float AnimationsExpandedTargetHeight = 6.0f * (MarginSmall + LineSize);
 	const float AnimationsExpandedHeight = SC_MODULE_REVEAL(AnimationsExpanded, AnimationsExpandedTargetHeight, Client()->RenderFrameTime());
 	const float AnimationsBlockHeight = LineSize + MarginSmall + LineSize + AnimationsExpandedHeight;
 
-	CUIRect AnimationsBlock;
-	RightColumn.HSplitTop(AnimationsBlockHeight, &AnimationsBlock, &RightColumn);
+	CUIRect AnimationsBlock = NextVisualsBlock(AnimationsBlockHeight);
 
 	CUIRect AnimationsBlockBg = AnimationsBlock;
 	AnimationsBlockBg.w += BlockPadding;
@@ -1617,7 +1692,6 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
 
 	const float MusicPlayerColorPickerLineSize = 25.0f;
 	const float MusicPlayerColorPickerLabelSize = 13.0f;
@@ -1635,8 +1709,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const float MusicPlayerExpandedHeight = SC_MODULE_REVEAL(MusicPlayerEnabled, MusicPlayerExpandedTargetHeight, Client()->RenderFrameTime());
 	const float MusicPlayerContentHeight = LineSize + MarginSmall + LineSize + MusicPlayerExpandedHeight;
 
-	CUIRect MusicPlayerBlock;
-	RightColumn.HSplitTop(MusicPlayerContentHeight, &MusicPlayerBlock, &RightColumn);
+	CUIRect MusicPlayerBlock = NextVisualsBlock(MusicPlayerContentHeight);
 
 	CUIRect MusicPlayerBlockBg = MusicPlayerBlock;
 	MusicPlayerBlockBg.w += BlockPadding;
@@ -1796,7 +1869,6 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
 
 	const bool AspectBlocked = GameClient()->m_AspectRatio.IsBlockedByFng();
 	const int AspectMode = g_Config.m_ScCustomAspectRatioMode >= 0 ? g_Config.m_ScCustomAspectRatioMode : (g_Config.m_ScCustomAspectRatio > 0 ? 1 : 0);
@@ -1806,8 +1878,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 	const float AspectBlockedHintHeight = AspectBlocked ? (MarginSmall + LineSize) : 0.0f;
 	const float AspectBlockHeight = AspectHeaderHeight + AspectExpandedHeight + AspectBlockedHintHeight;
 
-	CUIRect AspectBlock;
-	RightColumn.HSplitTop(AspectBlockHeight, &AspectBlock, &RightColumn);
+	CUIRect AspectBlock = NextVisualsBlock(AspectBlockHeight);
 
 	CUIRect AspectBlockBg = AspectBlock;
 	AspectBlockBg.w += BlockPadding;
@@ -1992,6 +2063,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
 
+	const float LeftColumnEndY = Column.y;
 	const float RightColumnEndY = RightColumn.y;
 	CUIRect VisualsScrollContentRect;
 	VisualsScrollContentRect.x = VisualsScrollContentX;
@@ -2055,6 +2127,25 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 
 	CUIRect LeftColumn = LeftView;
 	LeftColumn.HSplitTop(10.0f, nullptr, &LeftColumn);
+	CUIRect RightColumn = RightView;
+	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
+	const float LeftColumnStartY = LeftColumn.y;
+	const float RightColumnStartY = RightColumn.y;
+
+	static CSixClientColumnSplit s_GameplayColumns;
+	s_GameplayColumns.Begin(11, 6, MarginBetweenViews, 6);
+	int GameplayBlockIndex = 0;
+	const auto NextGameplayBlock = [&](float Height) {
+		const int Index = GameplayBlockIndex++;
+		const bool Left = s_GameplayColumns.IsLeft(Index);
+		CUIRect &Column = Left ? LeftColumn : RightColumn;
+		if(Column.y > (Left ? LeftColumnStartY : RightColumnStartY))
+			Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
+		CUIRect Block;
+		Column.HSplitTop(Height, &Block, &Column);
+		s_GameplayColumns.Record(Index, Height);
+		return Block;
+	};
 
 	const int InputsMode = g_Config.m_ScInputs;
 	const bool InputsEnabled = InputsMode != SC_INPUTS_OFF;
@@ -2063,11 +2154,10 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const float InputsExpandedTargetHeight = (MarginSmall + LineSize) + InputsModeFieldsHeight;
 	const float InputsExpandedHeight = SC_MODULE_REVEAL(InputsEnabled, InputsExpandedTargetHeight, Client()->RenderFrameTime());
 	const float InputsHeaderHeight = LineSize + MarginSmall + LineSize;
-	const float InputsFooterLines = g_Config.m_ClSubTickAiming ? 3.0f : 4.0f;
+	const float InputsFooterLines = g_Config.m_ClSubTickAiming ? 2.0f : 3.0f;
 	const float InputsBlockHeight = InputsHeaderHeight + InputsExpandedHeight + InputsFooterLines * (MarginSmall + LineSize);
 
-	CUIRect InputsBlock;
-	LeftColumn.HSplitTop(InputsBlockHeight, &InputsBlock, &LeftColumn);
+	CUIRect InputsBlock = NextGameplayBlock(InputsBlockHeight);
 
 	CUIRect InputsBlockBg = InputsBlock;
 	InputsBlockBg.w += BlockPadding;
@@ -2340,15 +2430,71 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 
 	InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 	InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-	Ui()->DoToolTip(&g_Config.m_ScAutoMargin, &Content, ScLocalize("Adjusts the prediction margin from your ping automatically, so you get fewer corrections without extra delay. Your old margin comes back when you turn it off."));
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScAutoMargin, ScLocalize("Auto margin"), &g_Config.m_ScAutoMargin, &Content, LineSize);
-
-	InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
-	InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
 	Ui()->DoToolTip(&g_Config.m_ScInputDebounce, &Content, ScLocalize("Keeps key presses shorter than one game tick (20 ms), so very fast taps of A, D, jump or hook are never lost."));
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScInputDebounce, ScLocalize("Input Debounce"), &g_Config.m_ScInputDebounce, &Content, LineSize);
 
-	LeftColumn.HSplitTop(MarginBetweenViews, nullptr, &LeftColumn);
+	const bool AutoMarginExpanded = g_Config.m_ScAutoMargin != 0;
+	const float AutoMarginHeaderHeight = LineSize + MarginSmall + LineSize;
+	const float AutoMarginExpandedTargetHeight = 3.0f * (MarginSmall + LineSize);
+	const float AutoMarginExpandedHeight = SC_MODULE_REVEAL(AutoMarginExpanded, AutoMarginExpandedTargetHeight, Client()->RenderFrameTime());
+	const float AutoMarginBlockHeight = AutoMarginHeaderHeight + AutoMarginExpandedHeight;
+
+	CUIRect AutoMarginBlock = NextGameplayBlock(AutoMarginBlockHeight);
+
+	CUIRect AutoMarginBlockBg = AutoMarginBlock;
+	AutoMarginBlockBg.w += BlockPadding;
+	AutoMarginBlockBg.h += BlockPadding;
+	AutoMarginBlockBg.x -= BlockPadding * 0.5f;
+	AutoMarginBlockBg.y -= BlockPadding * 0.5f;
+	SixClientUiTheme::DrawUiBlock(&AutoMarginBlockBg, IGraphics::CORNER_ALL, 10.0f);
+	SixClientSettingsSearch::DrawBlockHighlight(&g_Config.m_ScAutoMargin, &AutoMarginBlockBg);
+
+	AutoMarginBlock.HSplitTop(LineSize, &Label, &AutoMarginBlock);
+	Ui()->DoLabel(&Label, ScLocalize("Auto margin"), HeadlineFontSize, TEXTALIGN_ML);
+	AutoMarginBlock.HSplitTop(MarginSmall, nullptr, &AutoMarginBlock);
+
+	AutoMarginBlock.HSplitTop(LineSize, &Content, &AutoMarginBlock);
+	Ui()->DoToolTip(&g_Config.m_ScAutoMargin, &Content, ScLocalize("Sets the DDNet prediction margin from your connection: the server tells the client how early each input arrived, and the margin follows how much that changes. It rises at once when your connection gets worse and comes down slowly when it is stable again. Your old margin comes back when you turn it off."));
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScAutoMargin, ScLocalize("Enable"), &g_Config.m_ScAutoMargin, &Content, LineSize);
+
+	if(AutoMarginExpandedHeight > 0.5f)
+	{
+		CUIRect Visible = AutoMarginBlock;
+		Visible.h = AutoMarginExpandedHeight;
+		Ui()->ClipEnable(&Visible);
+
+		AutoMarginBlock.HSplitTop(MarginSmall, nullptr, &AutoMarginBlock);
+		AutoMarginBlock.HSplitTop(LineSize, &Button, &AutoMarginBlock);
+		Ui()->DoScrollbarOption(&g_Config.m_ScAutoMarginMin, &g_Config.m_ScAutoMarginMin, &Button, ScLocalize("Lowest margin"), 1, 50, &CUi::ms_LinearScrollbarScale, 0, "ms");
+		Ui()->DoToolTip(&g_Config.m_ScAutoMarginMin, &Button, ScLocalize("Auto margin never goes below this. Lower adds less delay on a clean connection."));
+
+		AutoMarginBlock.HSplitTop(MarginSmall, nullptr, &AutoMarginBlock);
+		AutoMarginBlock.HSplitTop(LineSize, &Button, &AutoMarginBlock);
+		Ui()->DoScrollbarOption(&g_Config.m_ScAutoMarginMax, &g_Config.m_ScAutoMarginMax, &Button, ScLocalize("Highest margin"), 10, 150, &CUi::ms_LinearScrollbarScale, 0, "ms");
+		Ui()->DoToolTip(&g_Config.m_ScAutoMarginMax, &Button, ScLocalize("Auto margin never goes above this, even when the connection is very unstable."));
+
+		AutoMarginBlock.HSplitTop(MarginSmall, nullptr, &AutoMarginBlock);
+		AutoMarginBlock.HSplitTop(LineSize, &Label, &AutoMarginBlock);
+		char aStatus[128];
+		ColorRGBA StatusColor(1.0f, 1.0f, 1.0f, 0.6f);
+		const CBcAutoMargin &AutoMargin = GameClient()->m_ScAutoMargin;
+		if(Client()->State() != IClient::STATE_ONLINE)
+			str_copy(aStatus, ScLocalize("Starts measuring once you join a server"));
+		else if(!Client()->CustomPredictionMarginSupported())
+		{
+			str_copy(aStatus, ScLocalize("This server uses a fixed 10 ms margin"));
+			StatusColor = ColorRGBA(1.0f, 0.6f, 0.4f, 0.9f);
+		}
+		else if(!AutoMargin.HasData())
+			str_copy(aStatus, ScLocalize("Measuring your connection..."));
+		else
+			str_format(aStatus, sizeof(aStatus), "%s: %d ms  ·  %s: %d ms  ·  %s: %.1f%%", ScLocalize("Margin"), g_Config.m_ClPredictionMargin, ScLocalize("Jitter"), AutoMargin.Jitter(), ScLocalize("Late inputs"), AutoMargin.LatePercent());
+		TextRender()->TextColor(StatusColor);
+		Ui()->DoLabel(&Label, aStatus, FontSize * 0.85f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+		Ui()->ClipDisable();
+	}
 
 	const bool SnapTapBlocked = GameClient()->m_SnapTap.IsBlockedByCommunity();
 	const bool SnapTapExpanded = g_Config.m_ScSnapTap != 0;
@@ -2358,8 +2504,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const float SnapTapBlockedHintHeight = SnapTapBlocked ? (MarginSmall + LineSize) : 0.0f;
 	const float SnapTapBlockHeight = SnapTapHeaderHeight + SnapTapExpandedHeight + SnapTapBlockedHintHeight;
 
-	CUIRect SnapTapBlock;
-	LeftColumn.HSplitTop(SnapTapBlockHeight, &SnapTapBlock, &LeftColumn);
+	CUIRect SnapTapBlock = NextGameplayBlock(SnapTapBlockHeight);
 
 	CUIRect SnapTapBlockBg = SnapTapBlock;
 	SnapTapBlockBg.w += BlockPadding;
@@ -2420,7 +2565,6 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
 
-	LeftColumn.HSplitTop(MarginBetweenViews, nullptr, &LeftColumn);
 
 	const bool GoresModeExpanded = g_Config.m_ScGoresMode != 0;
 	const float GoresModeHeaderHeight = LineSize + MarginSmall + LineSize;
@@ -2428,8 +2572,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const float GoresModeExpandedHeight = SC_MODULE_REVEAL(GoresModeExpanded, GoresModeExpandedTargetHeight, Client()->RenderFrameTime());
 	const float GoresModeBlockHeight = GoresModeHeaderHeight + GoresModeExpandedHeight;
 
-	CUIRect GoresModeBlock;
-	LeftColumn.HSplitTop(GoresModeBlockHeight, &GoresModeBlock, &LeftColumn);
+	CUIRect GoresModeBlock = NextGameplayBlock(GoresModeBlockHeight);
 
 	CUIRect GoresModeBlockBg = GoresModeBlock;
 	GoresModeBlockBg.w += BlockPadding;
@@ -2460,7 +2603,6 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-	LeftColumn.HSplitTop(MarginBetweenViews, nullptr, &LeftColumn);
 
 	const bool OptimizerExpanded = g_Config.m_ScOptimizer != 0;
 	const bool OptimizerFpsFogExpanded = OptimizerExpanded && g_Config.m_ScOptimizerFpsFog != 0;
@@ -2471,8 +2613,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const float OptimizerExpandedHeight = SC_MODULE_REVEAL(OptimizerExpanded, OptimizerExpandedTargetHeight, Client()->RenderFrameTime()) + OptimizerFpsFogExpandedHeight;
 	const float OptimizerBlockHeight = OptimizerHeaderHeight + OptimizerExpandedHeight;
 
-	CUIRect OptimizerBlock;
-	LeftColumn.HSplitTop(OptimizerBlockHeight, &OptimizerBlock, &LeftColumn);
+	CUIRect OptimizerBlock = NextGameplayBlock(OptimizerBlockHeight);
 
 	CUIRect OptimizerBlockBg = OptimizerBlock;
 	OptimizerBlockBg.w += BlockPadding;
@@ -2553,7 +2694,6 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-	LeftColumn.HSplitTop(MarginBetweenViews, nullptr, &LeftColumn);
 
 #if defined(CONF_FAMILY_WINDOWS)
 	const float PerformanceOptionRows = 4.0f;
@@ -2562,8 +2702,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 #endif
 	const float PerformanceHintSize = 11.0f;
 	const float PerformanceBlockHeight = LineSize + PerformanceOptionRows * (MarginSmall + LineSize) + MarginSmall + 3.0f * (PerformanceHintSize + 3.0f) + MarginSmall + LineSize;
-	CUIRect PerformanceBlock;
-	LeftColumn.HSplitTop(PerformanceBlockHeight, &PerformanceBlock, &LeftColumn);
+	CUIRect PerformanceBlock = NextGameplayBlock(PerformanceBlockHeight);
 
 	CUIRect PerformanceBlockBg = PerformanceBlock;
 	PerformanceBlockBg.w += BlockPadding;
@@ -2661,9 +2800,6 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	}
 	Ui()->DoToolTip(&s_MaxFpsPresetButton, &MaxFpsButton, ScLocalize("Low latency preset plus no FPS limit, no FSAA, no high detail, no particles and no frozen tee HUD"));
 
-	CUIRect RightColumn = RightView;
-	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
-
 	const float CinematicStrengthHeight = g_Config.m_ScCinematicCamera ? LineSize : 0.0f;
 	const float BetterSpectateDelayHeight = g_Config.m_ScBetterSpectate ? LineSize : 0.0f;
 	const float SpecMovedNotifyTextHeight = g_Config.m_ScSpecMovedNotify ? LineSize : 0.0f;
@@ -2678,8 +2814,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		7.0f * LineSize +
 		AutoUpdateHeight +
 		CinematicStrengthHeight + BetterSpectateDelayHeight + SpecMovedNotifyTextHeight + AutoLockDelayHeight;
-	CUIRect GameplayQoLBlock;
-	RightColumn.HSplitTop(GameplayQoLBlockHeight, &GameplayQoLBlock, &RightColumn);
+	CUIRect GameplayQoLBlock = NextGameplayBlock(GameplayQoLBlockHeight);
 
 	CUIRect GameplayQoLBlockBg = GameplayQoLBlock;
 	GameplayQoLBlockBg.w += BlockPadding;
@@ -2749,7 +2884,6 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 			g_Config.m_TcEgoTilesAntiLag ^= 1;
 	}
 
-	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
 
 	const bool FastActionsExpanded = g_Config.m_ScFastActions != 0;
 	const float FastActionsHeaderHeight = LineSize + MarginSmall + LineSize;
@@ -2757,8 +2891,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const float FastActionsExpandedHeight = SC_MODULE_REVEAL(FastActionsExpanded, FastActionsExpandedTargetHeight, Client()->RenderFrameTime());
 	const float FastActionsBlockHeight = FastActionsHeaderHeight + FastActionsExpandedHeight;
 
-	CUIRect FastActionsBlock;
-	RightColumn.HSplitTop(FastActionsBlockHeight, &FastActionsBlock, &RightColumn);
+	CUIRect FastActionsBlock = NextGameplayBlock(FastActionsBlockHeight);
 
 	CUIRect FastActionsBlockBg = FastActionsBlock;
 	FastActionsBlockBg.w += BlockPadding;
@@ -2919,7 +3052,6 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
 
 	{
 		const bool FastPracticeHudEnabled = g_Config.m_ScFastPracticeHud != 0;
@@ -2927,8 +3059,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		const float FastPracticeExpandedTarget = (MarginSmall + LineSize) * 3.0f + (MarginSmall + LineSize) * (1 + FastPracticeBindCount) + MarginSmall + LineSize * 0.8f;
 		const float FastPracticeExpanded = SC_MODULE_REVEAL(FastPracticeHudEnabled, FastPracticeExpandedTarget, Client()->RenderFrameTime());
 		const float FastPracticeBlockHeight = LineSize + MarginSmall + LineSize + FastPracticeExpanded;
-		CUIRect FastPracticeBlock;
-		RightColumn.HSplitTop(FastPracticeBlockHeight, &FastPracticeBlock, &RightColumn);
+		CUIRect FastPracticeBlock = NextGameplayBlock(FastPracticeBlockHeight);
 
 		CUIRect FastPracticeBlockBg = FastPracticeBlock;
 		FastPracticeBlockBg.w += BlockPadding;
@@ -2995,7 +3126,6 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		}
 	}
 
-	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
 
 	const bool FinishPredictionEnabled = g_Config.m_ScFinishPrediction != 0;
 	const bool FinishPredictionShowTimeOptions = FinishPredictionEnabled && g_Config.m_ScFinishPredictionShowTime != 0;
@@ -3003,8 +3133,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const float FinishPredictionExpandedTargetHeight = (MarginSmall + LineSize) + FinishPredictionTimeExpandedHeight + (MarginSmall + LineSize) * 3.0f;
 	const float FinishPredictionExpandedHeight = SC_MODULE_REVEAL(FinishPredictionEnabled, FinishPredictionExpandedTargetHeight, Client()->RenderFrameTime());
 	const float FinishPredictionBlockHeight = LineSize + MarginSmall + LineSize + FinishPredictionExpandedHeight;
-	CUIRect FinishPredictionBlock;
-	RightColumn.HSplitTop(FinishPredictionBlockHeight, &FinishPredictionBlock, &RightColumn);
+	CUIRect FinishPredictionBlock = NextGameplayBlock(FinishPredictionBlockHeight);
 
 	CUIRect FinishPredictionBlockBg = FinishPredictionBlock;
 	FinishPredictionBlockBg.w += BlockPadding;
@@ -3087,11 +3216,9 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 		Ui()->ClipDisable();
 	}
 
-	RightColumn.HSplitTop(MarginBetweenViews, nullptr, &RightColumn);
 	{
 		const float RunAnalysisBlockHeight = LineSize + 5.0f * (MarginSmall + LineSize);
-		CUIRect RunAnalysisBlock;
-		RightColumn.HSplitTop(RunAnalysisBlockHeight, &RunAnalysisBlock, &RightColumn);
+		CUIRect RunAnalysisBlock = NextGameplayBlock(RunAnalysisBlockHeight);
 		CUIRect RunAnalysisBlockBg = RunAnalysisBlock;
 		RunAnalysisBlockBg.w += BlockPadding;
 		RunAnalysisBlockBg.h += BlockPadding;
@@ -3167,10 +3294,26 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 	CUIRect RightColumn = RightView;
 	Column.HSplitTop(10.0f, nullptr, &Column);
 	RightColumn.HSplitTop(10.0f, nullptr, &RightColumn);
+	const float LeftColumnStartY = Column.y;
+	const float RightColumnStartY = RightColumn.y;
+
+	static CSixClientColumnSplit s_OthersColumns;
+	s_OthersColumns.Begin(4, 4, MarginBetweenViews);
+	int OthersBlockIndex = 0;
+	const auto NextOthersBlock = [&](float Height) {
+		const int Index = OthersBlockIndex++;
+		const bool Left = s_OthersColumns.IsLeft(Index);
+		CUIRect &Target = Left ? Column : RightColumn;
+		if(Target.y > (Left ? LeftColumnStartY : RightColumnStartY))
+			Target.HSplitTop(MarginBetweenViews, nullptr, &Target);
+		CUIRect Block;
+		Target.HSplitTop(Height, &Block, &Target);
+		s_OthersColumns.Record(Index, Height);
+		return Block;
+	};
 
 	{
-		CUIRect BetaBlock;
-		Column.HSplitTop(LineSize + MarginSmall + LineSize, &BetaBlock, &Column);
+		CUIRect BetaBlock = NextOthersBlock(LineSize + MarginSmall + LineSize);
 		CUIRect BetaBlockBg = BetaBlock;
 		BetaBlockBg.w += BlockPadding;
 		BetaBlockBg.h += BlockPadding;
@@ -3186,12 +3329,10 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 		BetaBlock.HSplitTop(LineSize, &BetaRow, &BetaBlock);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScBetaReports, ScLocalize("Send crash, freeze and stutter reports"), &g_Config.m_ScBetaReports, &BetaRow, LineSize);
 		Ui()->DoToolTip(&g_Config.m_ScBetaReports, &BetaRow, ScLocalize("While Cecen Client is in beta, crashes, freezes, stutters and lag are sent to the Cecen team with your name, the server, the map, your system and a few settings, so they can be fixed"));
-		Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 	}
 
 	const float ChatQoLBlockHeight = LineSize + MarginSmall + 4.0f * LineSize;
-	CUIRect ChatQoLBlock;
-	Column.HSplitTop(ChatQoLBlockHeight, &ChatQoLBlock, &Column);
+	CUIRect ChatQoLBlock = NextOthersBlock(ChatQoLBlockHeight);
 
 	CUIRect ChatQoLBlockBg = ChatQoLBlock;
 	ChatQoLBlockBg.w += BlockPadding;
@@ -3223,12 +3364,10 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScNotifySavesOnMap, ScLocalize("Notify about saves on map"), &g_Config.m_ScNotifySavesOnMap, &NotifySavesRow, LineSize);
 	}
 
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
 	const float BrowserUtilsBlockHeight = 5.0f * LineSize + 4.0f * MarginSmall;
 
-	CUIRect BrowserUtilsBlock;
-	Column.HSplitTop(BrowserUtilsBlockHeight, &BrowserUtilsBlock, &Column);
+	CUIRect BrowserUtilsBlock = NextOthersBlock(BrowserUtilsBlockHeight);
 
 	CUIRect BrowserUtilsBlockBg = BrowserUtilsBlock;
 	BrowserUtilsBlockBg.w += BlockPadding;
@@ -3257,7 +3396,6 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 	BrowserUtilsBlock.HSplitTop(LineSize, &Content, &BrowserUtilsBlock);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScShowFinishedMapOnEgo, ScLocalize("Show finished map on EGO"), &g_Config.m_ScShowFinishedMapOnEgo, &Content, LineSize);
 
-	Column.HSplitTop(MarginBetweenViews, nullptr, &Column);
 
 	const bool FocusModeEnabled = g_Config.m_ClFocusMode != 0;
 	const bool FocusModeAutoReplyEnabled = g_Config.m_ClFocusModeAutoReply != 0;
@@ -3266,8 +3404,7 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 	const float FocusModeExpandedHeight = SC_MODULE_REVEAL(FocusModeEnabled, FocusModeExpandedTargetHeight, Client()->RenderFrameTime());
 	const float FocusModeBlockHeight = FocusModeHeaderHeight + FocusModeExpandedHeight;
 
-	CUIRect FocusModeBlock;
-	Column.HSplitTop(FocusModeBlockHeight, &FocusModeBlock, &Column);
+	CUIRect FocusModeBlock = NextOthersBlock(FocusModeBlockHeight);
 
 	CUIRect FocusModeBlockBg = FocusModeBlock;
 	FocusModeBlockBg.w += BlockPadding;

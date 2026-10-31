@@ -89,10 +89,10 @@ CMenuRainBackground::SPalette CMenuRainBackground::Palette()
 	if(g_Config.m_ScMenuRainTone == 1)
 	{
 		return {
-			ColorRGBA(178.0f / 255.0f, 132.0f / 255.0f, 1.0f, 1.0f),
-			ColorRGBA(0.20f, 0.085f, 0.335f, 0.18f),
-			ColorRGBA(0.55f, 0.30f, 0.85f, 1.0f),
-			ColorRGBA(0.87f, 0.78f, 1.0f, 1.0f),
+			ColorRGBA(1.0f, 0.55f, 0.55f, 1.0f),
+			ColorRGBA(0.335f, 0.06f, 0.07f, 0.18f),
+			ColorRGBA(0.85f, 0.22f, 0.25f, 1.0f),
+			ColorRGBA(1.0f, 0.8f, 0.8f, 1.0f),
 		};
 	}
 	return {

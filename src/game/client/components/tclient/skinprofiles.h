@@ -12,6 +12,7 @@
 class CProfile
 {
 public:
+	static constexpr int NO_CUSTOM_COLORS = -2; // 667client
 	int m_BodyColor;
 	int m_FeetColor;
 	int m_CountryFlag;

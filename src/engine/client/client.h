@@ -203,6 +203,8 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	// the game snapshots are modifiable by the game
 	CSnapshotStorage m_aSnapshotStorage[NUM_DUMMIES];
 	int64_t m_aLastSnapshotArrival[NUM_DUMMIES] = {}; // 667client
+	int m_aInputTimingLateness[INPUT_TIMING_HISTORY] = {}; // 667client
+	int64_t m_InputTimingCount = 0; // 667client
 	CSnapshotStorage::CHolder *m_aapSnapshots[NUM_DUMMIES][NUM_SNAPSHOT_TYPES];
 
 	int m_aReceivedSnapshots[NUM_DUMMIES] = {0, 0};
@@ -368,6 +370,11 @@ public:
 	// ---
 
 	int GetPredictionTime() override;
+	// 667client
+	int64_t InputTimingCount() const override { return m_InputTimingCount; }
+	int InputTimingLateness(int64_t Index) const override { return m_aInputTimingLateness[Index % INPUT_TIMING_HISTORY]; }
+	bool CustomPredictionMarginSupported() const override;
+	// 667client
 	CSnapItem SnapGetItem(int SnapId, int Index) const override;
 	int GetPredictionTick() override;
 	const void *SnapFindItem(int SnapId, int Type, int Id) const override;

@@ -14,20 +14,6 @@
 #include <string>
 #include <vector>
 
-enum
-{
-	SC_PROFILE_ASSET_ENTITIES = 1 << 0,
-	SC_PROFILE_ASSET_GAME = 1 << 1,
-	SC_PROFILE_ASSET_EMOTICONS = 1 << 2,
-	SC_PROFILE_ASSET_PARTICLES = 1 << 3,
-	SC_PROFILE_ASSET_HUD = 1 << 4,
-	SC_PROFILE_ASSET_EXTRAS = 1 << 5,
-	SC_PROFILE_ASSET_CURSOR = 1 << 6,
-	SC_PROFILE_ASSET_ARROW = 1 << 7,
-	SC_PROFILE_ASSET_AUDIO = 1 << 8,
-	SC_PROFILE_ASSET_COUNT = 9,
-};
-
 struct SSixClientMultiSelectDropDownState
 {
 	CUIElement m_UiElement;

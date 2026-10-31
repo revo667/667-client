@@ -10,39 +10,24 @@
 
 namespace
 {
-constexpr int BASE_MARGIN = 9;
-constexpr int MAX_MARGIN = 300;
 constexpr float CHECK_INTERVAL_SECONDS = 0.5f;
-constexpr float PING_SMOOTH_FACTOR_RISE = 0.45f;
-constexpr float PING_SMOOTH_FACTOR_FALL = 0.20f;
-constexpr float JITTER_SMOOTH_FACTOR_RISE = 0.35f;
-constexpr float JITTER_SMOOTH_FACTOR_FALL = 0.15f;
-constexpr int HIGH_PING_ENTER_MS = 50;
-constexpr int HIGH_PING_EXIT_MS = 42;
-constexpr float JITTER_ENTER_MS = 4.0f;
-constexpr float JITTER_EXIT_MS = 2.0f;
-constexpr int MARGIN_DEADZONE = 1;
-constexpr int MARGIN_STEP_DOWN = 5;
-// 667client
-constexpr int MARGIN_STEP_UP = 8;
-
-float MarginFromPing(float Ping)
-{
-	return std::max((float)BASE_MARGIN, Ping * 0.25f);
-}
+constexpr float HOLD_AFTER_RISE_SECONDS = 4.0f;
+constexpr int MIN_SAMPLES = 25;
+constexpr float PERCENTILE = 0.97f;
+constexpr int SAFETY_MS = 2;
+constexpr int STEP_UP_MS = 10;
+constexpr int STEP_DOWN_MS = 1;
 }
 
 void CBcAutoMargin::ResetState()
 {
+	m_WindowCount = 0;
+	m_WindowPos = 0;
+	m_ReadCursor = -1;
 	m_CheckTimer = 0.0f;
-	m_LatestPing = -1.0f;
-	m_IntervalPingSum = 0.0f;
-	m_IntervalPingSamples = 0;
-	m_IntervalMinPing = -1.0f;
-	m_IntervalPeakPing = -1.0f;
-	m_SmoothedPing = -1.0f;
-	m_SmoothedJitter = 0.0f;
-	m_HighPing = false;
+	m_HoldTimer = 0.0f;
+	m_Jitter = -1;
+	m_LatePercent = 0.0f;
 }
 
 void CBcAutoMargin::OnReset()
@@ -56,22 +41,18 @@ void CBcAutoMargin::OnStateChange(int NewState, int OldState)
 		ResetState();
 }
 
-void CBcAutoMargin::OnNewSnapshot()
+void CBcAutoMargin::ReadSamples()
 {
-	if(Client()->State() != IClient::STATE_ONLINE || !GameClient()->m_Snap.m_pLocalInfo)
+	const int64_t Count = Client()->InputTimingCount();
+	if(m_ReadCursor < 0 || m_ReadCursor > Count)
+		m_ReadCursor = Count;
+	m_ReadCursor = std::max(m_ReadCursor, Count - (int64_t)IClient::INPUT_TIMING_HISTORY);
+	for(; m_ReadCursor < Count; m_ReadCursor++)
 	{
-		ResetState();
-		return;
+		m_aWindow[m_WindowPos] = Client()->InputTimingLateness(m_ReadCursor);
+		m_WindowPos = (m_WindowPos + 1) % WINDOW_SIZE;
+		m_WindowCount = std::min(m_WindowCount + 1, (int)WINDOW_SIZE);
 	}
-
-	const float CurrentPing = (float)std::max(0, GameClient()->m_Snap.m_pLocalInfo->m_Latency);
-	m_LatestPing = CurrentPing;
-	m_IntervalPingSum += CurrentPing;
-	++m_IntervalPingSamples;
-	if(m_IntervalMinPing < 0.0f || CurrentPing < m_IntervalMinPing)
-		m_IntervalMinPing = CurrentPing;
-	if(m_IntervalPeakPing < 0.0f || CurrentPing > m_IntervalPeakPing)
-		m_IntervalPeakPing = CurrentPing;
 }
 
 void CBcAutoMargin::OnUpdate()
@@ -95,72 +76,52 @@ void CBcAutoMargin::OnUpdate()
 		m_WasEnabled = true;
 	}
 
-	if(Client()->State() != IClient::STATE_ONLINE || !GameClient()->m_Snap.m_pLocalInfo)
+	if(Client()->State() != IClient::STATE_ONLINE || !Client()->CustomPredictionMarginSupported())
 	{
 		ResetState();
 		return;
 	}
 
-	m_CheckTimer -= Client()->RenderFrameTime();
+	ReadSamples();
+
+	const float FrameTime = Client()->RenderFrameTime();
+	m_HoldTimer = std::max(0.0f, m_HoldTimer - FrameTime);
+	m_CheckTimer -= FrameTime;
 	if(m_CheckTimer > 0.0f)
 		return;
-	m_CheckTimer += CHECK_INTERVAL_SECONDS;
-	if(m_CheckTimer < 0.0f)
-		m_CheckTimer = 0.0f;
+	m_CheckTimer = CHECK_INTERVAL_SECONDS;
 
-	const float CurrentPing = m_LatestPing >= 0.0f ? m_LatestPing : (float)std::max(0, GameClient()->m_Snap.m_pLocalInfo->m_Latency);
-	const float IntervalAveragePing = m_IntervalPingSamples > 0 ? m_IntervalPingSum / (float)m_IntervalPingSamples : CurrentPing;
-	const float IntervalMinPing = m_IntervalMinPing >= 0.0f ? m_IntervalMinPing : CurrentPing;
-	const float SamplePing = m_IntervalPeakPing >= 0.0f ? m_IntervalPeakPing : CurrentPing;
-	m_IntervalPingSum = 0.0f;
-	m_IntervalPingSamples = 0;
-	m_IntervalMinPing = -1.0f;
-	m_IntervalPeakPing = -1.0f;
-	const float IntervalJitter = std::max(0.0f, SamplePing - IntervalMinPing);
-
-	if(m_SmoothedPing < 0.0f)
-		m_SmoothedPing = IntervalAveragePing;
-	else
-	{
-		const float SmoothFactor = IntervalAveragePing > m_SmoothedPing ? PING_SMOOTH_FACTOR_RISE : PING_SMOOTH_FACTOR_FALL;
-		m_SmoothedPing += (IntervalAveragePing - m_SmoothedPing) * SmoothFactor;
-	}
-
-	const float JitterSmoothFactor = IntervalJitter > m_SmoothedJitter ? JITTER_SMOOTH_FACTOR_RISE : JITTER_SMOOTH_FACTOR_FALL;
-	m_SmoothedJitter += (IntervalJitter - m_SmoothedJitter) * JitterSmoothFactor;
-
-	const float EffectivePing = std::max(std::max(m_SmoothedPing, CurrentPing), IntervalAveragePing + m_SmoothedJitter * 0.25f);
-	const bool WantsDynamicMargin = EffectivePing >= (float)HIGH_PING_ENTER_MS || SamplePing >= (float)HIGH_PING_ENTER_MS || m_SmoothedJitter >= JITTER_ENTER_MS;
-
-	if(m_HighPing)
-	{
-		if(EffectivePing < (float)HIGH_PING_EXIT_MS && m_SmoothedJitter <= JITTER_EXIT_MS)
-			m_HighPing = false;
-	}
-	else if(WantsDynamicMargin)
-	{
-		m_HighPing = true;
-	}
-
-	int TargetMargin = BASE_MARGIN;
-	if(m_HighPing)
-	{
-		const float StableMargin = MarginFromPing(EffectivePing);
-		const float JitterMargin = std::max(m_SmoothedJitter * 0.90f, IntervalJitter * 0.35f);
-		TargetMargin = std::clamp((int)std::round(StableMargin + JitterMargin), BASE_MARGIN, MAX_MARGIN);
-	}
-
-	int CurrentMargin = std::clamp(g_Config.m_ClPredictionMargin, BASE_MARGIN, MAX_MARGIN);
-	const int MarginDelta = TargetMargin - CurrentMargin;
-	if(std::abs(MarginDelta) <= MARGIN_DEADZONE)
+	if(m_WindowCount < MIN_SAMPLES)
 		return;
 
-	if(MarginDelta > 0)
-		CurrentMargin += std::min(MarginDelta, MARGIN_STEP_UP);
-	else
-		CurrentMargin -= std::min(-MarginDelta, MARGIN_STEP_DOWN);
+	int aSorted[WINDOW_SIZE];
+	std::copy(m_aWindow, m_aWindow + m_WindowCount, aSorted);
+	const int Nth = std::min(m_WindowCount - 1, (int)std::ceil(m_WindowCount * PERCENTILE) - 1);
+	std::nth_element(aSorted, aSorted + Nth, aSorted + m_WindowCount);
+	m_Jitter = std::max(0, aSorted[Nth]);
 
-	CurrentMargin = std::clamp(CurrentMargin, BASE_MARGIN, MAX_MARGIN);
-	if(g_Config.m_ClPredictionMargin != CurrentMargin)
-		g_Config.m_ClPredictionMargin = CurrentMargin;
+	const int Margin = g_Config.m_ClPredictionMargin;
+	int Late = 0;
+	for(int i = 0; i < m_WindowCount; i++)
+		if(m_aWindow[i] > Margin)
+			Late++;
+	m_LatePercent = Late * 100.0f / m_WindowCount;
+
+	const int MinMargin = std::min(g_Config.m_ScAutoMarginMin, g_Config.m_ScAutoMarginMax);
+	const int MaxMargin = std::max(g_Config.m_ScAutoMarginMin, g_Config.m_ScAutoMarginMax);
+	const int Target = std::clamp(m_Jitter + SAFETY_MS, MinMargin, MaxMargin);
+
+	int NewMargin = std::clamp(Margin, MinMargin, MaxMargin);
+	if(Target > NewMargin)
+	{
+		NewMargin += std::min(Target - NewMargin, STEP_UP_MS);
+		m_HoldTimer = HOLD_AFTER_RISE_SECONDS;
+	}
+	else if(Target < NewMargin && m_HoldTimer <= 0.0f)
+	{
+		NewMargin -= std::min(NewMargin - Target, STEP_DOWN_MS);
+	}
+
+	if(NewMargin != Margin)
+		g_Config.m_ClPredictionMargin = NewMargin;
 }
