@@ -177,7 +177,10 @@
 
 	{"Inputs", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Gameplay", &g_Config.m_ScInputs, nullptr},
 	{"Sub-Tick aiming", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Inputs", &g_Config.m_ClSubTickAiming, nullptr},
-	{"Auto margin", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Inputs", &g_Config.m_ScAutoMargin, nullptr},
+
+	{"Auto margin", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Gameplay", &g_Config.m_ScAutoMargin, nullptr},
+	{"Lowest margin", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Auto margin", &g_Config.m_ScAutoMarginMin, &g_Config.m_ScAutoMargin},
+	{"Highest margin", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Auto margin", &g_Config.m_ScAutoMarginMax, &g_Config.m_ScAutoMargin},
 
 	{"Snap Tap", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Gameplay", &g_Config.m_ScSnapTap, nullptr},
 	{"Delay", SETTINGS_NAV_LEAF_SC_GAMEPLAY, "Snap Tap", &g_Config.m_ScSnapTapDelay, &g_Config.m_ScSnapTap},

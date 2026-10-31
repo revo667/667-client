@@ -2063,7 +2063,7 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 	const float InputsExpandedTargetHeight = (MarginSmall + LineSize) + InputsModeFieldsHeight;
 	const float InputsExpandedHeight = SC_MODULE_REVEAL(InputsEnabled, InputsExpandedTargetHeight, Client()->RenderFrameTime());
 	const float InputsHeaderHeight = LineSize + MarginSmall + LineSize;
-	const float InputsFooterLines = g_Config.m_ClSubTickAiming ? 3.0f : 4.0f;
+	const float InputsFooterLines = g_Config.m_ClSubTickAiming ? 2.0f : 3.0f;
 	const float InputsBlockHeight = InputsHeaderHeight + InputsExpandedHeight + InputsFooterLines * (MarginSmall + LineSize);
 
 	CUIRect InputsBlock;
@@ -2340,13 +2340,74 @@ void CMenus::RenderSettingsSixClientGameplay(CUIRect MainView)
 
 	InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
 	InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
-	Ui()->DoToolTip(&g_Config.m_ScAutoMargin, &Content, ScLocalize("Adjusts the prediction margin from your ping automatically, so you get fewer corrections without extra delay. Your old margin comes back when you turn it off."));
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScAutoMargin, ScLocalize("Auto margin"), &g_Config.m_ScAutoMargin, &Content, LineSize);
-
-	InputsBlock.HSplitTop(MarginSmall, nullptr, &InputsBlock);
-	InputsBlock.HSplitTop(LineSize, &Content, &InputsBlock);
 	Ui()->DoToolTip(&g_Config.m_ScInputDebounce, &Content, ScLocalize("Keeps key presses shorter than one game tick (20 ms), so very fast taps of A, D, jump or hook are never lost."));
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScInputDebounce, ScLocalize("Input Debounce"), &g_Config.m_ScInputDebounce, &Content, LineSize);
+
+	LeftColumn.HSplitTop(MarginBetweenViews, nullptr, &LeftColumn);
+
+	const bool AutoMarginExpanded = g_Config.m_ScAutoMargin != 0;
+	const float AutoMarginHeaderHeight = LineSize + MarginSmall + LineSize;
+	const float AutoMarginExpandedTargetHeight = 3.0f * (MarginSmall + LineSize);
+	const float AutoMarginExpandedHeight = SC_MODULE_REVEAL(AutoMarginExpanded, AutoMarginExpandedTargetHeight, Client()->RenderFrameTime());
+	const float AutoMarginBlockHeight = AutoMarginHeaderHeight + AutoMarginExpandedHeight;
+
+	CUIRect AutoMarginBlock;
+	LeftColumn.HSplitTop(AutoMarginBlockHeight, &AutoMarginBlock, &LeftColumn);
+
+	CUIRect AutoMarginBlockBg = AutoMarginBlock;
+	AutoMarginBlockBg.w += BlockPadding;
+	AutoMarginBlockBg.h += BlockPadding;
+	AutoMarginBlockBg.x -= BlockPadding * 0.5f;
+	AutoMarginBlockBg.y -= BlockPadding * 0.5f;
+	SixClientUiTheme::DrawUiBlock(&AutoMarginBlockBg, IGraphics::CORNER_ALL, 10.0f);
+	SixClientSettingsSearch::DrawBlockHighlight(&g_Config.m_ScAutoMargin, &AutoMarginBlockBg);
+
+	AutoMarginBlock.HSplitTop(LineSize, &Label, &AutoMarginBlock);
+	Ui()->DoLabel(&Label, ScLocalize("Auto margin"), HeadlineFontSize, TEXTALIGN_ML);
+	AutoMarginBlock.HSplitTop(MarginSmall, nullptr, &AutoMarginBlock);
+
+	AutoMarginBlock.HSplitTop(LineSize, &Content, &AutoMarginBlock);
+	Ui()->DoToolTip(&g_Config.m_ScAutoMargin, &Content, ScLocalize("Sets the DDNet prediction margin from your connection: the server tells the client how early each input arrived, and the margin follows how much that changes. It rises at once when your connection gets worse and comes down slowly when it is stable again. Your old margin comes back when you turn it off."));
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScAutoMargin, ScLocalize("Enable"), &g_Config.m_ScAutoMargin, &Content, LineSize);
+
+	if(AutoMarginExpandedHeight > 0.5f)
+	{
+		CUIRect Visible = AutoMarginBlock;
+		Visible.h = AutoMarginExpandedHeight;
+		Ui()->ClipEnable(&Visible);
+
+		AutoMarginBlock.HSplitTop(MarginSmall, nullptr, &AutoMarginBlock);
+		AutoMarginBlock.HSplitTop(LineSize, &Button, &AutoMarginBlock);
+		Ui()->DoScrollbarOption(&g_Config.m_ScAutoMarginMin, &g_Config.m_ScAutoMarginMin, &Button, ScLocalize("Lowest margin"), 1, 50, &CUi::ms_LinearScrollbarScale, 0, "ms");
+		Ui()->DoToolTip(&g_Config.m_ScAutoMarginMin, &Button, ScLocalize("Auto margin never goes below this. Lower adds less delay on a clean connection."));
+
+		AutoMarginBlock.HSplitTop(MarginSmall, nullptr, &AutoMarginBlock);
+		AutoMarginBlock.HSplitTop(LineSize, &Button, &AutoMarginBlock);
+		Ui()->DoScrollbarOption(&g_Config.m_ScAutoMarginMax, &g_Config.m_ScAutoMarginMax, &Button, ScLocalize("Highest margin"), 10, 150, &CUi::ms_LinearScrollbarScale, 0, "ms");
+		Ui()->DoToolTip(&g_Config.m_ScAutoMarginMax, &Button, ScLocalize("Auto margin never goes above this, even when the connection is very unstable."));
+
+		AutoMarginBlock.HSplitTop(MarginSmall, nullptr, &AutoMarginBlock);
+		AutoMarginBlock.HSplitTop(LineSize, &Label, &AutoMarginBlock);
+		char aStatus[128];
+		ColorRGBA StatusColor(1.0f, 1.0f, 1.0f, 0.6f);
+		const CBcAutoMargin &AutoMargin = GameClient()->m_ScAutoMargin;
+		if(Client()->State() != IClient::STATE_ONLINE)
+			str_copy(aStatus, ScLocalize("Starts measuring once you join a server"));
+		else if(!Client()->CustomPredictionMarginSupported())
+		{
+			str_copy(aStatus, ScLocalize("This server uses a fixed 10 ms margin"));
+			StatusColor = ColorRGBA(1.0f, 0.6f, 0.4f, 0.9f);
+		}
+		else if(!AutoMargin.HasData())
+			str_copy(aStatus, ScLocalize("Measuring your connection..."));
+		else
+			str_format(aStatus, sizeof(aStatus), "%s: %d ms  ·  %s: %d ms  ·  %s: %.1f%%", ScLocalize("Margin"), g_Config.m_ClPredictionMargin, ScLocalize("Jitter"), AutoMargin.Jitter(), ScLocalize("Late inputs"), AutoMargin.LatePercent());
+		TextRender()->TextColor(StatusColor);
+		Ui()->DoLabel(&Label, aStatus, FontSize * 0.85f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+		Ui()->ClipDisable();
+	}
 
 	LeftColumn.HSplitTop(MarginBetweenViews, nullptr, &LeftColumn);
 

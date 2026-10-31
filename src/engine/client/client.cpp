@@ -2190,6 +2190,14 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 						Target = Target - (int64_t)((TimeLeft / 1000.0f) * time_freq()) + m_aInputs[Conn][k].m_PredictionMargin;
 					else
 						Target = Target - (int64_t)((TimeLeft / 1000.0f) * time_freq());
+					// 667client
+					if(Conn == g_Config.m_ClDummy)
+					{
+						const int MarginMs = (int)(m_aInputs[Conn][k].m_PredictionMargin * 1000 / time_freq());
+						m_aInputTimingLateness[m_InputTimingCount % INPUT_TIMING_HISTORY] = MarginMs - TimeLeft;
+						m_InputTimingCount++;
+					}
+					// 667client
 					break;
 				}
 			}
@@ -5690,6 +5698,13 @@ int CClient::PredictionMargin() const
 {
 	return m_ServerCapabilities.m_SyncWeaponInput ? g_Config.m_ClPredictionMargin : 10;
 }
+
+// 667client
+bool CClient::CustomPredictionMarginSupported() const
+{
+	return m_ServerCapabilities.m_SyncWeaponInput;
+}
+// 667client
 
 IClient::EConnectivity CClient::UdpConnectivity(int NetType)
 {
