@@ -422,6 +422,7 @@ private:
 	bool m_ActiveItemValid = false;
 
 	int m_ActiveButtonLogicButton = -1;
+	int m_ButtonClicks = 0; // 667client
 	int m_ActiveDraggableButtonLogicButton = -1;
 	class CDoubleClickState
 	{
@@ -621,6 +622,10 @@ public:
 	const CScrollRegion *HotScrollRegion() const { return m_pHotScrollRegion; }
 
 	void StartCheck() { m_ActiveItemValid = false; }
+	// 667client
+	void ResetButtonClicks() { m_ButtonClicks = 0; }
+	int ButtonClicks() const { return m_ButtonClicks; }
+	// 667client
 	void FinishCheck()
 	{
 		if(!m_ActiveItemValid && m_pActiveItem != nullptr)

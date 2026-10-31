@@ -38,32 +38,37 @@ enum
 void CMenus::RenderSettingsAppearance(CUIRect MainView)
 {
 	char aBuf[128];
-	static int s_CurTab = 0;
+	int &s_CurTab = m_AppearanceTab; // 667client
 
 	CUIRect TabBar, LeftView, RightView, Button;
 
-	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	const float TabWidth = TabBar.w / (float)NUMBER_OF_APPEARANCE_TABS;
-	static CButtonContainer s_aPageTabs[NUMBER_OF_APPEARANCE_TABS] = {};
-	const char *apTabNames[NUMBER_OF_APPEARANCE_TABS] = {
-		Localize("HUD"),
-		Localize("Chat"),
-		Localize("Name Plate"),
-		Localize("Hook Collisions"),
-		Localize("Info Messages"),
-		Localize("Laser")};
-
-	for(int Tab = APPEARANCE_TAB_HUD; Tab < NUMBER_OF_APPEARANCE_TABS; ++Tab)
+	// 667client
+	if(!m_SettingsSidebarTabs)
 	{
-		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
-		const int Corners = Tab == APPEARANCE_TAB_HUD ? IGraphics::CORNER_L : (Tab == NUMBER_OF_APPEARANCE_TABS - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
-		if(DoButton_MenuTab(&s_aPageTabs[Tab], apTabNames[Tab], s_CurTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
-		{
-			s_CurTab = Tab;
-		}
-	}
+		MainView.HSplitTop(20.0f, &TabBar, &MainView);
+		const float TabWidth = TabBar.w / (float)NUMBER_OF_APPEARANCE_TABS;
+		static CButtonContainer s_aPageTabs[NUMBER_OF_APPEARANCE_TABS] = {};
+		const char *apTabNames[NUMBER_OF_APPEARANCE_TABS] = {
+			Localize("HUD"),
+			Localize("Chat"),
+			Localize("Name Plate"),
+			Localize("Hook Collisions"),
+			Localize("Info Messages"),
+			Localize("Laser")};
 
-	MainView.HSplitTop(10.0f, nullptr, &MainView);
+		for(int Tab = APPEARANCE_TAB_HUD; Tab < NUMBER_OF_APPEARANCE_TABS; ++Tab)
+		{
+			TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
+			const int Corners = Tab == APPEARANCE_TAB_HUD ? IGraphics::CORNER_L : (Tab == NUMBER_OF_APPEARANCE_TABS - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
+			if(DoButton_MenuTab(&s_aPageTabs[Tab], apTabNames[Tab], s_CurTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+			{
+				s_CurTab = Tab;
+			}
+		}
+
+		MainView.HSplitTop(10.0f, nullptr, &MainView);
+	}
+	// 667client
 
 	const float LineSize = 20.0f;
 	const float ColorPickerLineSize = 25.0f;

@@ -254,14 +254,14 @@ static CUi::EPopupMenuFunctionResult PopupRender(void *pContext, CUIRect View, b
 	return CUi::POPUP_KEEP_OPEN;
 }
 
-static void OpenSearchPopup(CMenus *pMenus, CUi *pUi, CGameClient *pGameClient, const CUIRect &Anchor)
+static void OpenSearchPopup(CMenus *pMenus, CUi *pUi, CGameClient *pGameClient, const CUIRect &Anchor, bool AlignLeft = false)
 {
 	gs_PopupContext.m_pMenus = pMenus;
 	gs_PopupContext.m_pUi = pUi;
 	gs_PopupContext.m_pGameClient = pGameClient;
 	const float PopupW = 320.0f;
 	const float PopupH = 320.0f;
-	const float X = Anchor.x + Anchor.w - PopupW;
+	const float X = AlignLeft ? Anchor.x : Anchor.x + Anchor.w - PopupW;
 	const float Y = Anchor.y + Anchor.h + 4.0f;
 	pUi->DoPopupMenu(&gs_PopupContext, X, Y, PopupW, PopupH, &gs_PopupContext, PopupRender);
 	gs_ForceSearchFocus = true;
@@ -300,6 +300,45 @@ void RenderCornerButton(CMenus *pMenus, CUi *pUi, CGameClient *pGameClient, IInp
 
 	if(!pUi->IsPopupOpen() && !pGameClient->m_GameConsole.IsActive() && pInput->ModifierIsPressed() && pInput->KeyPress(KEY_F))
 		OpenSearchPopup(pMenus, pUi, pGameClient, Button);
+}
+
+void RenderSearchField(CMenus *pMenus, CUi *pUi, CGameClient *pGameClient, IInput *pInput, CUIRect Field)
+{
+	static char s_FieldId;
+	const bool Open = pUi->IsPopupOpen(&gs_PopupContext);
+	const bool Hot = pUi->HotItem() == &s_FieldId;
+	Field.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, Open || Hot ? 0.10f : 0.06f), IGraphics::CORNER_ALL, 6.0f);
+
+	CUIRect Icon, Label;
+	Field.VSplitLeft(8.0f, nullptr, &Icon);
+	Icon.VSplitLeft(14.0f, &Icon, &Label);
+	Label.VSplitLeft(6.0f, nullptr, &Label);
+
+	pUi->TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+	pUi->TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+	{
+		SLabelProperties Props;
+		Props.SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, Open || Hot ? 0.85f : 0.5f));
+		pUi->DoLabel(&Icon, FontIcon::MAGNIFYING_GLASS, 9.0f, TEXTALIGN_MC, Props);
+	}
+	pUi->TextRender()->SetRenderFlags(0);
+	pUi->TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	{
+		SLabelProperties Props;
+		Props.SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, Open || Hot ? 0.7f : 0.45f));
+		pUi->DoLabel(&Label, Localize("Search"), 10.5f, TEXTALIGN_ML, Props);
+	}
+
+	if(pUi->DoButtonLogic(&s_FieldId, 0, &Field, BUTTONFLAG_LEFT))
+	{
+		if(Open)
+			pUi->ClosePopupMenu(&gs_PopupContext);
+		else
+			OpenSearchPopup(pMenus, pUi, pGameClient, Field, true);
+	}
+
+	if(!pUi->IsPopupOpen() && !pGameClient->m_GameConsole.IsActive() && pInput->ModifierIsPressed() && pInput->KeyPress(KEY_F))
+		OpenSearchPopup(pMenus, pUi, pGameClient, Field, true);
 }
 
 void Update(float DeltaTime)

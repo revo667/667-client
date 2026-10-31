@@ -378,6 +378,15 @@ void CMenus::RenderSettingsTClient(CUIRect MainView)
 	}
 
 	int SelectedVisibleIndex = 0;
+	// 667client
+	if(m_SettingsSidebarTabs)
+	{
+		for(int i = 0; i < VisibleCount; ++i)
+			if(aVisibleValues[i] == s_CurTClientSettingsTab)
+				SelectedVisibleIndex = i;
+	}
+	else
+	// 667client
 	{
 		CUIRect TabBar, Button;
 		MainView.HSplitTop(LineSize, &TabBar, &MainView);

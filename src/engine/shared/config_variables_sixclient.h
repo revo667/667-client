@@ -58,7 +58,7 @@ MACRO_CONFIG_INT(ScCustomAspectRatioDen, sc_custom_aspect_ratio_den, 0, 0, 10000
 // Visuals QoL
 MACRO_CONFIG_INT(ScShowCorrectCheckpoint, sc_show_correct_checkpoint, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show current tele checkpoint in movement information")
 MACRO_CONFIG_INT(ScShowSpectatorNames, sc_show_spectator_names, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show spectator nicknames in the spectator count HUD")
-MACRO_CONFIG_INT(ScUiStyle, sc_ui_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings layout (0 = Old UI, 1 = Cecen UI)")
+MACRO_CONFIG_INT(ScUiStyle, sc_ui_style, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings layout (0 = Old UI, 1 = Cecen UI)")
 MACRO_CONFIG_INT(ScClientIndicator, sc_client_indicator, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show the Cecen Client badge next to players who use Cecen Client")
 MACRO_CONFIG_INT(ScClientIndicatorShare, sc_client_indicator_share, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Let other Cecen Client users see that you use Cecen Client")
 MACRO_CONFIG_STR(ScClientIndicatorUrl, sc_client_indicator_url, 128, "https://api.667.wtf/cecen/v1/presence", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Presence service used for Cecen Client badges")
@@ -228,6 +228,7 @@ MACRO_CONFIG_INT(ScBetterPreview, sc_better_preview, 1, 0, 1, CFGFLAG_CLIENT | C
 
 // Media background
 MACRO_CONFIG_INT(ScMenuMediaBackground, sc_menu_media_background, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable custom media background in offline menus")
+MACRO_CONFIG_INT(ScMenuClickSound, sc_menu_click_sound, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Play a click sound when pressing buttons in menus")
 MACRO_CONFIG_INT(ScMenuRainBackground, sc_menu_rain_background, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Animated rain and spotlight background in offline menus")
 MACRO_CONFIG_INT(ScMenuRainTone, sc_menu_rain_tone, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Rain menu background tone (0 = silver, 1 = violet)")
 MACRO_CONFIG_INT(ScStartMenuTextLogo, sc_start_menu_text_logo, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use the dark Cecen Client text logo in the start menu instead of the image logo")

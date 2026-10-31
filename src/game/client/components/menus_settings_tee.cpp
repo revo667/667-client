@@ -52,14 +52,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	// 667client
 
 	static CButtonContainer s_PlayerTabButton;
-	if(DoButton_MenuTab(&s_PlayerTabButton, Localize("Player"), !m_Dummy, &PlayerTab, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f))
+	if(!m_SettingsSidebarTabs && DoButton_MenuTab(&s_PlayerTabButton, Localize("Player"), !m_Dummy, &PlayerTab, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f)) // 667client
 	{
 		m_Dummy = false;
 		m_SkinListScrollToSelected = true;
 	}
 
 	static CButtonContainer s_DummyTabButton;
-	if(DoButton_MenuTab(&s_DummyTabButton, Localize("Dummy"), m_Dummy, &DummyTab, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
+	if(!m_SettingsSidebarTabs && DoButton_MenuTab(&s_DummyTabButton, Localize("Dummy"), m_Dummy, &DummyTab, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f)) // 667client
 	{
 		m_Dummy = true;
 		m_SkinListScrollToSelected = true;
