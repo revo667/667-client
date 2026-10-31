@@ -177,7 +177,7 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 		if(Discord)
 			Client()->ViewLink("https://discord.gg/667");
 		if(Telegram)
-			Client()->ViewLink("https://t.me/bestddnet");
+			Client()->ViewLink("https://t.me/loresche");
 		if(CheckUpdate)
 		{
 #if defined(CONF_AUTOUPDATE)
