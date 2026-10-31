@@ -1517,6 +1517,7 @@ set(EXPECTED_DATA
   audio/wp_switch-03.wv
   autoexec_server.cfg
   background_noise.png
+  667Client/audio/menu_click.opus
   667Client/client_indicator.png
   667Client/gui_logo.png
   667Client/icon.png
@@ -3313,6 +3314,8 @@ if(CLIENT)
     components/sixclient/menus_assets_market.cpp
     components/sixclient/menus_cecen_ui.cpp
     components/sixclient/menus_friends.cpp
+    components/sixclient/menus_ingame_panel.cpp
+    components/sixclient/menus_settings_window.cpp
     components/sixclient/menus_social.cpp
     components/sixclient/menus_spotify.cpp
     components/sixclient/meow_input.cpp
@@ -3323,6 +3326,7 @@ if(CLIENT)
     components/sixclient/spotify_connect.h
     components/sixclient/teedata_client.cpp
     components/sixclient/teedata_client.h
+    components/sixclient/ui_theme/panel.h
     components/sixclient/ui_theme/settings_nav.cpp
     components/sixclient/ui_theme/settings_nav.h
     components/sixclient/ui_theme/style.h

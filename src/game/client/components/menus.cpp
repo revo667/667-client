@@ -1308,61 +1308,16 @@ void CMenus::Render()
 		{
 			RenderPopupFullscreen(Screen);
 		}
+		// 667client
+		else if(m_GamePage != PAGE_SETTINGS)
+		{
+			RenderIngamePanel(*Ui()->Screen());
+		}
 		else
 		{
-			CUIRect TabBar, MainView;
-			Screen.HSplitTop(24.0f, &TabBar, &MainView);
-
-			if(m_GamePage == PAGE_GAME)
-			{
-				RenderGame(MainView);
-				RenderIngameHint();
-			}
-			else if(m_GamePage == PAGE_PLAYERS)
-			{
-				RenderPlayers(MainView);
-			}
-			else if(m_GamePage == PAGE_SERVER_INFO)
-			{
-				RenderServerInfo(MainView);
-			}
-			else if(m_GamePage == PAGE_NETWORK)
-			{
-				RenderInGameNetwork(MainView);
-			}
-			else if(m_GamePage == PAGE_GHOST)
-			{
-				RenderGhost(MainView);
-			}
-			else if(m_GamePage == PAGE_CALLVOTE)
-			{
-				RenderServerControl(MainView);
-			}
-			else if(m_GamePage == PAGE_SPOTIFY) // 667client
-			{
-				RenderSpotify(MainView);
-			}
-			else if(m_GamePage == PAGE_DEMOS)
-			{
-				RenderDemoBrowser(MainView);
-			}
-			else if(m_GamePage == PAGE_SETTINGS)
-			{
-				RenderSettings(MainView);
-			}
-			else
-			{
-				dbg_assert_failed("Invalid m_GamePage: %d", m_GamePage);
-			}
-
-			// 667client
-			const bool AssetsEditorConfirmOpen = m_AssetsEditorState.m_Open &&
-				m_AssetsEditorState.m_ExploreSide < 0 && m_AssetsEditorState.m_ShowExitConfirm &&
-				g_Config.m_UiSettingsPage == SETTINGS_ASSETS;
-			if(!AssetsEditorConfirmOpen)
-			// 667client
-				RenderMenubar(TabBar, ClientState);
+			RenderSettingsWindow(*Ui()->Screen());
 		}
+		// 667client
 		break;
 
 	case IClient::STATE_DEMOPLAYBACK:
@@ -2514,6 +2469,10 @@ void CMenus::SetActive(bool Active)
 	{
 		Ui()->SetHotItem(nullptr);
 		Ui()->SetActiveItem(nullptr);
+		// 667client
+		if(Active && Client()->State() == IClient::STATE_ONLINE)
+			ResetIngamePanel();
+		// 667client
 	}
 	m_MenuActive = Active;
 	if(!m_MenuActive)
@@ -2657,6 +2616,10 @@ void CMenus::OnRender()
 	{
 		if(Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE))
 		{
+			// 667client
+			if(Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_SETTINGS)
+				m_GamePage = PAGE_GAME;
+			// 667client
 			SetActive(true);
 		}
 		// 667client
@@ -2681,6 +2644,7 @@ void CMenus::OnRender()
 		const SixClientUiTheme::CMenuThemeScope MenuThemeScope(IsActive() || Client()->State() == IClient::STATE_DEMOPLAYBACK);
 
 		Ui()->Update();
+		Ui()->ResetButtonClicks();
 
 		if(ShowAspectConfirmOverlay && IsActive())
 			Ui()->SetActiveItem(nullptr);
@@ -2701,6 +2665,9 @@ void CMenus::OnRender()
 		{
 			Ui()->RenderBackButton();
 		}
+
+		if(Ui()->ButtonClicks() > 0)
+			PlayMenuClickSound();
 	}
 	// 667client
 
@@ -2719,6 +2686,27 @@ void CMenus::OnRender()
 	Ui()->FinishCheck();
 	Ui()->ClearHotkeys();
 }
+
+// 667client
+void CMenus::PlayMenuClickSound()
+{
+	if(!g_Config.m_ScMenuClickSound || !g_Config.m_SndEnable)
+		return;
+	if(!m_MenuClickSoundLoaded)
+	{
+		m_MenuClickSoundLoaded = true;
+		void *pData;
+		unsigned DataSize;
+		if(Storage()->ReadFile("667Client/audio/menu_click.opus", IStorage::TYPE_ALL, &pData, &DataSize))
+		{
+			m_MenuClickSampleId = Sound()->LoadOpusFromMem(pData, DataSize, false, "667Client/audio/menu_click.opus");
+			free(pData);
+		}
+	}
+	if(m_MenuClickSampleId >= 0)
+		GameClient()->m_Sounds.PlaySample(CSounds::CHN_GUI, m_MenuClickSampleId, 0, 1.0f);
+}
+// 667client
 
 void CMenus::UpdateColors()
 {

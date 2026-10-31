@@ -1067,6 +1067,19 @@ static int InitSearchList(std::vector<const TName *> &vpSearchList, std::vector<
 	return vAssetList.size();
 }
 
+// 667client
+int CMenus::GetAssetsSettingsTab() const
+{
+	return s_CurCustomTab;
+}
+
+void CMenus::SetAssetsSettingsTab(int Tab)
+{
+	if(Tab >= ASSETS_TAB_ENTITIES && Tab < NUMBER_OF_ASSETS_TABS)
+		s_CurCustomTab = Tab;
+}
+// 667client
+
 void CMenus::RenderSettingsAssets(CUIRect MainView)
 {
 	CUIRect TabBar, CustomList, QuickSearch, DirectoryButton, ReloadButton;
@@ -1080,35 +1093,36 @@ void CMenus::RenderSettingsAssets(CUIRect MainView)
 		});
 	};
 
-	MainView.HSplitTop(20.0f, &TabBar, &MainView);
 	// 667client
 	const bool EditorExplore = m_AssetsEditorState.m_Open && m_AssetsEditorState.m_ExploreSide >= 0;
 	const int VisibleAssetTabs = EditorExplore ? ASSETS_TAB_AUDIO : NUMBER_OF_ASSETS_TABS;
 	if(EditorExplore && s_CurCustomTab >= VisibleAssetTabs)
 		s_CurCustomTab = ASSETS_TAB_ENTITIES;
-	const float TabWidth = TabBar.w / (float)VisibleAssetTabs;
-	// 667client
-	static CButtonContainer s_aPageTabs[NUMBER_OF_ASSETS_TABS] = {};
-	const char *apTabNames[NUMBER_OF_ASSETS_TABS] = {
-		Localize("Entities"),
-		Localize("Game"),
-		Localize("Emoticons"),
-		Localize("Particles"),
-		Localize("HUD"),
-		Localize("Extras"),
-		Localize("Cursor"),
-		Localize("Arrow"),
-		Localize("Audio")};
-
-	// 667client
-	for(int Tab = ASSETS_TAB_ENTITIES; Tab < VisibleAssetTabs; ++Tab)
+	if(!m_SettingsSidebarTabs)
 	{
-		CUIRect Button;
-		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
-		const int Corners = Tab == ASSETS_TAB_ENTITIES ? IGraphics::CORNER_L : (Tab == VisibleAssetTabs - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
-		if(DoButton_MenuTab(&s_aPageTabs[Tab], apTabNames[Tab], s_CurCustomTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		MainView.HSplitTop(20.0f, &TabBar, &MainView);
+		const float TabWidth = TabBar.w / (float)VisibleAssetTabs;
+		static CButtonContainer s_aPageTabs[NUMBER_OF_ASSETS_TABS] = {};
+		const char *apTabNames[NUMBER_OF_ASSETS_TABS] = {
+			Localize("Entities"),
+			Localize("Game"),
+			Localize("Emoticons"),
+			Localize("Particles"),
+			Localize("HUD"),
+			Localize("Extras"),
+			Localize("Cursor"),
+			Localize("Arrow"),
+			Localize("Audio")};
+
+		for(int Tab = ASSETS_TAB_ENTITIES; Tab < VisibleAssetTabs; ++Tab)
 		{
-			s_CurCustomTab = Tab;
+			CUIRect Button;
+			TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
+			const int Corners = Tab == ASSETS_TAB_ENTITIES ? IGraphics::CORNER_L : (Tab == VisibleAssetTabs - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
+			if(DoButton_MenuTab(&s_aPageTabs[Tab], apTabNames[Tab], s_CurCustomTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+			{
+				s_CurCustomTab = Tab;
+			}
 		}
 	}
 	// 667client

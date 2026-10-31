@@ -584,7 +584,10 @@ int CUi::DoButtonLogic(const void *pId, int Checked, const CUIRect *pRect, const
 		if(!MouseButton(m_ActiveButtonLogicButton))
 		{
 			if(Inside && Checked >= 0)
+			{
 				ReturnValue = 1 + m_ActiveButtonLogicButton;
+				m_ButtonClicks++; // 667client
+			}
 			SetActiveItem(nullptr);
 			m_ActiveButtonLogicButton = -1;
 		}

@@ -405,12 +405,13 @@ static bool IsSixClientTabFlagSet(int32_t Flags, int Tab)
 }
 void CMenus::RenderSettingsSixClient(CUIRect MainView)
 {
-	const float TopExtend = 20.0f;
+	const float TopExtend = m_SettingsSidebarTabs ? 0.0f : 20.0f;
 	MainView.y -= TopExtend;
 	MainView.h += TopExtend;
 	static CButtonContainer s_aPageTabs[NUM_SIXCLIENT_TABS] = {};
 
-	MainView.HSplitTop(8.0f, nullptr, &MainView);
+	if(!m_SettingsSidebarTabs)
+		MainView.HSplitTop(8.0f, nullptr, &MainView);
 
 	auto IsTabHidden = [&](int Tab) {
 		return Tab != SIXCLIENT_TAB_INFO && IsSixClientTabFlagSet(g_Config.m_ScSixClientSettingsTabs, Tab);
@@ -470,6 +471,13 @@ void CMenus::RenderSettingsSixClient(CUIRect MainView)
 		s_CurSixClientTab = FirstVisibleTab;
 
 	int SelectedVisibleIndex = 0;
+	if(m_SettingsSidebarTabs)
+	{
+		for(int i = 0; i < VisibleCount; ++i)
+			if(aVisibleValues[i] == s_CurSixClientTab)
+				SelectedVisibleIndex = i;
+	}
+	else
 	{
 		CUIRect TabBar, TabButton;
 		MainView.HSplitTop(24.0f, &TabBar, &MainView);
@@ -552,6 +560,7 @@ void CMenus::RenderSettingsSixClientVisuals(CUIRect MainView)
 		Ui()->Tooltips()->SetTextColor(pId, ColorRGBA(1.0f, 0.55f, 0.16f, 1.0f));
 	};
 
+	if(!m_SettingsSidebarTabs)
 	{
 		CUIRect HudButtonRow;
 		MainView.HSplitTop(24.0f, &HudButtonRow, &MainView);

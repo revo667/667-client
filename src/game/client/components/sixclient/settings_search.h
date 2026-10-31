@@ -22,6 +22,7 @@ struct SEntry
 };
 
 void RenderCornerButton(CMenus *pMenus, CUi *pUi, CGameClient *pGameClient, IInput *pInput, CUIRect Corner);
+void RenderSearchField(CMenus *pMenus, CUi *pUi, CGameClient *pGameClient, IInput *pInput, CUIRect Field);
 void Update(float DeltaTime);
 void DrawItemHighlight(const void *pId, const CUIRect *pRect);
 void DrawBlockHighlight(const void *pId, const CUIRect *pRect);

@@ -811,7 +811,7 @@ public:
 	};
 
 	// 667client
-	bool IsIngameGamePage() const { return m_MenuActive && Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_GAME; }
+	bool IsIngameGamePage() const { return m_MenuActive && Client()->State() == IClient::STATE_ONLINE && (m_GamePage == PAGE_GAME || (!m_IngamePanelExpanded && m_GamePage != PAGE_SETTINGS)); } // 667client
 	bool IsServerBrowserPageActive() const
 	{
 		return (Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITE_COMMUNITY_5) ||
@@ -1020,6 +1020,24 @@ private:
 	void RenderSettingsCecenSocial(CUIRect MainView); // 667client
 	void RenderSettingsCecenDm(CUIRect MainView); // 667client
 	void RenderSpotify(CUIRect MainView); // 667client
+	// 667client
+	bool m_IngamePanelExpanded = false;
+	float m_IngamePanelContentWidth = 0.0f;
+	float m_IngamePanelHeight = 0.0f;
+	int m_IngamePanelContentPage = -1;
+	CUIRect m_SettingsAnimFrom = {};
+	float m_SettingsAnimProgress = 1.0f;
+	void ResetIngamePanel();
+	void ReturnToIngamePanel(const CUIRect &From);
+	void IngameDisconnect();
+	void RenderIngamePanel(const CUIRect &Screen);
+	void RenderIngameGameActions(CUIRect View);
+	void RenderSettingsWindow(const CUIRect &Screen);
+	bool m_SettingsSidebarTabs = false;
+	int m_AppearanceTab = 0;
+	int GetAssetsSettingsTab() const;
+	void SetAssetsSettingsTab(int Tab);
+	// 667client
 	void RenderSettingsCecenUi(CUIRect MainView); // 667client
 	void RenderSettingsRestartBar(CUIRect RestartBar); // 667client
 	void OpenSocialProfile(const char *pName); // 667client
@@ -1035,6 +1053,9 @@ private:
 	void OpenSixClientFun();
 	// 667client
 	float m_MenuTabAlpha = 1.0f;
+	int m_MenuClickSampleId = -1;
+	bool m_MenuClickSoundLoaded = false;
+	void PlayMenuClickSound();
 	enum
 	{
 		ASSETS_EDITOR_CAT_ENTITIES = 0,
