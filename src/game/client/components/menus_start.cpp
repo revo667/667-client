@@ -56,7 +56,7 @@ float LogoEaseOut(float u)
 }
 } // namespace
 
-void CMenusStart::RenderTextLogo(float CenterX, float Top, float Height)
+void CMenusStart::RenderTextLogo(float CenterX, float Top, float Height, bool Decorated)
 {
 	const int64_t Now = time_get();
 	if(m_LastLogoRender == 0 || Now - m_LastLogoRender > time_freq() / 2)
@@ -72,10 +72,10 @@ void CMenusStart::RenderTextLogo(float CenterX, float Top, float Height)
 	const float SheenOffset = Sheen * 2.2f;
 	const vec2 Mouse = Ui()->MousePos();
 
-	const auto DrawSpaced = [&](const char *pText, float Size, float Tracking, float Y, float Delay, float Dark) {
+	const auto DrawSpaced = [&](const char *pText, float Size, float Tracking, float Y, float Delay, float Dark, ColorRGBA Tint) {
 		const float Progress = LogoEaseOut((m_LogoTime - Delay) / 0.9f);
 		if(Progress <= 0.0f)
-			return;
+			return 0.0f;
 		const float Rise = (1.0f - Progress) * 18.0f;
 		const int Len = str_length(pText);
 
@@ -99,16 +99,32 @@ void CMenusStart::RenderTextLogo(float CenterX, float Top, float Height)
 			float Near = std::clamp(1.0f - distance(Mouse, GlyphCenter) / 150.0f, 0.0f, 1.0f);
 			Near *= Near;
 			Light = mix(Light, 1.0f, Near * 0.9f);
-			TextRender()->TextColor(Light * 0.97f, Light * 0.98f, Light, Progress);
+			TextRender()->TextColor(Light * 0.97f * Tint.r, Light * 0.98f * Tint.g, Light * Tint.b, Progress);
 			TextRender()->Text(x, Y + Rise, Size, aGlyph, -1.0f);
 			x += aWidths[i] + Tracking;
 		}
+		return Total;
 	};
 
 	const float TitleSize = Height * 0.56f;
 	const float SubSize = Height * 0.15f;
-	DrawSpaced("CECEN", TitleSize, -0.04f * TitleSize, Top - Height * 0.04f, 0.0f, 0.62f);
-	DrawSpaced("CLIENT", SubSize, 0.6f * SubSize, Top + Height * 0.8f, 0.12f, 0.5f);
+	// 667client
+	const ColorRGBA White(1.0f, 1.0f, 1.0f, 1.0f);
+	DrawSpaced("CECEN", TitleSize, (Decorated ? 0.02f : -0.04f) * TitleSize, Top - Height * 0.04f, 0.0f, Decorated ? 0.8f : 0.62f, White);
+	const ColorRGBA SubTint = Decorated ? ColorRGBA(1.0f, 0.3f, 0.32f, 1.0f) : White;
+	const float SubWidth = DrawSpaced("CLIENT", SubSize, 0.6f * SubSize, Top + Height * 0.8f, 0.12f, Decorated ? 0.95f : 0.5f, SubTint);
+	if(Decorated && SubWidth > 0.0f)
+	{
+		const float Progress = LogoEaseOut((m_LogoTime - 0.2f) / 0.9f);
+		const float LineY = Top + Height * 0.8f + SubSize * 0.62f;
+		const float LineLength = Height * 0.55f * Progress;
+		const float LineGap = SubSize * 0.9f;
+		const ColorRGBA Solid(1.0f, 0.22f, 0.25f, 0.75f * Progress);
+		const ColorRGBA Clear = Solid.WithAlpha(0.0f);
+		Graphics()->DrawRect4(CenterX - SubWidth * 0.5f - LineGap - LineLength, LineY, LineLength, 1.5f, Clear, Solid, Clear, Solid, IGraphics::CORNER_NONE, 0.0f);
+		Graphics()->DrawRect4(CenterX + SubWidth * 0.5f + LineGap, LineY, LineLength, 1.5f, Solid, Clear, Solid, Clear, IGraphics::CORNER_NONE, 0.0f);
+	}
+	// 667client
 
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
@@ -117,6 +133,18 @@ void CMenusStart::RenderTextLogo(float CenterX, float Top, float Height)
 void CMenusStart::RenderStartMenu(CUIRect MainView)
 {
 	GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_START);
+	// 667client
+	float Reveal = 1.0f;
+	if(g_Config.m_ScStartMenuFox)
+		Reveal = RenderStartFox(MainView);
+	if(Reveal <= 0.0f)
+		return;
+	const auto SlideOffset = [&](int Index, float Left) {
+		const float Progress = std::clamp(Reveal * 1.6f - Index * 0.12f, 0.0f, 1.0f);
+		const float Eased = 1.0f - (1.0f - Progress) * (1.0f - Progress) * (1.0f - Progress);
+		return (1.0f - Eased) * (MainView.x + MainView.w - Left + 40.0f);
+	};
+	// 667client
 
 	const float Rounding = 10.0f;
 	const float VMargin = MainView.w / 2 - 190.0f;
@@ -134,37 +162,49 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	};
 
-	CUIRect ExtMenu;
-	MainView.VSplitLeft(30.0f, nullptr, &ExtMenu);
-	ExtMenu.VSplitLeft(100.0f, &ExtMenu, nullptr);
-	ExtMenu.HSplitBottom(ExtMenuBottomOffset, &ExtMenu, nullptr);
-
-	ExtMenu.HSplitBottom(20.0f, &ExtMenu, &Button);
+	// 667client
+	const bool FoxLayout = g_Config.m_ScStartMenuFox != 0;
 	static CButtonContainer s_DiscordButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_DiscordButton, Localize("Discord"), 0, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		Client()->ViewLink("https://discord.gg/667");
-
-	ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
-	ExtMenu.HSplitBottom(20.0f, &ExtMenu, &Button);
 	static CButtonContainer s_TelegramButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_TelegramButton, Localize("Telegram"), 0, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		Client()->ViewLink("https://t.me/bestddnet");
-
-	ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
-	ExtMenu.HSplitBottom(20.0f, &ExtMenu, &Button);
 	static CButtonContainer s_CheckUpdateButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_CheckUpdateButton, ScLocalize("Check update"), 0, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f))) // 667client
-	{
+	const auto DoExtButtons = [&](const CUIRect &DiscordRect, const CUIRect &TelegramRect, const CUIRect &UpdateRect) {
+		const ColorRGBA ExtColor(0.0f, 0.0f, 0.0f, 0.25f);
+		const ColorRGBA NoTint(0.0f, 0.0f, 0.0f, 0.0f);
+		CMenus &Menus = GameClient()->m_Menus;
+		const bool Discord = FoxLayout ? Menus.DoButton_StartMenu(&s_DiscordButton, Localize("Discord"), FontIcon::COMMENT, nullptr, &DiscordRect, nullptr, NoTint) : Menus.DoButton_Menu(&s_DiscordButton, Localize("Discord"), 0, &DiscordRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ExtColor);
+		const bool Telegram = FoxLayout ? Menus.DoButton_StartMenu(&s_TelegramButton, Localize("Telegram"), FontIcon::PAPER_PLANE, nullptr, &TelegramRect, nullptr, NoTint) : Menus.DoButton_Menu(&s_TelegramButton, Localize("Telegram"), 0, &TelegramRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ExtColor);
+		const bool CheckUpdate = FoxLayout ? Menus.DoButton_StartMenu(&s_CheckUpdateButton, ScLocalize("Check update"), FontIcon::ARROWS_ROTATE, nullptr, &UpdateRect, nullptr, NoTint) : Menus.DoButton_Menu(&s_CheckUpdateButton, ScLocalize("Check update"), 0, &UpdateRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ExtColor);
+		if(Discord)
+			Client()->ViewLink("https://discord.gg/667");
+		if(Telegram)
+			Client()->ViewLink("https://t.me/bestddnet");
+		if(CheckUpdate)
+		{
 #if defined(CONF_AUTOUPDATE)
-		Updater()->CheckForUpdate();
+			Updater()->CheckForUpdate();
 #endif
+		}
+	};
+	if(!FoxLayout)
+	{
+		CUIRect ExtMenu, DiscordRect, TelegramRect, UpdateRect;
+		MainView.VSplitLeft(30.0f, nullptr, &ExtMenu);
+		ExtMenu.VSplitLeft(100.0f, &ExtMenu, nullptr);
+		ExtMenu.HSplitBottom(ExtMenuBottomOffset, &ExtMenu, nullptr);
+		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &DiscordRect);
+		ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
+		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &TelegramRect);
+		ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
+		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &UpdateRect);
+		DoExtButtons(DiscordRect, TelegramRect, UpdateRect);
 	}
+	// 667client
 
-	constexpr float LogoW = 360.0f;
-	constexpr float LogoH = 103.0f;
+	const float LogoH = FoxLayout ? 150.0f : 103.0f; // 667client
+	const float LogoW = LogoH * 360.0f / 103.0f; // 667client
 	constexpr float LogoGap = 30.0f;
-	constexpr float ButtonH = 40.0f;
-	constexpr float ButtonGap = 5.0f;
+	const float ButtonH = FoxLayout ? 46.0f : 40.0f; // 667client
+	const float ButtonGap = FoxLayout ? 8.0f : 5.0f; // 667client
 	constexpr int MenuButtonCount = 5;
 	const float ButtonsH = MenuButtonCount * ButtonH + (MenuButtonCount - 1) * ButtonGap;
 	const float TotalBlockH = LogoH + LogoGap + ButtonsH;
@@ -173,19 +213,36 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 	MainView.VMargin(VMargin, &Menu);
 
 	const float BlockStartY = MainView.y + (MainView.h - TotalBlockH) / 2.0f - 50.0f;
+	// 667client
+	float LogoCenterX = MainView.x + MainView.w / 2.0f;
+	float LogoTop = BlockStartY;
+	float ButtonsTop = BlockStartY + LogoH + LogoGap;
+	if(FoxLayout)
+	{
+		vec2 FoxCenter;
+		float FoxSize;
+		StartFoxLayout(MainView, &FoxCenter, &FoxSize);
+		LogoCenterX = FoxCenter.x - FoxSize * 0.03f;
+		LogoTop = FoxCenter.y - FoxSize * 0.43f - LogoH - 34.0f;
+		const CUIRect FoxMenu = StartFoxMenuRect(MainView);
+		Menu.x = FoxMenu.x;
+		Menu.w = FoxMenu.w;
+		ButtonsTop = MainView.y + (MainView.h - ButtonsH) / 2.0f;
+	}
+	// 667client
 
 	if(g_Config.m_ScStartMenuTextLogo)
 	{
-		RenderTextLogo(MainView.x + MainView.w / 2.0f, BlockStartY, LogoH);
+		RenderTextLogo(LogoCenterX, LogoTop, LogoH, FoxLayout);
 	}
 	else
 	{
-		const float LogoX = MainView.x + MainView.w / 2.0f - LogoW / 2.0f;
+		const float LogoX = LogoCenterX - LogoW / 2.0f;
 		const IGraphics::CTextureHandle &LogoTexture = GameClient()->m_Menus.ScLogoTexture();
 		Graphics()->TextureSet(LogoTexture.IsValid() && !LogoTexture.IsNullTexture() ? LogoTexture : g_pData->m_aImages[IMAGE_BANNER].m_Id);
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(1, 1, 1, 1);
-		IGraphics::CQuadItem LogoQuad(LogoX, BlockStartY, LogoW, LogoH);
+		IGraphics::CQuadItem LogoQuad(LogoX, LogoTop, LogoW, LogoH);
 		Graphics()->QuadsDrawTL(&LogoQuad, 1);
 		Graphics()->QuadsEnd();
 	}
@@ -199,12 +256,18 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 		return Out;
 	};
 
+	const auto DoStartButton = [&](CButtonContainer *pButton, const char *pText, const char *pIcon, const char *pHotkey, const CUIRect *pRect, const char *pImageName, ColorRGBA Color) {
+		if(FoxLayout)
+			return GameClient()->m_Menus.DoButton_StartMenu(pButton, pText, pIcon, pHotkey, pRect, pImageName, Color.g > 0.5f ? ColorRGBA(0.0f, 1.0f, 0.0f, 0.12f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f));
+		return GameClient()->m_Menus.DoButton_MenuEx(pButton, pText, 0, pRect, BUTTONFLAG_LEFT, pImageName, IGraphics::CORNER_ALL, Rounding, 0.5f, Color, true);
+	};
+
 	CUIRect aMenuButtons[MenuButtonCount];
 	{
-		float Y = BlockStartY + LogoH + LogoGap;
+		float Y = ButtonsTop;
 		for(int i = 0; i < MenuButtonCount; ++i)
 		{
-			aMenuButtons[i] = {Menu.x, Y, Menu.w, ButtonH};
+			aMenuButtons[i] = {Menu.x + SlideOffset(i, Menu.x), Y, Menu.w, ButtonH}; // 667client
 			Y += ButtonH + ButtonGap;
 		}
 	}
@@ -248,21 +311,21 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 	{
 		CUIRect ScaledButton = ScaleButtonRect(aMenuButtons[0], s_aMenuButtonScale[0]);
 		static CButtonContainer s_PlayButton;
-		if((GameClient()->m_Menus.DoButton_MenuEx(&s_PlayButton, Localize("Play", "Start menu"), 0, &ScaledButton, BUTTONFLAG_LEFT, g_Config.m_ClShowStartMenuImages ? "play_game" : nullptr, IGraphics::CORNER_ALL, Rounding, 0.5f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), true) || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) || CheckHotKey(KEY_P)))
+		if((DoStartButton(&s_PlayButton, Localize("Play", "Start menu"), FontIcon::PLAY, "P", &ScaledButton, g_Config.m_ClShowStartMenuImages ? "play_game" : nullptr, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) || CheckHotKey(KEY_P)))
 			NewPage = g_Config.m_UiPage >= CMenus::PAGE_INTERNET && g_Config.m_UiPage <= CMenus::PAGE_FAVORITE_COMMUNITY_5 ? g_Config.m_UiPage : CMenus::PAGE_INTERNET;
 	}
 
 	{
 		CUIRect ScaledButton = ScaleButtonRect(aMenuButtons[1], s_aMenuButtonScale[1]);
 		static CButtonContainer s_DemoButton;
-		if((GameClient()->m_Menus.DoButton_MenuEx(&s_DemoButton, Localize("Demos"), 0, &ScaledButton, BUTTONFLAG_LEFT, g_Config.m_ClShowStartMenuImages ? "demos" : nullptr, IGraphics::CORNER_ALL, Rounding, 0.5f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), true) || CheckHotKey(KEY_D)))
+		if((DoStartButton(&s_DemoButton, Localize("Demos"), FontIcon::FILM, "D", &ScaledButton, g_Config.m_ClShowStartMenuImages ? "demos" : nullptr, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) || CheckHotKey(KEY_D)))
 			NewPage = CMenus::PAGE_DEMOS;
 	}
 
 	{
 		CUIRect ScaledButton = ScaleButtonRect(aMenuButtons[2], s_aMenuButtonScale[2]);
 		static CButtonContainer s_MapEditorButton;
-		if((GameClient()->m_Menus.DoButton_MenuEx(&s_MapEditorButton, Localize("Editor"), 0, &ScaledButton, BUTTONFLAG_LEFT, g_Config.m_ClShowStartMenuImages ? "editor" : nullptr, IGraphics::CORNER_ALL, Rounding, 0.5f, GameClient()->Editor()->HasUnsavedData() ? ColorRGBA(0.0f, 1.0f, 0.0f, 0.25f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), true) || CheckHotKey(KEY_E)))
+		if((DoStartButton(&s_MapEditorButton, Localize("Editor"), FontIcon::PEN_TO_SQUARE, "E", &ScaledButton, g_Config.m_ClShowStartMenuImages ? "editor" : nullptr, GameClient()->Editor()->HasUnsavedData() ? ColorRGBA(0.0f, 1.0f, 0.0f, 0.25f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) || CheckHotKey(KEY_E)))
 		{
 			g_Config.m_ClEditor = 1;
 			Input()->MouseModeRelative();
@@ -273,7 +336,7 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 		CUIRect ScaledButton = ScaleButtonRect(aMenuButtons[3], s_aMenuButtonScale[3]);
 		static CButtonContainer s_LocalServerButton;
 		const bool LocalServerRunning = GameClient()->m_LocalServer.IsServerRunning();
-		if((GameClient()->m_Menus.DoButton_MenuEx(&s_LocalServerButton, LocalServerRunning ? Localize("Stop server") : Localize("Run server"), 0, &ScaledButton, BUTTONFLAG_LEFT, g_Config.m_ClShowStartMenuImages ? "local_server" : nullptr, IGraphics::CORNER_ALL, Rounding, 0.5f, LocalServerRunning ? ColorRGBA(0.0f, 1.0f, 0.0f, 0.25f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), true) || (CheckHotKey(KEY_R) && Input()->KeyPress(KEY_R))))
+		if((DoStartButton(&s_LocalServerButton, LocalServerRunning ? Localize("Stop server") : Localize("Run server"), FontIcon::NETWORK_WIRED, "R", &ScaledButton, g_Config.m_ClShowStartMenuImages ? "local_server" : nullptr, LocalServerRunning ? ColorRGBA(0.0f, 1.0f, 0.0f, 0.25f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) || (CheckHotKey(KEY_R) && Input()->KeyPress(KEY_R))))
 		{
 			if(LocalServerRunning)
 				GameClient()->m_LocalServer.KillServer();
@@ -286,9 +349,32 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 	{
 		CUIRect ScaledButton = ScaleButtonRect(aMenuButtons[4], s_aMenuButtonScale[4]);
 		static CButtonContainer s_SettingsButton;
-		if(GameClient()->m_Menus.DoButton_MenuEx(&s_SettingsButton, Localize("Settings"), 0, &ScaledButton, BUTTONFLAG_LEFT, g_Config.m_ClShowStartMenuImages ? "settings" : nullptr, IGraphics::CORNER_ALL, Rounding, 0.5f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), true) || CheckHotKey(KEY_S))
+		if(DoStartButton(&s_SettingsButton, Localize("Settings"), FontIcon::GEAR, "S", &ScaledButton, g_Config.m_ClShowStartMenuImages ? "settings" : nullptr, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) || CheckHotKey(KEY_S))
+		{
 			NewPage = CMenus::PAGE_SETTINGS;
+			GameClient()->m_Menus.OpenSettingsWindow(ScaledButton); // 667client
+		}
 	}
+
+	// 667client
+	CUIRect UpdateAnchor = SettingsButton;
+	CUIRect FoxQuitRect;
+	if(FoxLayout)
+	{
+		CUIRect ExtRow = {Menu.x + SlideOffset(MenuButtonCount, Menu.x), SettingsButton.y + SettingsButton.h + 14.0f, Menu.w, 30.0f};
+		UpdateAnchor = ExtRow;
+		CUIRect DiscordRect, TelegramRect, UpdateRect;
+		const float ExtGap = 8.0f;
+		const float ExtW = (ExtRow.w - 2.0f * ExtGap) / 3.0f;
+		ExtRow.VSplitLeft(ExtW, &UpdateRect, &ExtRow);
+		ExtRow.VSplitLeft(ExtGap, nullptr, &ExtRow);
+		ExtRow.VSplitLeft(ExtW, &TelegramRect, &ExtRow);
+		ExtRow.VSplitLeft(ExtGap, nullptr, &DiscordRect);
+		DoExtButtons(DiscordRect, TelegramRect, UpdateRect);
+		FoxQuitRect = {Menu.x + SlideOffset(MenuButtonCount + 1, Menu.x), UpdateAnchor.y + UpdateAnchor.h + ExtGap, Menu.w, 34.0f};
+		UpdateAnchor = FoxQuitRect;
+	}
+	// 667client
 
 #if defined(CONF_AUTOUPDATE)
 	{
@@ -302,8 +388,8 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 
 		if(ShowDownloadButton || ShowRetryButton || ShowRestartButton || ShowUpdateProgress)
 		{
-			CUIRect UpdateRow = SettingsButton;
-			UpdateRow.y += SettingsButton.h + ButtonGap;
+			CUIRect UpdateRow = UpdateAnchor; // 667client
+			UpdateRow.y += UpdateAnchor.h + ButtonGap; // 667client
 			UpdateRow.h = 22.0f;
 
 			CUIRect UpdateLabel, UpdateButton;
@@ -371,8 +457,19 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 		QuitButton.x += (Button.w - QuitButton.w) / 2.0f;
 		static CButtonContainer s_QuitButton;
 		bool UsedEscape = false;
-		SetIconMode();
-		if(GameClient()->m_Menus.DoButton_Menu(&s_QuitButton, FontIcon::POWER_OFF, 0, &QuitButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, Rounding, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) || (UsedEscape = Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE)) || CheckHotKey(KEY_Q))
+		// 667client
+		bool QuitClicked;
+		if(FoxLayout)
+		{
+			QuitClicked = GameClient()->m_Menus.DoButton_StartMenu(&s_QuitButton, Localize("Quit"), FontIcon::POWER_OFF, "Q", &FoxQuitRect, nullptr, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f));
+		}
+		else
+		{
+			SetIconMode();
+			QuitClicked = GameClient()->m_Menus.DoButton_Menu(&s_QuitButton, FontIcon::POWER_OFF, 0, &QuitButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, Rounding, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f));
+		}
+		if(QuitClicked || (UsedEscape = Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE)) || CheckHotKey(KEY_Q))
+		// 667client
 		{
 			ResetIconMode();
 			if(g_Config.m_ScConfirmQuit || UsedEscape || GameClient()->Editor()->HasUnsavedData() || (GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmQuitTime && g_Config.m_ClConfirmQuitTime >= 0))

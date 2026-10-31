@@ -80,11 +80,18 @@ void CSkinProfiles::ApplyProfile(int Dummy, const CProfile &Profile)
 {
 	if(g_Config.m_TcProfileSkin && strlen(Profile.m_SkinName) != 0)
 		str_copy(Dummy ? g_Config.m_ClDummySkin : g_Config.m_ClPlayerSkin, Profile.m_SkinName);
-	if(g_Config.m_TcProfileColors && Profile.m_BodyColor != -1 && Profile.m_FeetColor != -1)
+	// 667client
+	if(g_Config.m_TcProfileColors && Profile.m_BodyColor >= 0 && Profile.m_FeetColor >= 0)
 	{
 		(Dummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody) = Profile.m_BodyColor;
 		(Dummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet) = Profile.m_FeetColor;
+		(Dummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor) = 1;
 	}
+	else if(g_Config.m_TcProfileColors && Profile.m_BodyColor == CProfile::NO_CUSTOM_COLORS)
+	{
+		(Dummy ? g_Config.m_ClDummyUseCustomColor : g_Config.m_ClPlayerUseCustomColor) = 0;
+	}
+	// 667client
 	if(g_Config.m_TcProfileEmote && Profile.m_Emote > 0 && Profile.m_Emote < NUM_EMOTES)
 		(Dummy ? g_Config.m_ClDummyDefaultEyes : g_Config.m_ClPlayerDefaultEyes) = Profile.m_Emote;
 	if(g_Config.m_TcProfileName && strlen(Profile.m_Name) != 0)

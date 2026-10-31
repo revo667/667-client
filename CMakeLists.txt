@@ -1525,6 +1525,7 @@ set(EXPECTED_DATA
   667Client/keystrokes/wasd.png
   667Client/languages/russian.txt
   667Client/languages/simplified_chinese.txt
+  667Client/menu_fox.png
   667Client/spotify.png
   667Client/social/discord.png
   667Client/social/github.png
@@ -3315,9 +3316,11 @@ if(CLIENT)
     components/sixclient/menus_cecen_ui.cpp
     components/sixclient/menus_friends.cpp
     components/sixclient/menus_ingame_panel.cpp
+    components/sixclient/menus_profiles.cpp
     components/sixclient/menus_settings_window.cpp
     components/sixclient/menus_social.cpp
     components/sixclient/menus_spotify.cpp
+    components/sixclient/menus_start_fox.cpp
     components/sixclient/meow_input.cpp
     components/sixclient/meow_input.h
     components/sixclient/social_card.cpp

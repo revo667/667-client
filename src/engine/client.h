@@ -277,6 +277,15 @@ public:
 
 	virtual int GetPredictionTime() = 0;
 	virtual int GetPredictionTick() = 0;
+	// 667client
+	enum
+	{
+		INPUT_TIMING_HISTORY = 128,
+	};
+	virtual int64_t InputTimingCount() const = 0;
+	virtual int InputTimingLateness(int64_t Index) const = 0;
+	virtual bool CustomPredictionMarginSupported() const = 0;
+	// 667client
 
 	// snapshot interface
 

@@ -628,6 +628,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 	if(DoButton_MenuTab(&s_SettingsButton, FontIcon::GEAR, ActivePage == PAGE_SETTINGS, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_SETTINGS]))
 	{
 		NewPage = PAGE_SETTINGS;
+		OpenSettingsWindow(Button); // 667client
 	}
 	Ui()->DoToolTip(&s_SettingsButton, &Button, Localize("Settings"));
 
@@ -1267,6 +1268,12 @@ void CMenus::Render()
 		{
 			m_MenusStart.RenderStartMenu(Screen);
 		}
+		// 667client
+		else if(g_Config.m_ScUiStyle == 1 && m_MenuPage == PAGE_SETTINGS)
+		{
+			RenderSettingsWindow(*Ui()->Screen());
+		}
+		// 667client
 		else
 		{
 			CUIRect TabBar, MainView;
@@ -1309,15 +1316,70 @@ void CMenus::Render()
 			RenderPopupFullscreen(Screen);
 		}
 		// 667client
-		else if(m_GamePage != PAGE_SETTINGS)
+		else if(g_Config.m_ScUiStyle == 1 && m_GamePage != PAGE_SETTINGS)
 		{
 			RenderIngamePanel(*Ui()->Screen());
 		}
-		else
+		else if(g_Config.m_ScUiStyle == 1)
 		{
 			RenderSettingsWindow(*Ui()->Screen());
 		}
 		// 667client
+		else
+		{
+			CUIRect TabBar, MainView;
+			Screen.HSplitTop(24.0f, &TabBar, &MainView);
+
+			if(m_GamePage == PAGE_GAME)
+			{
+				RenderGame(MainView);
+				RenderIngameHint();
+			}
+			else if(m_GamePage == PAGE_PLAYERS)
+			{
+				RenderPlayers(MainView);
+			}
+			else if(m_GamePage == PAGE_SERVER_INFO)
+			{
+				RenderServerInfo(MainView);
+			}
+			else if(m_GamePage == PAGE_NETWORK)
+			{
+				RenderInGameNetwork(MainView);
+			}
+			else if(m_GamePage == PAGE_GHOST)
+			{
+				RenderGhost(MainView);
+			}
+			else if(m_GamePage == PAGE_CALLVOTE)
+			{
+				RenderServerControl(MainView);
+			}
+			else if(m_GamePage == PAGE_SPOTIFY) // 667client
+			{
+				RenderSpotify(MainView);
+			}
+			else if(m_GamePage == PAGE_DEMOS)
+			{
+				RenderDemoBrowser(MainView);
+			}
+			else if(m_GamePage == PAGE_SETTINGS)
+			{
+				RenderSettings(MainView);
+			}
+			else
+			{
+				dbg_assert_failed("Invalid m_GamePage: %d", m_GamePage);
+			}
+
+			// 667client
+			const bool AssetsEditorConfirmOpen = m_AssetsEditorState.m_Open &&
+				m_AssetsEditorState.m_ExploreSide < 0 && m_AssetsEditorState.m_ShowExitConfirm &&
+				g_Config.m_UiSettingsPage == SETTINGS_ASSETS;
+			if(!AssetsEditorConfirmOpen)
+			// 667client
+				RenderMenubar(TabBar, ClientState);
+		}
 		break;
 
 	case IClient::STATE_DEMOPLAYBACK:
@@ -2470,7 +2532,7 @@ void CMenus::SetActive(bool Active)
 		Ui()->SetHotItem(nullptr);
 		Ui()->SetActiveItem(nullptr);
 		// 667client
-		if(Active && Client()->State() == IClient::STATE_ONLINE)
+		if(Active && g_Config.m_ScUiStyle == 1 && Client()->State() == IClient::STATE_ONLINE)
 			ResetIngamePanel();
 		// 667client
 	}
@@ -2617,7 +2679,7 @@ void CMenus::OnRender()
 		if(Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE))
 		{
 			// 667client
-			if(Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_SETTINGS)
+			if(g_Config.m_ScUiStyle == 1 && Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_SETTINGS)
 				m_GamePage = PAGE_GAME;
 			// 667client
 			SetActive(true);

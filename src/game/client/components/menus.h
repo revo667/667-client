@@ -61,6 +61,8 @@ public:
 	int DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, unsigned Flags = BUTTONFLAG_LEFT, const char *pImageName = nullptr, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, ColorRGBA Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f));
 	// 667client
 	int DoButton_MenuEx(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, bool AlwaysColoredImage);
+	int DoButton_StartMenu(CButtonContainer *pButtonContainer, const char *pText, const char *pIcon, const char *pHotkey, const CUIRect *pRect, const char *pImageName, ColorRGBA Tint);
+	void OpenSettingsWindow(const CUIRect &From);
 	int DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator = nullptr, const ColorRGBA *pDefaultColor = nullptr, const ColorRGBA *pActiveColor = nullptr, const ColorRGBA *pHoverColor = nullptr, float EdgeRounding = 10.0f, const CCommunityIcon *pCommunityIcon = nullptr, bool AnimateChecked = true, int HoverCorners = IGraphics::CORNER_NONE, float HoverRounding = -1.0f, float AlphaMul = 1.0f);
 	// 667client
 
@@ -811,7 +813,7 @@ public:
 	};
 
 	// 667client
-	bool IsIngameGamePage() const { return m_MenuActive && Client()->State() == IClient::STATE_ONLINE && (m_GamePage == PAGE_GAME || (!m_IngamePanelExpanded && m_GamePage != PAGE_SETTINGS)); } // 667client
+	bool IsIngameGamePage() const { return m_MenuActive && Client()->State() == IClient::STATE_ONLINE && (m_GamePage == PAGE_GAME || (g_Config.m_ScUiStyle == 1 && !m_IngamePanelExpanded && m_GamePage != PAGE_SETTINGS)); } // 667client
 	bool IsServerBrowserPageActive() const
 	{
 		return (Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITE_COMMUNITY_5) ||
@@ -1018,6 +1020,7 @@ private:
 	// 667client
 	void RenderSettingsSixClientFriends(CUIRect MainView); // 667client
 	void RenderSettingsCecenSocial(CUIRect MainView); // 667client
+	void RenderSettingsCecenProfiles(CUIRect MainView); // 667client
 	void RenderSettingsCecenDm(CUIRect MainView); // 667client
 	void RenderSpotify(CUIRect MainView); // 667client
 	// 667client
