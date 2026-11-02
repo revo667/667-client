@@ -1420,6 +1420,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 			str_copy(s_pSelectedEntry->m_aClan, s_aEntryClan);
 			str_copy(s_pSelectedEntry->m_aReason, s_aEntryReason);
 			s_pSelectedEntry->m_pWarType = s_pSelectedType;
+			GameClient()->m_WarList.MarkChanged();
 		}
 	}
 	if(DoButtonLineSize_Menu(&s_AddButton, TCLocalize("Add Entry"), 0, &ButtonR, LineSize))
@@ -1545,6 +1546,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		{
 			str_copy(s_pSelectedType->m_aWarName, s_aTypeName);
 			s_pSelectedType->m_Color = s_GroupColor;
+			GameClient()->m_WarList.MarkChanged();
 		}
 	}
 	bool AddDisabled = str_comp(GameClient()->m_WarList.FindWarType(s_aTypeName)->m_aWarName, "none") != 0 || str_comp(s_aTypeName, "none") == 0;

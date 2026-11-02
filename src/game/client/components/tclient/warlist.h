@@ -165,7 +165,9 @@ public:
 	std::unordered_map<std::string, std::vector<int>> m_ClanIndex;
 	size_t m_IndexedEntries = (size_t)-1;
 	size_t m_IndexedTypes = (size_t)-1;
-	int64_t m_LastIndexTime = 0;
+	// Bumped by every change to entries or groups; the index is rebuilt only when it moves
+	uint64_t m_WarListRevision = 1;
+	uint64_t m_IndexedRevision = 0;
 	int m_IndexGeneration = 0;
 	int m_aMatchedGeneration[MAX_CLIENTS] = {};
 	char m_aaMatchedName[MAX_CLIENTS][MAX_NAME_LENGTH] = {};
@@ -176,6 +178,8 @@ public:
 	void OnConsoleInit() override;
 
 	void UpdateWarPlayers();
+	// Call after editing an entry or group in place (name, clan, reason, type, color)
+	void MarkChanged() { m_WarListRevision++; }
 
 	void UpdateWarEntry(int Index, const char *pName, const char *pClan, const char *pReason, CWarType *pType);
 

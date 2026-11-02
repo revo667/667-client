@@ -46,27 +46,36 @@ namespace
 	}
 } // namespace
 
-float MusicPlayerTextWidth(ITextRender *pTextRender, float FontSize, const char *pText)
+namespace
 {
-	if(pTextRender == nullptr)
-		return FontSize * 5.0f;
-
-	struct SEntry
+	struct STextWidthEntry
 	{
 		std::string m_Text;
 		float m_FontSize;
 		float m_Width;
 	};
-	static std::vector<SEntry> s_vCache;
-	for(const SEntry &Entry : s_vCache)
+	std::vector<STextWidthEntry> s_vTextWidthCache;
+} // namespace
+
+void MusicPlayerClearTextWidthCache()
+{
+	s_vTextWidthCache.clear();
+}
+
+float MusicPlayerTextWidth(ITextRender *pTextRender, float FontSize, const char *pText)
+{
+	if(pTextRender == nullptr)
+		return FontSize * 5.0f;
+
+	for(const STextWidthEntry &Entry : s_vTextWidthCache)
 	{
 		if(Entry.m_FontSize == FontSize && Entry.m_Text == pText)
 			return Entry.m_Width;
 	}
-	if(s_vCache.size() >= 48)
-		s_vCache.clear();
+	if(s_vTextWidthCache.size() >= 48)
+		s_vTextWidthCache.clear();
 	const float Width = pTextRender->TextWidth(FontSize, pText, -1, -1.0f);
-	s_vCache.push_back({pText, FontSize, Width});
+	s_vTextWidthCache.push_back({pText, FontSize, Width});
 	return Width;
 }
 
@@ -177,6 +186,7 @@ void CMusicPlayerLyrics::ClearLayoutState()
 	m_LayoutText.clear();
 	m_vCharMetrics.clear();
 	m_BaseLineWidth = 0.0f;
+	MusicPlayerClearTextWidthCache();
 }
 
 void CMusicPlayerLyrics::Disable()

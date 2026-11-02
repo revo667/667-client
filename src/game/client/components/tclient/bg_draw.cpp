@@ -555,6 +555,9 @@ void CBgDraw::OnRender()
 		}
 		// 667client
 	}
+	// Nothing drawn: skip the item pass (autosave and the eraser position above still ran)
+	if(m_pvItems->empty())
+		return;
 	// Remove extra items
 	MakeSpaceFor(0);
 	// Update age of items, delete old items, render items

@@ -130,6 +130,8 @@ void CHud::OnReset()
 	m_FreezeInfoInitialized = false;
 	m_CachedFreezeSkinRevision = 0;
 	m_LastMovementInfoTick = -1;
+	m_LastFps = -1;
+	m_LastFpsWidth = -1.0f;
 
 	ResetHudContainers();
 }
@@ -556,25 +558,21 @@ void CHud::RenderTextInfo()
 		const int FramesPerSecond = this->FramesPerSecond();
 		str_format(aBuf, sizeof(aBuf), "%d", FramesPerSecond);
 
-		static float s_TextWidth0 = TextRender()->TextWidth(12.f, "0", -1, -1.0f);
-		static float s_TextWidth00 = TextRender()->TextWidth(12.f, "00", -1, -1.0f);
-		static float s_TextWidth000 = TextRender()->TextWidth(12.f, "000", -1, -1.0f);
-		static float s_TextWidth0000 = TextRender()->TextWidth(12.f, "0000", -1, -1.0f);
-		static float s_TextWidth00000 = TextRender()->TextWidth(12.f, "00000", -1, -1.0f);
-		static const float s_aTextWidth[5] = {s_TextWidth0, s_TextWidth00, s_TextWidth000, s_TextWidth0000, s_TextWidth00000};
-
-		int DigitIndex = GetDigitsIndex(FramesPerSecond, 4);
-
-		CTextCursor Cursor;
-		Cursor.SetPosition(vec2(m_Width - 10 - s_aTextWidth[DigitIndex], 5));
-		Cursor.m_FontSize = 12.0f;
-		auto OldFlags = TextRender()->GetRenderFlags();
-		TextRender()->SetRenderFlags(OldFlags | TEXT_RENDER_FLAG_ONE_TIME_USE);
-		if(m_FPSTextContainerIndex.Valid())
-			TextRender()->RecreateTextContainerSoft(m_FPSTextContainerIndex, &Cursor, aBuf);
-		else
-			TextRender()->CreateTextContainer(m_FPSTextContainerIndex, &Cursor, "0");
-		TextRender()->SetRenderFlags(OldFlags);
+		if(FramesPerSecond != m_LastFps || m_Width != m_LastFpsWidth || !m_FPSTextContainerIndex.Valid())
+		{
+			m_LastFps = FramesPerSecond;
+			m_LastFpsWidth = m_Width;
+			CTextCursor Cursor;
+			Cursor.SetPosition(vec2(m_Width - 10 - TextRender()->TextWidth(12.0f, aBuf, -1, -1.0f), 5));
+			Cursor.m_FontSize = 12.0f;
+			auto OldFlags = TextRender()->GetRenderFlags();
+			TextRender()->SetRenderFlags(OldFlags | TEXT_RENDER_FLAG_ONE_TIME_USE);
+			if(m_FPSTextContainerIndex.Valid())
+				TextRender()->RecreateTextContainerSoft(m_FPSTextContainerIndex, &Cursor, aBuf);
+			else
+				TextRender()->CreateTextContainer(m_FPSTextContainerIndex, &Cursor, aBuf);
+			TextRender()->SetRenderFlags(OldFlags);
+		}
 		if(m_FPSTextContainerIndex.Valid())
 		{
 			TextRender()->RenderTextContainer(m_FPSTextContainerIndex, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor());

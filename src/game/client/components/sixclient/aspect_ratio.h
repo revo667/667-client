@@ -30,6 +30,7 @@ class CAspectRatio : public CComponent
 	SConfig m_Last;
 	bool m_HudAspectDisabled = false;
 	bool m_MusicPlayerAspectDisabled = false;
+	bool m_CachedUseGameNoHudAspect = false;
 	bool m_MenuRestoreGraphicsAspect = true;
 	mutable bool m_BlockedByFng = false;
 	mutable int m_BlockedByFngState = -1;

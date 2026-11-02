@@ -91,6 +91,9 @@ class CHud : public CComponent
 	uint64_t m_CachedFreezeSkinRevision = 0;
 	CTeeRenderInfo m_CachedFreezeInfo;
 	int m_LastMovementInfoTick = -1;
+	// FPS text is rebuilt only when the number or the HUD width changes
+	int m_LastFps = -1;
+	float m_LastFpsWidth = -1.0f;
 	void RenderSpectatorCount(bool ForcePreview = false); // 667client
 	void RenderDummyActions(bool ForcePreview = false); // 667client
 	void RenderMovementInformation(bool ForcePreview = false); // 667client

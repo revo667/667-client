@@ -19,6 +19,8 @@ struct STextColorSplit;
 struct _json_value;
 
 float MusicPlayerTextWidth(ITextRender *pTextRender, float FontSize, const char *pText);
+// Widths depend on the font; drop them on reset, resize and when the lyrics layout is rebuilt
+void MusicPlayerClearTextWidthCache();
 
 class CMusicPlayerLyrics
 {

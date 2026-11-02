@@ -51,6 +51,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -2236,6 +2237,112 @@ namespace
 		void PlayPause() override {}
 		void Next() override {}
 	};
+
+#if defined(CONF_PLATFORM_LINUX) && SC_MUSICPLAYER_HAS_DBUS
+	// Runs a provider whose calls block (Linux DBus round trips) on its own thread. The game thread
+	// only copies the latest snapshot; commands are queued and run before the next poll.
+	class CThreadedNowPlayingProvider final : public IMusicPlaybackProvider
+	{
+	public:
+		explicit CThreadedNowPlayingProvider(std::unique_ptr<IMusicPlaybackProvider> pInner) :
+			m_pInner(std::move(pInner))
+		{
+			m_Thread = std::thread([this]() { Run(); });
+		}
+
+		~CThreadedNowPlayingProvider() override
+		{
+			{
+				std::lock_guard<std::mutex> Lock(m_Mutex);
+				m_Shutdown = true;
+			}
+			m_Cv.notify_one();
+			if(m_Thread.joinable())
+				m_Thread.join();
+		}
+
+		bool Poll(SNowPlayingSnapshot &Out) override
+		{
+			std::lock_guard<std::mutex> Lock(m_Mutex);
+			if(!m_LatestValid)
+			{
+				Out = SNowPlayingSnapshot();
+				return false;
+			}
+			Out = m_Latest;
+			// The worker read the position when it polled; move a playing track forward to now
+			if(Out.m_PlaybackState == EMusicPlaybackState::PLAYING)
+			{
+				Out.m_PositionMs += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_LatestTime).count();
+				if(Out.m_DurationMs > 0)
+					Out.m_PositionMs = std::min(Out.m_PositionMs, Out.m_DurationMs);
+			}
+			return true;
+		}
+
+		void Previous() override { Queue([](IMusicPlaybackProvider &Provider) { Provider.Previous(); }); }
+		void PlayPause() override { Queue([](IMusicPlaybackProvider &Provider) { Provider.PlayPause(); }); }
+		void Next() override { Queue([](IMusicPlaybackProvider &Provider) { Provider.Next(); }); }
+		void PlayUri(const std::string &Uri, int64_t PositionMs) override
+		{
+			Queue([Uri, PositionMs](IMusicPlaybackProvider &Provider) { Provider.PlayUri(Uri, PositionMs); });
+		}
+		void SeekTo(int64_t PositionMs, int64_t CurrentPositionMs) override
+		{
+			Queue([PositionMs, CurrentPositionMs](IMusicPlaybackProvider &Provider) { Provider.SeekTo(PositionMs, CurrentPositionMs); });
+		}
+
+	private:
+		using FCommand = std::function<void(IMusicPlaybackProvider &)>;
+		static constexpr int POLL_INTERVAL_MS = 125;
+
+		void Queue(FCommand Command)
+		{
+			{
+				std::lock_guard<std::mutex> Lock(m_Mutex);
+				if(m_Shutdown)
+					return;
+				m_vCommands.push_back(std::move(Command));
+			}
+			m_Cv.notify_one();
+		}
+
+		void Run()
+		{
+			while(true)
+			{
+				std::vector<FCommand> vCommands;
+				{
+					std::unique_lock<std::mutex> Lock(m_Mutex);
+					m_Cv.wait_for(Lock, std::chrono::milliseconds(POLL_INTERVAL_MS), [this]() { return m_Shutdown || !m_vCommands.empty(); });
+					if(m_Shutdown)
+						return;
+					vCommands.swap(m_vCommands);
+				}
+				for(FCommand &Command : vCommands)
+					Command(*m_pInner);
+
+				SNowPlayingSnapshot Snapshot;
+				const bool Valid = m_pInner->Poll(Snapshot);
+				const auto PolledAt = std::chrono::steady_clock::now();
+				std::lock_guard<std::mutex> Lock(m_Mutex);
+				m_Latest = std::move(Snapshot);
+				m_LatestValid = Valid;
+				m_LatestTime = PolledAt;
+			}
+		}
+
+		std::unique_ptr<IMusicPlaybackProvider> m_pInner;
+		std::thread m_Thread;
+		std::mutex m_Mutex;
+		std::condition_variable m_Cv;
+		bool m_Shutdown = false;
+		std::vector<FCommand> m_vCommands;
+		SNowPlayingSnapshot m_Latest;
+		bool m_LatestValid = false;
+		std::chrono::steady_clock::time_point m_LatestTime{};
+	};
+#endif
 } // namespace
 
 namespace
@@ -3673,7 +3780,7 @@ public:
 				std::lock_guard<std::mutex> Lock(m_Mutex);
 				if(m_Shutdown)
 					return;
-				PublishDefault();
+				// The worker publishes the reset levels: the seqlock only allows one writer
 				m_Reset = true;
 			}
 			m_Cv.notify_one();
@@ -3731,13 +3838,6 @@ public:
 			m_PublishSeq.fetch_add(1, std::memory_order_release);
 		}
 
-		void PublishDefault()
-		{
-			std::array<float, MUSIC_PLAYER_MAX_VISUALIZER_BARS> Default{};
-			Default.fill(0.18f);
-			PublishLevels(Default);
-		}
-
 		void ThreadMain()
 		{
 			while(true)
@@ -3771,8 +3871,7 @@ public:
 				if(HasInput)
 					AdvanceVisualizerLevels(m_aLevels, m_Motion, Input, Delta);
 
-				if(!Reset)
-					PublishLevels(m_aLevels);
+				PublishLevels(m_aLevels);
 			}
 		}
 
@@ -3875,7 +3974,7 @@ public:
 		{
 #if defined(CONF_PLATFORM_LINUX)
 #if SC_MUSICPLAYER_HAS_DBUS
-			m_pProvider = std::make_unique<CLinuxNowPlayingProvider>();
+			m_pProvider = std::make_unique<CThreadedNowPlayingProvider>(std::make_unique<CLinuxNowPlayingProvider>());
 #else
 			m_pProvider = std::make_unique<CNullNowPlayingProvider>();
 #endif
@@ -4763,6 +4862,7 @@ void CMusicPlayer::EnsureImpl()
 
 void CMusicPlayer::OnReset()
 {
+	MusicPlayerClearTextWidthCache();
 	EnsureImpl();
 	m_pImpl->Reset(Graphics());
 }
@@ -4779,6 +4879,7 @@ void CMusicPlayer::OnShutdown()
 
 void CMusicPlayer::OnWindowResize()
 {
+	MusicPlayerClearTextWidthCache();
 	if(!m_pImpl)
 		return;
 	m_pImpl->ResetArtwork(Graphics());

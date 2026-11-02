@@ -1,7 +1,5 @@
 #include "warlist.h"
 
-#include <base/time.h>
-
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
@@ -217,6 +215,7 @@ void CWarList::UpdateWarEntry(int Index, const char *pName, const char *pClan, c
 		str_copy(m_vWarEntries[Index].m_aClan, pClan);
 		str_copy(m_vWarEntries[Index].m_aReason, pReason);
 		m_vWarEntries[Index].m_pWarType = pType;
+		MarkChanged();
 	}
 }
 
@@ -229,6 +228,7 @@ void CWarList::UpsertWarType(int Index, const char *pType, ColorRGBA Color)
 	{
 		str_copy(m_WarTypes[Index]->m_aWarName, pType);
 		m_WarTypes[Index]->m_Color = Color;
+		MarkChanged();
 	}
 	else
 	{
@@ -259,6 +259,7 @@ void CWarList::AddWarEntry(const char *pName, const char *pClan, const char *pRe
 	if(!g_Config.m_TcWarListAllowDuplicates)
 		RemoveWarEntryDuplicates(pName, pClan);
 	m_vWarEntries.push_back(Entry);
+	MarkChanged();
 }
 
 void CWarList::RemoveWarEntryDuplicates(const char *pName, const char *pClan)
@@ -273,7 +274,10 @@ void CWarList::RemoveWarEntryDuplicates(const char *pName, const char *pClan)
 			(str_comp(It->m_aClan, pClan) == 0);
 
 		if(IsDuplicate)
+		{
 			It = m_vWarEntries.erase(It);
+			MarkChanged();
+		}
 		else
 			++It;
 	}
@@ -294,6 +298,7 @@ void CWarList::AddWarType(const char *pType, ColorRGBA Color)
 	{
 		Type->m_Color = Color;
 	}
+	MarkChanged();
 }
 
 void CWarList::RemoveWarEntry(const char *pName, const char *pClan, const char *pType)
@@ -302,7 +307,10 @@ void CWarList::RemoveWarEntry(const char *pName, const char *pClan, const char *
 	CWarEntry Entry(pWarType, pName, pClan, "");
 	auto It = std::find(m_vWarEntries.begin(), m_vWarEntries.end(), Entry);
 	if(It != m_vWarEntries.end())
+	{
 		m_vWarEntries.erase(It);
+		MarkChanged();
+	}
 }
 
 void CWarList::RemoveWarEntry(CWarEntry *Entry)
@@ -310,7 +318,10 @@ void CWarList::RemoveWarEntry(CWarEntry *Entry)
 	auto It = std::find_if(m_vWarEntries.begin(), m_vWarEntries.end(),
 		[Entry](const CWarEntry &WarEntry) { return &WarEntry == Entry; });
 	if(It != m_vWarEntries.end())
+	{
 		m_vWarEntries.erase(It);
+		MarkChanged();
+	}
 }
 
 void CWarList::RemoveWarType(const char *pType)
@@ -334,6 +345,7 @@ void CWarList::RemoveWarType(const char *pType)
 			}
 		}
 		m_WarTypes.erase(It);
+		MarkChanged();
 	}
 }
 
@@ -416,8 +428,7 @@ void CWarList::SortWarEntries()
 void CWarList::UpdateWarPlayers()
 {
 	// 667client
-	const int64_t Now = time_get();
-	if(m_vWarEntries.size() != m_IndexedEntries || m_WarTypes.size() != m_IndexedTypes || Now - m_LastIndexTime > time_freq())
+	if(m_WarListRevision != m_IndexedRevision || m_vWarEntries.size() != m_IndexedEntries || m_WarTypes.size() != m_IndexedTypes)
 	{
 		for(int i = 0; i < (int)m_WarTypes.size(); ++i)
 			m_WarTypes[i]->m_Index = i;
@@ -433,7 +444,7 @@ void CWarList::UpdateWarPlayers()
 		}
 		m_IndexedEntries = m_vWarEntries.size();
 		m_IndexedTypes = m_WarTypes.size();
-		m_LastIndexTime = Now;
+		m_IndexedRevision = m_WarListRevision;
 		m_IndexGeneration++;
 	}
 

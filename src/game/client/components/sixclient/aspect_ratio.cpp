@@ -112,12 +112,14 @@ void CAspectRatio::BeginFrame()
 	Graphics()->SetScreenAspectOverrideEnabled(true);
 	m_HudAspectDisabled = false;
 	m_MusicPlayerAspectDisabled = false;
+	// Read once per frame; PrepareComponent runs for every component and the cursor Begin/End pair must agree
+	m_CachedUseGameNoHudAspect = UseGameNoHudAspect();
 	GameClient()->m_TClient.SetForcedAspect();
 }
 
 void CAspectRatio::PrepareComponent(const CComponent *pComponent)
 {
-	if(!UseGameNoHudAspect())
+	if(!m_CachedUseGameNoHudAspect)
 		return;
 
 	if(m_MusicPlayerAspectDisabled && pComponent != &GameClient()->m_MusicPlayer)
@@ -142,25 +144,25 @@ void CAspectRatio::PrepareComponent(const CComponent *pComponent)
 
 void CAspectRatio::BeforeFogRect()
 {
-	if(UseGameNoHudAspect() && m_HudAspectDisabled)
+	if(m_CachedUseGameNoHudAspect && m_HudAspectDisabled)
 		Graphics()->SetScreenAspectOverrideEnabled(true);
 }
 
 void CAspectRatio::AfterFogRect()
 {
-	if(UseGameNoHudAspect() && m_HudAspectDisabled)
+	if(m_CachedUseGameNoHudAspect && m_HudAspectDisabled)
 		Graphics()->SetScreenAspectOverrideEnabled(false);
 }
 
 void CAspectRatio::BeginCursorGameAspect()
 {
-	if(UseGameNoHudAspect())
+	if(m_CachedUseGameNoHudAspect)
 		Graphics()->SetScreenAspectOverrideEnabled(true);
 }
 
 void CAspectRatio::EndCursorGameAspect()
 {
-	if(UseGameNoHudAspect())
+	if(m_CachedUseGameNoHudAspect)
 		Graphics()->SetScreenAspectOverrideEnabled(false);
 }
 
