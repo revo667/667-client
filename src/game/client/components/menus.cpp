@@ -2728,8 +2728,9 @@ void CMenus::OnRender()
 			Ui()->RenderBackButton();
 		}
 
-		if(Ui()->ButtonClicks() > 0)
+		if(Ui()->ButtonClicks() > 0 && !m_SuppressMenuClickSound)
 			PlayMenuClickSound();
+		m_SuppressMenuClickSound = false;
 	}
 	// 667client
 

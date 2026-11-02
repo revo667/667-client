@@ -220,10 +220,11 @@ MACRO_CONFIG_STR(ClAssetCursor, cl_asset_cursor, 50, "default", CFGFLAG_CLIENT |
 MACRO_CONFIG_STR(ClAssetArrow, cl_asset_arrow, 50, "default", CFGFLAG_CLIENT | CFGFLAG_SAVE, "The asset for arrow")
 MACRO_CONFIG_INT(ScAssetsMarket, sc_assets_market, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Let the Assets Market load assets from teedata.net")
 MACRO_CONFIG_STR(ScAssetsMarketUrl, sc_assets_market_url, 128, "https://teedata.net", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Base URL of the teedata.net API used by the Assets Market (https only)")
+MACRO_CONFIG_STR(ScCustomSoundsUrl, sc_custom_sounds_url, 128, "https://api.667.wtf/cecen/v1/sounds", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Where the Assets Editor downloads its custom sounds from (https only)")
 MACRO_CONFIG_STR(SndPack, snd_pack, 64, "default", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Sound pack")
 
 // Profile assets
-MACRO_CONFIG_INT(ScProfileAssets, sc_profile_assets, 0, 0, 511, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Bitmask of asset types to save/load in profiles")
+MACRO_CONFIG_INT(ScProfileAssets, sc_profile_assets, 0, 0, 2047, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Bitmask of asset types to save/load in profiles")
 
 // Better preview
 MACRO_CONFIG_INT(ScBetterPreview, sc_better_preview, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Better preview")

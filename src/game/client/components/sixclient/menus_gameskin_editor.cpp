@@ -16,12 +16,14 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+#include <game/client/components/mapimages.h>
 #include <game/client/components/menus.h>
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
 #include <game/client/ui.h>
 #include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
+#include <game/mapitems.h>
 
 #include <algorithm>
 #include <cmath>
@@ -29,25 +31,25 @@
 #include <string>
 #include <vector>
 
+// Game skin and entities editors: one sheet (a grid of cells) is the base, named parts of it can be
+// taken from other sheets of the same kind and tinted, and the result is saved as a new asset.
+
 namespace
 {
-	constexpr int GAMESKIN_GRID_X = 32;
-	constexpr int GAMESKIN_GRID_Y = 16;
-
 	struct SCellRect
 	{
 		int m_X, m_Y, m_W, m_H;
 	};
 
-	struct SGameSkinPart
+	struct SSheetPart
 	{
 		const char *m_pName;
 		std::vector<SCellRect> m_vRects;
 	};
 
-	const std::vector<SGameSkinPart> &GameSkinParts()
+	const std::vector<SSheetPart> &GameSkinParts()
 	{
-		static const std::vector<SGameSkinPart> s_vParts = {
+		static const std::vector<SSheetPart> s_vParts = {
 			{"Hook", {{2, 0, 3, 1}}},
 			{"Cursors", {{0, 4, 2, 2}, {0, 0, 2, 2}, {0, 6, 2, 2}, {0, 8, 2, 2}, {0, 10, 2, 2}, {0, 12, 2, 2}}},
 			{"Hammer", {{2, 1, 4, 3}}},
@@ -62,6 +64,62 @@ namespace
 			{"Particles", {{6, 0, 9, 2}}},
 			{"Stars", {{15, 0, 6, 2}}},
 		};
+		return s_vParts;
+	}
+
+	// Entities sheets are 16x16 tiles, tile i sits at (i % 16, i / 16); entities (spawns, pickups,
+	// lasers, draggers) are stored from ENTITY_OFFSET on.
+	SSheetPart TilePart(const char *pName, std::initializer_list<int> Tiles)
+	{
+		SSheetPart Part{pName, {}};
+		for(int Tile : Tiles)
+			Part.m_vRects.push_back({Tile % 16, Tile / 16, 1, 1});
+		return Part;
+	}
+
+	SSheetPart TileRangePart(const char *pName, int First, int Last)
+	{
+		SSheetPart Part{pName, {}};
+		for(int Tile = First; Tile <= Last; Tile++)
+			Part.m_vRects.push_back({Tile % 16, Tile / 16, 1, 1});
+		return Part;
+	}
+
+	const std::vector<SSheetPart> &EntitiesParts()
+	{
+		static const std::vector<SSheetPart> s_vParts = [] {
+			std::vector<SSheetPart> vParts = {
+				TilePart("Hookable", {TILE_SOLID}),
+				TilePart("Unhookable", {TILE_NOHOOK}),
+				TilePart("Death", {TILE_DEATH}),
+				TilePart("Freeze", {TILE_FREEZE, TILE_DFREEZE}),
+				TilePart("Unfreeze", {TILE_UNFREEZE, TILE_DUNFREEZE}),
+				TilePart("Hook through", {TILE_THROUGH_CUT, TILE_THROUGH, TILE_THROUGH_ALL, TILE_THROUGH_DIR}),
+				TilePart("Laser blocker", {TILE_NOLASER}),
+				TilePart("Jumps", {TILE_JUMP, TILE_WALLJUMP, TILE_REFILL_JUMPS}),
+				TilePart("Teleporters", {TILE_TELEINEVIL, TILE_TELEINWEAPON, TILE_TELEINHOOK, TILE_TELEIN, TILE_TELEOUT, TILE_TELECHECK, TILE_TELECHECKOUT, TILE_TELECHECKIN, TILE_TELECHECKINEVIL}),
+				TilePart("Speedup", {TILE_SPEED_BOOST_OLD}),
+				TilePart("Start & finish", {TILE_START, TILE_FINISH}),
+				TileRangePart("Time checkpoints", TILE_TIME_CHECKPOINT_FIRST, TILE_TIME_CHECKPOINT_LAST),
+				TilePart("Stoppers", {TILE_STOP, TILE_STOPS, TILE_STOPA}),
+				TilePart("Switches", {TILE_SWITCHTIMEDOPEN, TILE_SWITCHTIMEDCLOSE, TILE_SWITCHOPEN, TILE_SWITCHCLOSE}),
+				TilePart("Toggles", {TILE_EHOOK_ENABLE, TILE_EHOOK_DISABLE, TILE_HIT_ENABLE, TILE_HIT_DISABLE, TILE_SOLO_ENABLE, TILE_OLDLASER, TILE_NPC, TILE_EHOOK, TILE_NOHIT, TILE_NPH, TILE_UNLOCK_TEAM, TILE_ADD_TIME, TILE_NPC_DISABLE, TILE_UNLIMITED_JUMPS_DISABLE, TILE_JETPACK_DISABLE, TILE_NPH_DISABLE, TILE_SUBTRACT_TIME, TILE_TELE_GUN_ENABLE, TILE_TELE_GUN_DISABLE, TILE_ALLOW_TELE_GUN, TILE_ALLOW_BLUE_TELE_GUN, TILE_NPC_ENABLE, TILE_UNLIMITED_JUMPS_ENABLE, TILE_JETPACK_ENABLE, TILE_NPH_ENABLE, TILE_TELE_GRENADE_ENABLE, TILE_TELE_GRENADE_DISABLE, TILE_TELE_LASER_ENABLE, TILE_TELE_LASER_DISABLE}),
+				TilePart("Tune zone", {TILE_TUNE}),
+				TileRangePart("Spawns & flags", ENTITY_OFFSET + ENTITY_SPAWN, ENTITY_OFFSET + ENTITY_FLAGSTAND_BLUE),
+			};
+			SSheetPart Pickups = TileRangePart("Pickups", ENTITY_OFFSET + ENTITY_ARMOR_1, ENTITY_OFFSET + ENTITY_WEAPON_LASER);
+			for(int Entity = ENTITY_ARMOR_SHOTGUN; Entity <= ENTITY_ARMOR_LASER; Entity++)
+				Pickups.m_vRects.push_back({(ENTITY_OFFSET + Entity) % 16, (ENTITY_OFFSET + Entity) / 16, 1, 1});
+			vParts.push_back(Pickups);
+			SSheetPart Lasers = TileRangePart("Lasers & plasma", ENTITY_OFFSET + ENTITY_LASER_FAST_CCW, ENTITY_OFFSET + ENTITY_LASER_O_FAST);
+			for(int Entity = ENTITY_PLASMAE; Entity <= ENTITY_CRAZY_SHOTGUN; Entity++)
+				Lasers.m_vRects.push_back({(ENTITY_OFFSET + Entity) % 16, (ENTITY_OFFSET + Entity) / 16, 1, 1});
+			vParts.push_back(Lasers);
+			SSheetPart Draggers = TileRangePart("Draggers & door", ENTITY_OFFSET + ENTITY_DRAGGER_WEAK, ENTITY_OFFSET + ENTITY_DRAGGER_STRONG_NW);
+			Draggers.m_vRects.push_back({(ENTITY_OFFSET + ENTITY_DOOR) % 16, (ENTITY_OFFSET + ENTITY_DOOR) / 16, 1, 1});
+			vParts.push_back(Draggers);
+			return vParts;
+		}();
 		return s_vParts;
 	}
 
@@ -84,7 +142,7 @@ namespace
 		CButtonContainer m_Button;
 	};
 
-	struct SGameSkinEditorState
+	struct SSheetEditorState
 	{
 		bool m_Initialized = false;
 		std::vector<SSkinEntry> m_vSkins;
@@ -97,13 +155,48 @@ namespace
 		IGraphics::CTextureHandle m_PreviewTexture;
 		char m_aStatus[256] = "";
 		bool m_StatusError = false;
+
+		CLineInputBuffered<64> m_ExportName;
+		CButtonContainer m_BaseButton;
+		std::vector<CButtonContainer> m_vPartButtons;
+		CScrollRegion m_PartScroll;
+		CButtonContainer m_SheetButton;
+		int m_HueId = 0, m_SatId = 0, m_BrightId = 0;
+		CButtonContainer m_ResetPartButton;
+		CButtonContainer m_RefreshButton;
+		CScrollRegion m_GalleryScroll;
+		CButtonContainer m_SaveButton, m_ApplyButton, m_ResetButton;
 	};
 
-	SGameSkinEditorState gs_GameSkinEditor;
-	CLineInputBuffered<64> gs_ExportNameInput;
+	// What makes the game skin and the entities editor different
+	struct SSheetEditorConfig
+	{
+		int m_GridX;
+		int m_GridY;
+		const std::vector<SSheetPart> *m_pParts;
+		const char *m_pFolder; // assets/<folder>
+		bool (*m_pfnResolve)(IStorage *pStorage, const std::string &Name, char *pOut, int OutSize);
+		const char *m_pDefaultExportName;
+		const char *m_pGalleryTitle;
+		const char *m_pBaseLabel;
+		const char *m_pBaseHint;
+		const char *m_pLoadError;
+		const char *m_pPickError;
+	};
+
+	SSheetEditorState gs_GameSkinEditor;
+	SSheetEditorState gs_EntitiesEditor;
 	int gs_EditorSubTab = 0;
 
-	int ListGameSkinsCallback(const char *pName, int IsDir, int DirType, void *pUser)
+	enum
+	{
+		EDITOR_TAB_GAMESKIN = 0,
+		EDITOR_TAB_DEMO_TEE,
+		EDITOR_TAB_ENTITIES,
+		EDITOR_TAB_AUDIO,
+	};
+
+	int ListSheetsCallback(const char *pName, int IsDir, int DirType, void *pUser)
 	{
 		auto *pNames = static_cast<std::vector<std::string> *>(pUser);
 		if(pName[0] == '.')
@@ -178,12 +271,12 @@ namespace
 		b = B + m;
 	}
 
-	void CopyRegion(CImageInfo &Dst, const CImageInfo &Src, const SCellRect &Rect)
+	void CopyRegion(CImageInfo &Dst, const CImageInfo &Src, const SCellRect &Rect, int GridX, int GridY)
 	{
-		const int DstCellW = Dst.m_Width / GAMESKIN_GRID_X;
-		const int DstCellH = Dst.m_Height / GAMESKIN_GRID_Y;
-		const int SrcCellW = Src.m_Width / GAMESKIN_GRID_X;
-		const int SrcCellH = Src.m_Height / GAMESKIN_GRID_Y;
+		const int DstCellW = Dst.m_Width / GridX;
+		const int DstCellH = Dst.m_Height / GridY;
+		const int SrcCellW = Src.m_Width / GridX;
+		const int SrcCellH = Src.m_Height / GridY;
 		const int DstX = Rect.m_X * DstCellW, DstY = Rect.m_Y * DstCellH;
 		const int DstW = Rect.m_W * DstCellW, DstH = Rect.m_H * DstCellH;
 		const int SrcX = Rect.m_X * SrcCellW, SrcY = Rect.m_Y * SrcCellH;
@@ -203,10 +296,10 @@ namespace
 		}
 	}
 
-	void AdjustRegion(CImageInfo &Image, const SCellRect &Rect, const SPartEdit &Edit)
+	void AdjustRegion(CImageInfo &Image, const SCellRect &Rect, const SPartEdit &Edit, int GridX, int GridY)
 	{
-		const int CellW = Image.m_Width / GAMESKIN_GRID_X;
-		const int CellH = Image.m_Height / GAMESKIN_GRID_Y;
+		const int CellW = Image.m_Width / GridX;
+		const int CellH = Image.m_Height / GridY;
 		const float HueShift = Edit.m_Hue / 360.0f;
 		const float Sat = Edit.m_Saturation / 100.0f;
 		const float Bright = Edit.m_Brightness / 100.0f;
@@ -231,7 +324,7 @@ namespace
 		}
 	}
 
-	void DrawSubset(IGraphics *pGraphics, IGraphics::CTextureHandle Texture, const CUIRect &Rect, const SCellRect &Cells, float Alpha = 1.0f)
+	void DrawSubset(IGraphics *pGraphics, IGraphics::CTextureHandle Texture, const CUIRect &Rect, const SCellRect &Cells, int GridX, int GridY, float Alpha = 1.0f)
 	{
 		if(!Texture.IsValid())
 			return;
@@ -246,7 +339,7 @@ namespace
 		pGraphics->TextureSet(Texture);
 		pGraphics->QuadsBegin();
 		pGraphics->SetColor(1.0f, 1.0f, 1.0f, Alpha);
-		pGraphics->QuadsSetSubset((float)Cells.m_X / GAMESKIN_GRID_X, (float)Cells.m_Y / GAMESKIN_GRID_Y, (float)(Cells.m_X + Cells.m_W) / GAMESKIN_GRID_X, (float)(Cells.m_Y + Cells.m_H) / GAMESKIN_GRID_Y);
+		pGraphics->QuadsSetSubset((float)Cells.m_X / GridX, (float)Cells.m_Y / GridY, (float)(Cells.m_X + Cells.m_W) / GridX, (float)(Cells.m_Y + Cells.m_H) / GridY);
 		const IGraphics::CQuadItem Quad(Rect.x + (Rect.w - W) / 2.0f, Rect.y + (Rect.h - H) / 2.0f, W, H);
 		pGraphics->QuadsDrawTL(&Quad, 1);
 		pGraphics->QuadsSetSubset(0.0f, 0.0f, 1.0f, 1.0f);
@@ -254,13 +347,13 @@ namespace
 		pGraphics->WrapNormal();
 	}
 
-	CUIRect CellsToRect(const CUIRect &Sheet, const SCellRect &Cells)
+	CUIRect CellsToRect(const CUIRect &Sheet, const SCellRect &Cells, int GridX, int GridY)
 	{
 		CUIRect Rect;
-		Rect.x = Sheet.x + Sheet.w * Cells.m_X / GAMESKIN_GRID_X;
-		Rect.y = Sheet.y + Sheet.h * Cells.m_Y / GAMESKIN_GRID_Y;
-		Rect.w = Sheet.w * Cells.m_W / GAMESKIN_GRID_X;
-		Rect.h = Sheet.h * Cells.m_H / GAMESKIN_GRID_Y;
+		Rect.x = Sheet.x + Sheet.w * Cells.m_X / GridX;
+		Rect.y = Sheet.y + Sheet.h * Cells.m_Y / GridY;
+		Rect.w = Sheet.w * Cells.m_W / GridX;
+		Rect.h = Sheet.h * Cells.m_H / GridY;
 		return Rect;
 	}
 
@@ -296,82 +389,114 @@ static bool ResolveGameSkinPath(IStorage *pStorage, const std::string &Name, cha
 	return pStorage->FileExists(pOut, IStorage::TYPE_ALL);
 }
 
+// The DDNet sheet of an entities pack, the one DDNet servers use
+static bool ResolveEntitiesPath(IStorage *pStorage, const std::string &Name, char *pOut, int OutSize)
+{
+	if(Name == "default")
+	{
+		str_copy(pOut, "editor/entities_clear/ddnet.png", OutSize);
+		return pStorage->FileExists(pOut, IStorage::TYPE_ALL);
+	}
+	str_format(pOut, OutSize, "assets/entities/%s/ddnet.png", Name.c_str());
+	if(pStorage->FileExists(pOut, IStorage::TYPE_ALL))
+		return true;
+	str_format(pOut, OutSize, "assets/entities/%s.png", Name.c_str());
+	return pStorage->FileExists(pOut, IStorage::TYPE_ALL);
+}
+
 void CMenus::RenderSettingsSixClientAssetsEditor(CUIRect MainView)
 {
-	static CButtonContainer s_GameSkinTab, s_DemoTeeTab, s_EntitiesTab;
-	CUIRect TabBar, GameSkinButton, DemoTeeButton, EntitiesButton;
+	static CButtonContainer s_GameSkinTab, s_EntitiesTab, s_AudioTab, s_DemoTeeTab;
+	CUIRect TabBar, GameSkinButton, EntitiesButton, AudioButton, DemoTeeButton;
 	MainView.HSplitTop(24.0f, &TabBar, &MainView);
-	const float TabWidth = TabBar.w / 3.0f;
+	const float TabWidth = TabBar.w / 4.0f;
 	TabBar.VSplitLeft(TabWidth, &GameSkinButton, &TabBar);
-	TabBar.VSplitLeft(TabWidth, &DemoTeeButton, &EntitiesButton);
-	if(DoButton_MenuTab(&s_GameSkinTab, Localize("Game Skin"), gs_EditorSubTab == 0, &GameSkinButton, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f))
-		gs_EditorSubTab = 0;
-	if(DoButton_MenuTab(&s_DemoTeeTab, Localize("Demo Tee"), gs_EditorSubTab == 1, &DemoTeeButton, IGraphics::CORNER_NONE, nullptr, nullptr, nullptr, nullptr, 4.0f))
-		gs_EditorSubTab = 1;
-	if(DoButton_MenuTab(&s_EntitiesTab, Localize("Entities"), gs_EditorSubTab == 2, &EntitiesButton, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
-		gs_EditorSubTab = 2;
+	TabBar.VSplitLeft(TabWidth, &EntitiesButton, &TabBar);
+	TabBar.VSplitLeft(TabWidth, &AudioButton, &DemoTeeButton);
+	if(DoButton_MenuTab(&s_GameSkinTab, Localize("Game Skin"), gs_EditorSubTab == EDITOR_TAB_GAMESKIN, &GameSkinButton, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		gs_EditorSubTab = EDITOR_TAB_GAMESKIN;
+	if(DoButton_MenuTab(&s_EntitiesTab, Localize("Entities"), gs_EditorSubTab == EDITOR_TAB_ENTITIES, &EntitiesButton, IGraphics::CORNER_NONE, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		gs_EditorSubTab = EDITOR_TAB_ENTITIES;
+	if(DoButton_MenuTab(&s_AudioTab, Localize("Audio"), gs_EditorSubTab == EDITOR_TAB_AUDIO, &AudioButton, IGraphics::CORNER_NONE, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		gs_EditorSubTab = EDITOR_TAB_AUDIO;
+	if(DoButton_MenuTab(&s_DemoTeeTab, Localize("Demo Tee"), gs_EditorSubTab == EDITOR_TAB_DEMO_TEE, &DemoTeeButton, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		gs_EditorSubTab = EDITOR_TAB_DEMO_TEE;
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
 
-	if(gs_EditorSubTab == 0)
+	if(gs_EditorSubTab == EDITOR_TAB_GAMESKIN)
 	{
 		RenderSixClientGameSkinEditor(MainView);
 		return;
 	}
-
-	if(gs_EditorSubTab == 1)
+	if(gs_EditorSubTab == EDITOR_TAB_ENTITIES)
 	{
-		MainView.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.2f), IGraphics::CORNER_ALL, 10.0f);
-		CUIRect Content = MainView;
-		Content.Margin(20.0f, &Content);
-		CUIRect Icon, Title, Line;
-		Content.HSplitTop(44.0f, &Icon, &Content);
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.7f);
-		Ui()->DoLabel(&Icon, FontIcon::USER, 32.0f, TEXTALIGN_ML);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-		TextRender()->TextColor(TextRender()->DefaultTextColor());
-		Content.HSplitTop(8.0f, nullptr, &Content);
-		Content.HSplitTop(24.0f, &Title, &Content);
-		Ui()->DoLabel(&Title, Localize("Demo Tee Editor"), 20.0f, TEXTALIGN_ML);
-		Content.HSplitTop(10.0f, nullptr, &Content);
-
-		auto DrawLine = [&](const char *pText) {
-			Content.HSplitTop(18.0f, &Line, &Content);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.75f);
-			Ui()->DoLabel(&Line, pText, 14.0f, TEXTALIGN_ML);
-			TextRender()->TextColor(TextRender()->DefaultTextColor());
-		};
-		DrawLine(Localize("Edit tee name, clan, skin and colors while watching a demo."));
-		DrawLine(Localize("1. Open a demo and keep the demo menu open."));
-		DrawLine(Localize("2. Click a tee to open the editor popup."));
-		DrawLine(Localize("3. Save a cut to export the edited demo (0.6 demos)."));
-		Content.HSplitTop(16.0f, nullptr, &Content);
-		DrawLine(Localize("Edited names are marked with *...* when exported."));
-		DrawLine(Localize("0.7 demos: preview only, export of tee edits is not supported."));
+		RenderSixClientEntitiesEditor(MainView);
+		return;
+	}
+	if(gs_EditorSubTab == EDITOR_TAB_AUDIO)
+	{
+		RenderSixClientAudioEditor(MainView);
 		return;
 	}
 
 	MainView.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.2f), IGraphics::CORNER_ALL, 10.0f);
-	CUIRect Icon, Title, Subtitle;
-	MainView.HSplitTop(MainView.h / 2.0f - 50.0f, nullptr, &Icon);
-	Icon.HSplitTop(50.0f, &Icon, &Title);
-	Title.HSplitTop(30.0f, &Title, &Subtitle);
-	Subtitle.HSplitTop(20.0f, &Subtitle, nullptr);
+	CUIRect Content = MainView;
+	Content.Margin(20.0f, &Content);
+	CUIRect Icon, Title, Line;
+	Content.HSplitTop(44.0f, &Icon, &Content);
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-	Ui()->DoLabel(&Icon, FontIcon::PEN_TO_SQUARE, 36.0f, TEXTALIGN_MC);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.7f);
+	Ui()->DoLabel(&Icon, FontIcon::USER, 32.0f, TEXTALIGN_ML);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	Ui()->DoLabel(&Title, Localize("Entities editor"), 20.0f, TEXTALIGN_MC);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-	Ui()->DoLabel(&Subtitle, Localize("Work in progress, coming soon."), 14.0f, TEXTALIGN_MC);
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(8.0f, nullptr, &Content);
+	Content.HSplitTop(24.0f, &Title, &Content);
+	Ui()->DoLabel(&Title, Localize("Demo Tee Editor"), 20.0f, TEXTALIGN_ML);
+	Content.HSplitTop(10.0f, nullptr, &Content);
+
+	auto DrawLine = [&](const char *pText) {
+		Content.HSplitTop(18.0f, &Line, &Content);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.75f);
+		Ui()->DoLabel(&Line, pText, 14.0f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	};
+	DrawLine(Localize("Edit tee name, clan, skin and colors while watching a demo."));
+	DrawLine(Localize("1. Open a demo and keep the demo menu open."));
+	DrawLine(Localize("2. Click a tee to open the editor popup."));
+	DrawLine(Localize("3. Save a cut to export the edited demo (0.6 demos)."));
+	Content.HSplitTop(16.0f, nullptr, &Content);
+	DrawLine(Localize("Edited names are marked with *...* when exported."));
+	DrawLine(Localize("0.7 demos: preview only, export of tee edits is not supported."));
 }
 
 void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 {
-	SGameSkinEditorState &State = gs_GameSkinEditor;
-	const std::vector<SGameSkinPart> &vParts = GameSkinParts();
+	RenderSixClientSheetEditor(MainView, false);
+}
+
+void CMenus::RenderSixClientEntitiesEditor(CUIRect MainView)
+{
+	RenderSixClientSheetEditor(MainView, true);
+}
+
+void CMenus::RenderSixClientSheetEditor(CUIRect MainView, bool Entities)
+{
+	static const SSheetEditorConfig s_GameSkinConfig = {
+		32, 16, &GameSkinParts(), "game", ResolveGameSkinPath, "667_gameskin",
+		"Game skins", "Base skin",
+		"Pick the skin every part starts from. Select a part on the left or in the preview to mix it from another skin.",
+		"Failed to load the base game skin.", "This game skin could not be loaded."};
+	static const SSheetEditorConfig s_EntitiesConfig = {
+		16, 16, &EntitiesParts(), "entities", ResolveEntitiesPath, "667_entities",
+		"Entities", "Base entities",
+		"Pick the entities every group starts from. Select a group on the left or a tile in the preview to take it from other entities.",
+		"Failed to load the base entities.", "These entities could not be loaded."};
+	const SSheetEditorConfig &Config = Entities ? s_EntitiesConfig : s_GameSkinConfig;
+	SSheetEditorState &State = Entities ? gs_EntitiesEditor : gs_GameSkinEditor;
+	const std::vector<SSheetPart> &vParts = *Config.m_pParts;
+	const int GridX = Config.m_GridX;
+	const int GridY = Config.m_GridY;
+	const float SheetAspect = (float)GridX / GridY;
 	const float LineSize = 20.0f;
 	const float Margin = 5.0f;
 
@@ -386,10 +511,10 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			return It->second.m_pData ? &It->second : nullptr;
 		CImageInfo &Image = State.m_Images[Name];
 		char aPath[IO_MAX_PATH_LENGTH];
-		if(!ResolveGameSkinPath(Storage(), Name, aPath, sizeof(aPath)) || !Graphics()->LoadPng(Image, aPath, IStorage::TYPE_ALL))
+		if(!Config.m_pfnResolve(Storage(), Name, aPath, sizeof(aPath)) || !Graphics()->LoadPng(Image, aPath, IStorage::TYPE_ALL))
 			return nullptr;
 		ConvertToRgba(Image);
-		if(Image.m_Width < GAMESKIN_GRID_X || Image.m_Height < GAMESKIN_GRID_Y || Image.m_Width % GAMESKIN_GRID_X != 0 || Image.m_Height % GAMESKIN_GRID_Y != 0)
+		if((int)Image.m_Width < GridX || (int)Image.m_Height < GridY || Image.m_Width % GridX != 0 || Image.m_Height % GridY != 0)
 		{
 			Image.Free();
 			return nullptr;
@@ -404,7 +529,9 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			Image.Free();
 		State.m_Images.clear();
 		std::vector<std::string> vNames;
-		Storage()->ListDirectory(IStorage::TYPE_ALL, "assets/game", ListGameSkinsCallback, &vNames);
+		char aFolder[IO_MAX_PATH_LENGTH];
+		str_format(aFolder, sizeof(aFolder), "assets/%s", Config.m_pFolder);
+		Storage()->ListDirectory(IStorage::TYPE_ALL, aFolder, ListSheetsCallback, &vNames);
 		std::sort(vNames.begin(), vNames.end(), [](const std::string &A, const std::string &B) { return str_comp_nocase(A.c_str(), B.c_str()) < 0; });
 		vNames.insert(vNames.begin(), "default");
 		State.m_vSkins.clear();
@@ -418,8 +545,10 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 	{
 		State.m_Initialized = true;
 		State.m_vEdits.assign(vParts.size(), SPartEdit());
-		State.m_Base = g_Config.m_ClAssetGame[0] ? g_Config.m_ClAssetGame : "default";
-		gs_ExportNameInput.Set("667_gameskin");
+		State.m_vPartButtons.resize(vParts.size());
+		const char *pCurrent = Entities ? g_Config.m_ClAssetsEntities : g_Config.m_ClAssetGame;
+		State.m_Base = pCurrent[0] ? pCurrent : "default";
+		State.m_ExportName.Set(Config.m_pDefaultExportName);
 		RefreshSkinList();
 	}
 
@@ -443,19 +572,19 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 				{
 					if(const CImageInfo *pSource = GetImage(Edit.m_Source))
 						for(const SCellRect &Rect : vParts[i].m_vRects)
-							CopyRegion(State.m_Composed, *pSource, Rect);
+							CopyRegion(State.m_Composed, *pSource, Rect, GridX, GridY);
 				}
 				if(Edit.HasColorChange())
 					for(const SCellRect &Rect : vParts[i].m_vRects)
-						AdjustRegion(State.m_Composed, Rect, Edit);
+						AdjustRegion(State.m_Composed, Rect, Edit, GridX, GridY);
 			}
 			Graphics()->UnloadTexture(&State.m_PreviewTexture);
 			CImageInfo Upload = State.m_Composed.DeepCopy();
-			State.m_PreviewTexture = Graphics()->LoadTextureRawMove(Upload, 0, "gameskin_editor_preview");
+			State.m_PreviewTexture = Graphics()->LoadTextureRawMove(Upload, 0, Entities ? "entities_editor_preview" : "gameskin_editor_preview");
 		}
 		else
 		{
-			SetStatus(true, Localize("Failed to load the base game skin."));
+			SetStatus(true, Localize(Config.m_pLoadError));
 		}
 	}
 
@@ -470,12 +599,17 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 	PartList.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.2f), IGraphics::CORNER_ALL, 8.0f);
 	PartList.Margin(Margin, &PartList);
 	{
-		static CButtonContainer s_BaseButton;
-		static std::vector<CButtonContainer> s_vPartButtons(vParts.size());
+		CScrollRegionParams PartScrollParams;
+		PartScrollParams.m_ScrollUnit = 60.0f;
+		PartScrollParams.m_ScrollbarMargin = 2.0f;
+		State.m_PartScroll.Begin(&PartList, &PartScrollParams);
+		PartList.VSplitRight(6.0f, &PartList, nullptr);
 		auto DoPartRow = [&](CButtonContainer *pButton, int Index, const char *pName, bool Modified) {
 			CUIRect Row, IconRect, Label, Mark;
 			PartList.HSplitTop(24.0f, &Row, &PartList);
 			PartList.HSplitTop(2.0f, nullptr, &PartList);
+			if(!State.m_PartScroll.AddRect(Row))
+				return;
 			const bool Selected = State.m_Selected == Index;
 			const bool Hovered = Ui()->MouseHovered(&Row);
 			if(Selected || Hovered)
@@ -489,7 +623,7 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			if(Index < 0)
 				Ui()->DoLabel(&IconRect, FontIcon::IMAGE, 11.0f, TEXTALIGN_MC);
 			else
-				DrawSubset(Graphics(), State.m_PreviewTexture, IconRect, vParts[Index].m_vRects.front());
+				DrawSubset(Graphics(), State.m_PreviewTexture, IconRect, vParts[Index].m_vRects.front(), GridX, GridY);
 			if(Modified)
 			{
 				TextRender()->TextColor(0.45f, 0.8f, 1.0f, 1.0f);
@@ -499,13 +633,17 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 			Ui()->DoLabel(&Label, pName, 12.0f, TEXTALIGN_ML);
 		};
-		DoPartRow(&s_BaseButton, -1, Localize("Base skin"), false);
+		DoPartRow(&State.m_BaseButton, -1, Localize(Config.m_pBaseLabel), false);
 		CUIRect Separator;
 		PartList.HSplitTop(4.0f, &Separator, &PartList);
-		Separator.HMargin(1.5f, &Separator);
-		Separator.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.1f), IGraphics::CORNER_NONE, 0.0f);
+		if(State.m_PartScroll.AddRect(Separator))
+		{
+			Separator.HMargin(1.5f, &Separator);
+			Separator.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.1f), IGraphics::CORNER_NONE, 0.0f);
+		}
 		for(size_t i = 0; i < vParts.size(); i++)
-			DoPartRow(&s_vPartButtons[i], (int)i, Localize(vParts[i].m_pName), State.m_vEdits[i].Modified());
+			DoPartRow(&State.m_vPartButtons[i], (int)i, Localize(vParts[i].m_pName), State.m_vEdits[i].Modified());
+		State.m_PartScroll.End();
 	}
 
 	CUIRect Preview, Lower;
@@ -517,22 +655,22 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 	CUIRect Sheet;
 	Preview.Margin(Margin, &Sheet);
 	{
-		float W = Sheet.w, H = Sheet.w / 2.0f;
+		float W = Sheet.w, H = Sheet.w / SheetAspect;
 		if(H > Sheet.h)
 		{
 			H = Sheet.h;
-			W = H * 2.0f;
+			W = H * SheetAspect;
 		}
 		Sheet = {Sheet.x + (Sheet.w - W) / 2.0f, Sheet.y + (Sheet.h - H) / 2.0f, W, H};
 	}
 	DrawCheckerboard(Graphics(), Sheet, 8.0f);
-	DrawSubset(Graphics(), State.m_PreviewTexture, Sheet, {0, 0, GAMESKIN_GRID_X, GAMESKIN_GRID_Y});
+	DrawSubset(Graphics(), State.m_PreviewTexture, Sheet, {0, 0, GridX, GridY}, GridX, GridY);
 
 	int HoveredPart = -1;
 	if(Ui()->MouseHovered(&Sheet))
 	{
-		const int CellX = (int)((Ui()->MouseX() - Sheet.x) / Sheet.w * GAMESKIN_GRID_X);
-		const int CellY = (int)((Ui()->MouseY() - Sheet.y) / Sheet.h * GAMESKIN_GRID_Y);
+		const int CellX = (int)((Ui()->MouseX() - Sheet.x) / Sheet.w * GridX);
+		const int CellY = (int)((Ui()->MouseY() - Sheet.y) / Sheet.h * GridY);
 		for(size_t i = 0; i < vParts.size() && HoveredPart < 0; i++)
 			for(const SCellRect &Rect : vParts[i].m_vRects)
 				if(CellX >= Rect.m_X && CellX < Rect.m_X + Rect.m_W && CellY >= Rect.m_Y && CellY < Rect.m_Y + Rect.m_H)
@@ -541,14 +679,13 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 					break;
 				}
 	}
-	static CButtonContainer s_SheetButton;
-	if(Ui()->DoButtonLogic(&s_SheetButton, 0, &Sheet, BUTTONFLAG_LEFT) && HoveredPart >= 0)
+	if(Ui()->DoButtonLogic(&State.m_SheetButton, 0, &Sheet, BUTTONFLAG_LEFT) && HoveredPart >= 0)
 		State.m_Selected = HoveredPart;
 
 	auto OutlinePart = [&](int Part, ColorRGBA Color) {
 		for(const SCellRect &Cells : vParts[Part].m_vRects)
 		{
-			const CUIRect Rect = CellsToRect(Sheet, Cells);
+			const CUIRect Rect = CellsToRect(Sheet, Cells, GridX, GridY);
 			Rect.Draw(Color, IGraphics::CORNER_ALL, 3.0f);
 		}
 	};
@@ -578,7 +715,7 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 	{
 		CUIRect Label;
 		Controls.HSplitTop(LineSize, &Label, &Controls);
-		Ui()->DoLabel(&Label, BaseSelected ? Localize("Base skin") : Localize(vParts[State.m_Selected].m_pName), 16.0f, TEXTALIGN_ML);
+		Ui()->DoLabel(&Label, BaseSelected ? Localize(Config.m_pBaseLabel) : Localize(vParts[State.m_Selected].m_pName), 16.0f, TEXTALIGN_ML);
 		Controls.HSplitTop(LineSize, &Label, &Controls);
 		char aSource[128];
 		str_format(aSource, sizeof(aSource), "%s: %s", Localize("Source"), ActiveSource.c_str());
@@ -594,29 +731,27 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 			SLabelProperties Props;
 			Props.m_MaxWidth = Hint.w;
-			Ui()->DoLabel(&Hint, Localize("Pick the skin every part starts from. Select a part on the left or in the preview to mix it from another skin."), 11.0f, TEXTALIGN_TL, Props);
+			Ui()->DoLabel(&Hint, Localize(Config.m_pBaseHint), 11.0f, TEXTALIGN_TL, Props);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		}
 		else
 		{
 			SPartEdit &Edit = State.m_vEdits[State.m_Selected];
 			const SPartEdit Before = Edit;
-			static int s_HueId, s_SatId, s_BrightId;
 			CUIRect Slider;
 			Controls.HSplitTop(LineSize, &Slider, &Controls);
-			Ui()->DoScrollbarOption(&s_HueId, &Edit.m_Hue, &Slider, Localize("Hue"), -180, 180, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "°");
+			Ui()->DoScrollbarOption(&State.m_HueId, &Edit.m_Hue, &Slider, Localize("Hue"), -180, 180, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "°");
 			Controls.HSplitTop(LineSize, &Slider, &Controls);
-			Ui()->DoScrollbarOption(&s_SatId, &Edit.m_Saturation, &Slider, Localize("Saturation"), 0, 200, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "%");
+			Ui()->DoScrollbarOption(&State.m_SatId, &Edit.m_Saturation, &Slider, Localize("Saturation"), 0, 200, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "%");
 			Controls.HSplitTop(LineSize, &Slider, &Controls);
-			Ui()->DoScrollbarOption(&s_BrightId, &Edit.m_Brightness, &Slider, Localize("Brightness"), 0, 200, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "%");
+			Ui()->DoScrollbarOption(&State.m_BrightId, &Edit.m_Brightness, &Slider, Localize("Brightness"), 0, 200, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE, "%");
 			if(Edit.m_Hue != Before.m_Hue || Edit.m_Saturation != Before.m_Saturation || Edit.m_Brightness != Before.m_Brightness)
 				State.m_Dirty = true;
 
 			Controls.HSplitTop(Margin * 2.0f, nullptr, &Controls);
 			CUIRect Button;
 			Controls.HSplitTop(LineSize, &Button, &Controls);
-			static CButtonContainer s_ResetPartButton;
-			if(DoButton_Menu(&s_ResetPartButton, Localize("Reset part"), 0, &Button) && Edit.Modified())
+			if(DoButton_Menu(&State.m_ResetPartButton, Localize("Reset part"), 0, &Button) && Edit.Modified())
 			{
 				Edit = SPartEdit();
 				State.m_Dirty = true;
@@ -629,7 +764,7 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			{
 				Zoom.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 6.0f);
 				Zoom.Margin(4.0f, &Zoom);
-				DrawSubset(Graphics(), State.m_PreviewTexture, Zoom, vParts[State.m_Selected].m_vRects.front());
+				DrawSubset(Graphics(), State.m_PreviewTexture, Zoom, vParts[State.m_Selected].m_vRects.front(), GridX, GridY);
 			}
 		}
 	}
@@ -641,19 +776,17 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 		Gallery.HSplitTop(LineSize, &Header, &Gallery);
 		Header.VSplitRight(LineSize, &Header, &RefreshButton);
 		char aTitle[64];
-		str_format(aTitle, sizeof(aTitle), "%s (%d)", Localize("Game skins"), (int)State.m_vSkins.size());
+		str_format(aTitle, sizeof(aTitle), "%s (%d)", Localize(Config.m_pGalleryTitle), (int)State.m_vSkins.size());
 		Ui()->DoLabel(&Header, aTitle, 12.0f, TEXTALIGN_ML);
-		static CButtonContainer s_RefreshButton;
-		if(Ui()->DoButton_FontIcon(&s_RefreshButton, FontIcon::ARROW_ROTATE_RIGHT, 0, &RefreshButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_FontIcon(&State.m_RefreshButton, FontIcon::ARROW_ROTATE_RIGHT, 0, &RefreshButton, BUTTONFLAG_LEFT))
 			RefreshSkinList();
 		Gallery.HSplitTop(Margin, nullptr, &Gallery);
 
-		const SCellRect PreviewCells = BaseSelected ? SCellRect{0, 0, GAMESKIN_GRID_X, GAMESKIN_GRID_Y} : vParts[State.m_Selected].m_vRects.front();
-		static CScrollRegion s_ScrollRegion;
+		const SCellRect PreviewCells = BaseSelected ? SCellRect{0, 0, GridX, GridY} : vParts[State.m_Selected].m_vRects.front();
 		CScrollRegionParams Params;
 		Params.m_ScrollUnit = 60.0f;
 		Params.m_ScrollbarMargin = 2.0f;
-		s_ScrollRegion.Begin(&Gallery, &Params);
+		State.m_GalleryScroll.Begin(&Gallery, &Params);
 		Gallery.VSplitRight(8.0f, &Gallery, nullptr);
 
 		const float CellW = BaseSelected ? 120.0f : 92.0f;
@@ -674,7 +807,7 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			CUIRect Cell;
 			Row.VSplitLeft(RealW, &Cell, &Row);
 			Row.VSplitLeft(Margin, nullptr, &Row);
-			if(!s_ScrollRegion.AddRect(Cell))
+			if(!State.m_GalleryScroll.AddRect(Cell))
 				continue;
 
 			SSkinEntry &Entry = State.m_vSkins[i];
@@ -683,7 +816,7 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 				Entry.m_TextureLoaded = true;
 				LoadsThisFrame++;
 				char aPath[IO_MAX_PATH_LENGTH];
-				if(ResolveGameSkinPath(Storage(), Entry.m_Name, aPath, sizeof(aPath)))
+				if(Config.m_pfnResolve(Storage(), Entry.m_Name, aPath, sizeof(aPath)))
 					Entry.m_Texture = Graphics()->LoadTexture(aPath, IStorage::TYPE_ALL);
 			}
 
@@ -696,10 +829,10 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			CUIRect Image, Name;
 			Cell.Margin(4.0f, &Image);
 			Image.HSplitBottom(14.0f, &Image, &Name);
-			DrawSubset(Graphics(), Entry.m_Texture, Image, PreviewCells);
+			DrawSubset(Graphics(), Entry.m_Texture, Image, PreviewCells, GridX, GridY);
 			Ui()->DoLabel(&Name, Entry.m_Name.c_str(), 10.0f, TEXTALIGN_MC);
 		}
-		s_ScrollRegion.End();
+		State.m_GalleryScroll.End();
 
 		if(!Picked.empty())
 		{
@@ -725,7 +858,7 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 				}
 			}
 			if(State.m_Dirty && GetImage(Picked) == nullptr)
-				SetStatus(true, Localize("This game skin could not be loaded."));
+				SetStatus(true, Localize(Config.m_pPickError));
 		}
 	}
 
@@ -740,10 +873,18 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 	Bottom.VSplitLeft(90.0f, &ResetButton, &Bottom);
 	Bottom.VSplitLeft(Margin * 2.0f, nullptr, &Status);
 
-	Ui()->DoEditBox(&gs_ExportNameInput, &NameBox, 12.0f);
-	const char *pExportName = gs_ExportNameInput.GetString();
+	Ui()->DoEditBox(&State.m_ExportName, &NameBox, 12.0f);
+	const char *pExportName = State.m_ExportName.GetString();
 	char aExportPath[IO_MAX_PATH_LENGTH];
-	str_format(aExportPath, sizeof(aExportPath), "assets/game/%s.png", pExportName);
+	str_format(aExportPath, sizeof(aExportPath), "assets/%s/%s.png", Config.m_pFolder, pExportName);
+	if(Entities && ExportNameValid(pExportName))
+	{
+		// a folder pack wins over a single file of the same name, so write into the folder then
+		char aPackFolder[IO_MAX_PATH_LENGTH];
+		str_format(aPackFolder, sizeof(aPackFolder), "assets/entities/%s", pExportName);
+		if(Storage()->FolderExists(aPackFolder, IStorage::TYPE_SAVE))
+			str_format(aExportPath, sizeof(aExportPath), "%s/ddnet.png", aPackFolder);
+	}
 	const bool Exists = ExportNameValid(pExportName) && Storage()->FileExists(aExportPath, IStorage::TYPE_SAVE);
 
 	auto Save = [&]() {
@@ -757,8 +898,10 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			SetStatus(true, Localize("Nothing to save."));
 			return false;
 		}
+		char aFolder[IO_MAX_PATH_LENGTH];
+		str_format(aFolder, sizeof(aFolder), "assets/%s", Config.m_pFolder);
 		Storage()->CreateFolder("assets", IStorage::TYPE_SAVE);
-		Storage()->CreateFolder("assets/game", IStorage::TYPE_SAVE);
+		Storage()->CreateFolder(aFolder, IStorage::TYPE_SAVE);
 		IOHANDLE File = Storage()->OpenFile(aExportPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		if(!File || !CImageLoader::SavePng(File, aExportPath, State.m_Composed))
 		{
@@ -788,7 +931,21 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 			State.m_vSkins.push_back(std::move(Entry));
 			std::sort(State.m_vSkins.begin() + 1, State.m_vSkins.end(), [](const SSkinEntry &A, const SSkinEntry &B) { return str_comp_nocase(A.m_Name.c_str(), B.m_Name.c_str()) < 0; });
 		}
-		if(!m_vGameList.empty() && std::none_of(m_vGameList.begin(), m_vGameList.end(), [&](const SCustomGame &Item) { return str_comp(Item.m_aName, pExportName) == 0; }))
+		if(Entities)
+		{
+			if(!m_vEntitiesList.empty() && std::none_of(m_vEntitiesList.begin(), m_vEntitiesList.end(), [&](const SCustomEntities &Item) { return str_comp(Item.m_aName, pExportName) == 0; }))
+			{
+				SCustomEntities Item;
+				str_copy(Item.m_aName, pExportName);
+				const IGraphics::CTextureHandle Texture = Graphics()->LoadTexture(aExportPath, IStorage::TYPE_ALL);
+				for(auto &Image : Item.m_aImages)
+					Image.m_Texture = Texture;
+				Item.m_RenderTexture = Texture;
+				m_vEntitiesList.push_back(Item);
+				std::sort(m_vEntitiesList.begin(), m_vEntitiesList.end());
+			}
+		}
+		else if(!m_vGameList.empty() && std::none_of(m_vGameList.begin(), m_vGameList.end(), [&](const SCustomGame &Item) { return str_comp(Item.m_aName, pExportName) == 0; }))
 		{
 			SCustomGame Item;
 			str_copy(Item.m_aName, pExportName);
@@ -802,22 +959,33 @@ void CMenus::RenderSixClientGameSkinEditor(CUIRect MainView)
 		return true;
 	};
 
-	static CButtonContainer s_SaveButton, s_ApplyButton, s_ResetButton;
-	if(DoButton_Menu(&s_SaveButton, Exists ? Localize("Overwrite") : Localize("Save"), 0, &SaveButton))
-	{
-		Save();
-		if(str_comp(g_Config.m_ClAssetGame, pExportName) == 0)
+	auto ApplyAsset = [&]() {
+		if(Entities)
+		{
+			str_copy(g_Config.m_ClAssetsEntities, pExportName);
+			GameClient()->m_MapImages.ChangeEntitiesPath(pExportName);
+		}
+		else
+		{
+			str_copy(g_Config.m_ClAssetGame, pExportName);
 			GameClient()->LoadGameSkin(pExportName);
-	}
-	if(DoButton_Menu(&s_ApplyButton, Localize("Save & Apply"), 0, &ApplyButton) && Save())
+		}
+	};
+
+	if(DoButton_Menu(&State.m_SaveButton, Exists ? Localize("Overwrite") : Localize("Save"), 0, &SaveButton) && Save())
 	{
-		str_copy(g_Config.m_ClAssetGame, pExportName);
-		GameClient()->LoadGameSkin(pExportName);
+		// reload it when it is the asset in use
+		if(str_comp(Entities ? g_Config.m_ClAssetsEntities : g_Config.m_ClAssetGame, pExportName) == 0)
+			ApplyAsset();
+	}
+	if(DoButton_Menu(&State.m_ApplyButton, Localize("Save & Apply"), 0, &ApplyButton) && Save())
+	{
+		ApplyAsset();
 		char aStatus[256];
 		str_format(aStatus, sizeof(aStatus), Localize("Saved and applied %s"), pExportName);
 		SetStatus(false, aStatus);
 	}
-	if(DoButton_Menu(&s_ResetButton, Localize("Reset all"), 0, &ResetButton))
+	if(DoButton_Menu(&State.m_ResetButton, Localize("Reset all"), 0, &ResetButton))
 	{
 		State.m_vEdits.assign(vParts.size(), SPartEdit());
 		State.m_Dirty = true;

@@ -80,6 +80,17 @@ void SixClientApplyProfileAssets(CGameClient *pGameClient, const CProfile &Profi
 			pGameClient->m_Sounds.Clear();
 		}
 	}
+	if((Flags & SC_PROFILE_ASSET_BG_COLOR) && Profile.m_HasBackgroundColor)
+	{
+		g_Config.m_ClBackgroundColor = Profile.m_BackgroundColor;
+		g_Config.m_ClBackgroundEntitiesColor = Profile.m_BackgroundEntitiesColor;
+	}
+	// An empty map is a real value here (no background map), so it applies too
+	if((Flags & SC_PROFILE_ASSET_BG_MAP) && Profile.m_HasBackgroundMap && str_comp(g_Config.m_ClBackgroundEntities, Profile.m_BackgroundMap) != 0)
+	{
+		str_copy(g_Config.m_ClBackgroundEntities, Profile.m_BackgroundMap);
+		pGameClient->m_Background.LoadBackground();
+	}
 }
 
 void SixClientFillProfileAssets(CProfile &Profile)
@@ -94,6 +105,11 @@ void SixClientFillProfileAssets(CProfile &Profile)
 	str_copy(Profile.m_AssetCursor, (Flags & SC_PROFILE_ASSET_CURSOR) ? g_Config.m_ClAssetCursor : "");
 	str_copy(Profile.m_AssetArrow, (Flags & SC_PROFILE_ASSET_ARROW) ? g_Config.m_ClAssetArrow : "");
 	str_copy(Profile.m_AssetAudio, (Flags & SC_PROFILE_ASSET_AUDIO) ? g_Config.m_SndPack : "");
+	Profile.m_HasBackgroundColor = (Flags & SC_PROFILE_ASSET_BG_COLOR) != 0;
+	Profile.m_BackgroundColor = Profile.m_HasBackgroundColor ? g_Config.m_ClBackgroundColor : 0;
+	Profile.m_BackgroundEntitiesColor = Profile.m_HasBackgroundColor ? g_Config.m_ClBackgroundEntitiesColor : 0;
+	Profile.m_HasBackgroundMap = (Flags & SC_PROFILE_ASSET_BG_MAP) != 0;
+	str_copy(Profile.m_BackgroundMap, Profile.m_HasBackgroundMap ? g_Config.m_ClBackgroundEntities : "");
 }
 
 struct SMultiSelectPopupContext
@@ -263,6 +279,8 @@ void SixClientDoProfileAssetsDropDown(CUi *pUi, CMenus *pMenus, CUIRect *pRect)
 		Localize("Cursor"),
 		Localize("Arrow"),
 		Localize("Audio"),
+		Localize("Background color"),
+		Localize("Background map"),
 	};
 	static const int s_aBits[] = {
 		SC_PROFILE_ASSET_ENTITIES,
@@ -274,6 +292,8 @@ void SixClientDoProfileAssetsDropDown(CUi *pUi, CMenus *pMenus, CUIRect *pRect)
 		SC_PROFILE_ASSET_CURSOR,
 		SC_PROFILE_ASSET_ARROW,
 		SC_PROFILE_ASSET_AUDIO,
+		SC_PROFILE_ASSET_BG_COLOR,
+		SC_PROFILE_ASSET_BG_MAP,
 	};
 	g_Config.m_ScProfileAssets = DoMultiSelectDropDown(pUi, pMenus, pRect, g_Config.m_ScProfileAssets, apLabels, s_aBits, SC_PROFILE_ASSET_COUNT, s_State);
 }

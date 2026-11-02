@@ -3020,6 +3020,7 @@ if(CLIENT)
     components/sixclient/menus_cosmetics.cpp
     components/sixclient/image_picker.cpp
     components/sixclient/image_picker.h
+    components/sixclient/menus_audio_editor.cpp
     components/sixclient/menus_gameskin_editor.cpp
     components/sixclient/menus_sensitivity.cpp
     components/sixclient/music_dock.cpp

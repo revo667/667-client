@@ -1048,6 +1048,9 @@ private:
 	void RenderSettingsSixClientAssetsEditor(CUIRect MainView);
 	void RenderSettingsSixClientSensitivity(CUIRect MainView);
 	void RenderSixClientGameSkinEditor(CUIRect MainView);
+	void RenderSixClientSheetEditor(CUIRect MainView, bool Entities);
+	void RenderSixClientEntitiesEditor(CUIRect MainView);
+	void RenderSixClientAudioEditor(CUIRect MainView);
 	void RenderSettingsSixClientConfigPresets(CUIRect MainView); // 667client
 	void RenderSettingsSixClientInfo(CUIRect MainView); // 667client
 	void RenderSettingsSixClientChatBlock(CUIRect &Column); // 667client
@@ -1058,6 +1061,7 @@ private:
 	float m_MenuTabAlpha = 1.0f;
 	int m_MenuClickSampleId = -1;
 	bool m_MenuClickSoundLoaded = false;
+	bool m_SuppressMenuClickSound = false; // set for one frame, e.g. by the audio editor while it previews a sound
 	void PlayMenuClickSound();
 	enum
 	{

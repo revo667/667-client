@@ -708,6 +708,8 @@ int CSound::LoadOpus(const char *pFilename, int StorageType)
 	bool bLoaded = false; // 667client
 	// 667client
 	const char *pEffectivePack = nullptr;
+	// Packs replace the game's own sounds only; map sounds (mapres/) and editor previews load as usual
+	if(str_startswith(pFilename, "audio/"))
 	{
 		char aPackDir[256];
 		auto FolderExists = [&](const char *pPack) {
@@ -796,6 +798,8 @@ int CSound::LoadWV(const char *pFilename, int StorageType)
 	bool bLoaded = false; // 667client
 	// 667client
 	const char *pEffectivePack = nullptr;
+	// Packs replace the game's own sounds only; map sounds (mapres/) and editor previews load as usual
+	if(str_startswith(pFilename, "audio/"))
 	{
 		char aPackDir[256];
 		auto FolderExists = [&](const char *pPack) {

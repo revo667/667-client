@@ -13,6 +13,14 @@ static void EscapeParam(char *pDst, const char *pSrc, int Size)
 }
 
 // 667client
+enum
+{
+	PROFILE_BACKGROUND_COLOR = 1 << 0,
+	PROFILE_BACKGROUND_MAP = 1 << 1,
+};
+// 667client
+
+// 667client
 CProfile::CProfile(int BodyColor, int FeetColor, int CountryFlag, int Emote, const char *pSkinName, const char *pName, const char *pClan,
 	const char *pAssetEntities, const char *pAssetGame, const char *pAssetParticles,
 	const char *pAssetHud, const char *pAssetExtras, const char *pAssetCursor, const char *pAssetArrow,
@@ -44,7 +52,7 @@ void CSkinProfiles::OnConsoleInit()
 		pConfigManager->RegisterCallback(ConfigSaveCallback, this, ConfigDomain::TCLIENTPROFILES);
 
 	// 667client
-	Console()->Register("add_profile", "i[body] i[feet] i[flag] i[emote] s[skin] s[name] s[clan] ?s[entities] ?s[game] ?s[particles] ?s[hud] ?s[extras] ?s[cursor] ?s[arrow] ?s[emoticons] ?s[audio]", CFGFLAG_CLIENT, ConAddProfile, this, "Add a profile");
+	Console()->Register("add_profile", "i[body] i[feet] i[flag] i[emote] s[skin] s[name] s[clan] ?s[entities] ?s[game] ?s[particles] ?s[hud] ?s[extras] ?s[cursor] ?s[arrow] ?s[emoticons] ?s[audio] ?i[background] ?s[bg_color] ?s[bg_entities_color] ?s[bg_map]", CFGFLAG_CLIENT, ConAddProfile, this, "Add a profile");
 	// 667client
 }
 
@@ -58,6 +66,21 @@ void CSkinProfiles::ConAddProfile(IConsole::IResult *pResult, void *pUserData)
 		pResult->GetString(7), pResult->GetString(8), pResult->GetString(9),
 		pResult->GetString(10), pResult->GetString(11), pResult->GetString(12), pResult->GetString(13),
 		pResult->GetString(14), pResult->GetString(15));
+
+	// Background bitmask: 1 = colors saved, 2 = map saved. Older lines stop before it and read as 0.
+	CProfile &Profile = pSelf->m_Profiles.back();
+	const int Background = pResult->GetInteger(16);
+	if(Background & PROFILE_BACKGROUND_COLOR)
+	{
+		Profile.m_HasBackgroundColor = true;
+		Profile.m_BackgroundColor = str_toulong_base(pResult->GetString(17), 10);
+		Profile.m_BackgroundEntitiesColor = str_toulong_base(pResult->GetString(18), 10);
+	}
+	if(Background & PROFILE_BACKGROUND_MAP)
+	{
+		Profile.m_HasBackgroundMap = true;
+		str_copy(Profile.m_BackgroundMap, pResult->GetString(19));
+	}
 	// 667client
 }
 
@@ -119,10 +142,10 @@ void CSkinProfiles::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUs
 {
 	CSkinProfiles *pThis = (CSkinProfiles *)pUserData;
 	// 667client
-	char aBuf[1024];
-	// 667client
+	char aBuf[2048];
 	char aBufTemp[128];
-	char aEscapeBuf[256];
+	char aEscapeBuf[IO_MAX_PATH_LENGTH * 2];
+	// 667client
 	for(const CProfile &Profile : pThis->m_Profiles)
 	{
 		str_copy(aBuf, "add_profile ", sizeof(aBuf));
@@ -163,6 +186,17 @@ void CSkinProfiles::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUs
 			EscapeParam(aEscapeBuf, pAsset, sizeof(aEscapeBuf));
 			str_format(aBufTemp, sizeof(aBufTemp), " \"%s\"", aEscapeBuf);
 			str_append(aBuf, aBufTemp, sizeof(aBuf));
+		}
+
+		// Background fields only go on lines that carry them, so plain profiles keep the old line.
+		const int Background = (Profile.m_HasBackgroundColor ? PROFILE_BACKGROUND_COLOR : 0) | (Profile.m_HasBackgroundMap ? PROFILE_BACKGROUND_MAP : 0);
+		if(Background != 0)
+		{
+			str_format(aBufTemp, sizeof(aBufTemp), " %d %u %u \"", Background, Profile.m_BackgroundColor, Profile.m_BackgroundEntitiesColor);
+			str_append(aBuf, aBufTemp, sizeof(aBuf));
+			EscapeParam(aEscapeBuf, Profile.m_BackgroundMap, sizeof(aEscapeBuf));
+			str_append(aBuf, aEscapeBuf, sizeof(aBuf));
+			str_append(aBuf, "\"", sizeof(aBuf));
 		}
 		// 667client
 

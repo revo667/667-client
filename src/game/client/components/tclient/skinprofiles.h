@@ -30,6 +30,12 @@ public:
 	char m_AssetArrow[50];
 	char m_AssetEmoticons[50];
 	char m_AssetAudio[64];
+	// Background color (regular + entities) and background map; m_HasBackground* says whether the profile carries them
+	bool m_HasBackgroundColor = false;
+	unsigned m_BackgroundColor = 0;
+	unsigned m_BackgroundEntitiesColor = 0;
+	bool m_HasBackgroundMap = false;
+	char m_BackgroundMap[IO_MAX_PATH_LENGTH] = "";
 	CProfile(int BodyColor, int FeetColor, int CountryFlag, int Emote, const char *pSkinName, const char *pName, const char *pClan,
 		const char *pAssetEntities = "", const char *pAssetGame = "", const char *pAssetParticles = "",
 		const char *pAssetHud = "", const char *pAssetExtras = "", const char *pAssetCursor = "", const char *pAssetArrow = "",
