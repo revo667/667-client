@@ -114,7 +114,7 @@ jobs:
           asset-name: CecenClient-windows.zip
         - name: macos
           os: macOS-latest
-          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_BUNDLED_LIBS=ON -DPRECOMPILE_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_SYSTEM_IGNORE_PATH=/usr/lib -DCMAKE_FIND_FRAMEWORK=LAST
+          cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPREFER_BUNDLED_LIBS=ON -DPRECOMPILE_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 -DCMAKE_SYSTEM_IGNORE_PATH=/usr/lib -DCMAKE_FIND_FRAMEWORK=LAST
           cmake-init-env: CXXFLAGS=
           package-file: "*-macos.dmg"
           asset-name: CecenClient-macos.dmg
@@ -149,7 +149,7 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         brew update
-        brew install pkg-config ninja glew libpng opusfile wavpack x264
+        brew install pkg-config ninja glew libpng opusfile wavpack x264 glslang spirv-tools
         brew upgrade freetype
         pip3 install --break-system-packages dmgbuild pyobjc-framework-Quartz
         echo /Library/Frameworks/Python.framework/Versions/3.12/bin >> "$GITHUB_PATH"
@@ -163,7 +163,11 @@ jobs:
         rustup update
         rustup target add x86_64-apple-darwin aarch64-apple-darwin
 
-    # The macOS build has no Vulkan backend, it renders with OpenGL.
+    # macOS links the official universal static MoltenVK instead of the Vulkan SDK.
+    - name: Fetch MoltenVK
+      if: contains(matrix.os, 'macOS')
+      run: scripts/fetch_moltenvk.sh "${GITHUB_WORKSPACE}/moltenvk"
+
     - name: Install Vulkan SDK
       if: ${{ !contains(matrix.os, 'macOS') }}
       uses: humbletim/install-vulkan-sdk@30ba978f977e81b72d091fc8888feb1fb26f9aff # v1.2
@@ -183,7 +187,9 @@ jobs:
         if [[ "${{ matrix.os }}" == windows-latest ]]; then
           cmake -S . -B build-release ${{ matrix.cmake-args }}
         elif [[ "${{ matrix.os }}" == "macOS-latest" ]]; then
-          cmake -S . -B build-release ${{ matrix.cmake-args }} -DVULKAN=OFF \
+          cmake -S . -B build-release ${{ matrix.cmake-args }} -DVULKAN=ON \
+            -DVULKAN_LIBRARIES="${GITHUB_WORKSPACE}/moltenvk/lib/libMoltenVK.a" \
+            -DVULKAN_INCLUDE_DIRS="${GITHUB_WORKSPACE}/moltenvk/include" \
             -DPNG_LIBRARY="${GITHUB_WORKSPACE}/ddnet-libs/png/mac/libfat/libpng16.16.dylib" \
             -DPNG_INCLUDEDIR="${GITHUB_WORKSPACE}/ddnet-libs/png/include"
         else

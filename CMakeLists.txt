@@ -801,6 +801,12 @@ if(CLIENT AND VULKAN AND TARGET_OS STREQUAL "mac")
       endif()
     endforeach()
   endif()
+  # 667client: the official MoltenVK release (scripts/fetch_moltenvk.sh) is built for macOS 12.0.
+  # Linked into an older deployment target it references Metal symbols that macOS 11 lacks,
+  # and the whole app fails to launch there, not just the Vulkan backend.
+  if(VULKAN AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 12.0)
+    message(WARNING "The Vulkan backend links MoltenVK, which needs CMAKE_OSX_DEPLOYMENT_TARGET 12.0 or newer (now ${CMAKE_OSX_DEPLOYMENT_TARGET})")
+  endif()
 endif()
 if(CLIENT AND VULKAN)
   include(cmake/BuildVulkanShaders.cmake)
@@ -4609,6 +4615,22 @@ if(CLIENT AND DMGBUILD_FOUND)
     set(DMG_SPOTIFY_HELPER_DEPENDS spotify-helper)
   endif()
 
+  # 667client: the Vulkan backend loads SPIR-V shaders from data/shader/vulkan. They are compiled
+  # into the build tree, so the copy of the source data folder below doesn't carry them.
+  set(DMG_VULKAN_COMMANDS)
+  set(DMG_VULKAN_DEPENDS)
+  if(VULKAN)
+    foreach(file ${VULKAN_SHADER_FILE_LIST})
+      list(APPEND DMG_VULKAN_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_BINARY_DIR}/${file}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Resources/${file}")
+    endforeach()
+    set(DMG_VULKAN_DEPENDS ${VULKAN_SHADER_OUTPUT_PATHS})
+    # MoltenVK is linked statically, its Apache 2.0 license travels with the app.
+    get_filename_component(MOLTENVK_LICENSE "${VULKAN_LIBRARIES}/../../LICENSE" ABSOLUTE)
+    if(EXISTS "${MOLTENVK_LICENSE}")
+      list(APPEND DMG_VULKAN_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "${MOLTENVK_LICENSE}" "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Resources/MoltenVK-LICENSE.txt")
+    endif()
+  endif()
+
   if(EXTERNAL_STEAM_API_DYLIB)
     set(STEAM_API_DYLIB_FOR_PACKAGE "${EXTERNAL_STEAM_API_DYLIB}")
   elseif(STEAM AND EXISTS "${PROJECT_SOURCE_DIR}/libsteam_api.dylib")
@@ -4720,6 +4742,7 @@ if(CLIENT AND DMGBUILD_FOUND)
     COMMAND ${CMAKE_COMMAND} -E copy bundle/client/Info.plist ${PROJECT_SOURCE_DIR}/other/bundle/client/PkgInfo "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/"
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game-client> ${TARGET_TOOLS_FILES} "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/MacOS/"
     ${DMG_SPOTIFY_HELPER_COMMANDS}
+    ${DMG_VULKAN_COMMANDS}
     COMMAND /bin/cp -a ${PROJECT_SOURCE_DIR}/ddnet-libs/sdl/${LIB_DIR}/SDL2.framework "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
     COMMAND /bin/cp -a $<TARGET_BUNDLE_DIR:MediaRemoteAdapter> "${DMG_TMPDIR}/${CLIENT_APP_NAME}.app/Contents/Frameworks/"
     # tidy-alphabetical-start
@@ -4748,6 +4771,7 @@ if(CLIENT AND DMGBUILD_FOUND)
       game-client
       MediaRemoteAdapter
       ${DMG_SPOTIFY_HELPER_DEPENDS}
+      ${DMG_VULKAN_DEPENDS}
       ${TARGET_STEAMAPI}
       ${PROJECT_BINARY_DIR}/bundle/client/Info.plist
       ${DMG_SERVER_DEPENDS}

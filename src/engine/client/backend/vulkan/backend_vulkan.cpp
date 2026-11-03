@@ -3594,6 +3594,12 @@ public:
 		// enables detailed diagnostics after a VK_ERROR_DEVICE_LOST.
 		OurExt.emplace(VK_EXT_DEVICE_FAULT_EXTENSION_NAME);
 #endif
+#ifdef CONF_PLATFORM_MACOS
+		// 667client: MoltenVK is a portability implementation, and the spec requires enabling
+		// VK_KHR_portability_subset whenever the device lists it. The name macro is behind
+		// VK_ENABLE_BETA_EXTENSIONS, so it is spelled out.
+		OurExt.emplace("VK_KHR_portability_subset");
+#endif
 		return OurExt;
 	}
 
