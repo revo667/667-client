@@ -194,6 +194,10 @@ void CPlayers::RenderHookCollLine(
 
 	bool Local = GameClient()->m_Snap.m_LocalClientId == ClientId;
 
+	// 667client: per-player hide (hide_hookline / scoreboard popup), own line stays on cl_show_hook_coll_own
+	if(!Local && GameClient()->m_SixClient.IsHooklineHidden(GameClient()->m_aClients[ClientId].m_aName))
+		return;
+
 #if defined(CONF_VIDEORECORDER)
 	if(IVideo::Current() && !g_Config.m_ClVideoShowHookCollOther && !Local)
 		return;

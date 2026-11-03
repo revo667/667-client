@@ -56,6 +56,7 @@ class CScoreboard : public CComponent
 		CButtonContainer m_SpectateButton;
 		CButtonContainer m_TeamAction;
 		CButtonContainer m_ListenButton; // 667client
+		CButtonContainer m_HooklineAction; // 667client
 		CButtonContainer m_TeamExitButton;
 		CButtonContainer m_TeamJoinButton;
 		CButtonContainer m_TeamInviteButton;

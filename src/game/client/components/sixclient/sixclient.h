@@ -5,6 +5,7 @@
 #include <base/vmath.h>
 
 #include <engine/client/enums.h>
+#include <engine/console.h>
 
 #include <game/client/component.h>
 #include <game/teamscore.h>
@@ -12,7 +13,10 @@
 #include "menu_media_background.h"
 
 #include <memory>
+#include <string>
+#include <vector>
 
+class IConfigManager;
 class IHttpRequest;
 class CTeeRenderInfo;
 
@@ -48,8 +52,17 @@ class CSixClient : public CComponent
 	char m_aaFollowedFoeNames[MAX_CLIENTS][MAX_NAME_LENGTH]{};
 	char m_aaFollowedFoeClans[MAX_CLIENTS][MAX_CLAN_LENGTH]{};
 
+	// Players whose hook collision line isn't drawn, by name. Saved to settings_667.cfg.
+	std::vector<std::string> m_vHiddenHooklines;
+
 	void UpdateFindHours();
 	void ResetFindHours();
+
+	static void ConHideHookline(IConsole::IResult *pResult, void *pUserData);
+	static void ConAddHiddenHookline(IConsole::IResult *pResult, void *pUserData);
+	static void ConRemoveHiddenHookline(IConsole::IResult *pResult, void *pUserData);
+	static void ConHiddenHooklines(IConsole::IResult *pResult, void *pUserData);
+	static void ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData);
 
 public:
 	int Sizeof() const override { return sizeof(*this); }
@@ -80,6 +93,9 @@ public:
 
 	void CopyPlayerSkin(int ClientId);
 	void FetchFindHours(const char *pName);
+
+	bool IsHooklineHidden(const char *pName) const;
+	void SetHooklineHidden(const char *pName, bool Hidden);
 };
 
 float SixClientScoreboardPlayerPopupHeight(const class CGameClient *pGameClient, bool IsLocal, bool IsSpectatorRow, int ClientId);

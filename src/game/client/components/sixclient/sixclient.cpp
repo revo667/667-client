@@ -146,6 +146,82 @@ void CSixClient::OnConsoleInit()
 		CSixClient *pThis = static_cast<CSixClient *>(pUserData);
 		CChatQoL::ListSavesForCurrentMap(pThis->GameClient()->m_Chat);
 	}, this, "List team saves for the current map in chat");
+
+	IConfigManager *pConfigManager = Kernel()->RequestInterface<IConfigManager>();
+	if(pConfigManager)
+		pConfigManager->RegisterCallback(ConfigSaveCallback, this, ConfigDomain::SIXCLIENT);
+
+	Console()->Register("hide_hookline", "r[name]", CFGFLAG_CLIENT, ConHideHookline, this, "Hide or show a player's hook collision line");
+	Console()->Register("add_hidden_hookline", "r[name]", CFGFLAG_CLIENT, ConAddHiddenHookline, this, "Hide a player's hook collision line");
+	Console()->Register("remove_hidden_hookline", "r[name]", CFGFLAG_CLIENT, ConRemoveHiddenHookline, this, "Show a player's hook collision line again");
+	Console()->Register("hidden_hooklines", "", CFGFLAG_CLIENT, ConHiddenHooklines, this, "List players whose hook collision line is hidden");
+}
+
+bool CSixClient::IsHooklineHidden(const char *pName) const
+{
+	if(m_vHiddenHooklines.empty() || !pName || pName[0] == '\0')
+		return false;
+	return std::any_of(m_vHiddenHooklines.begin(), m_vHiddenHooklines.end(), [pName](const std::string &Name) {
+		return str_comp(Name.c_str(), pName) == 0;
+	});
+}
+
+void CSixClient::SetHooklineHidden(const char *pName, bool Hidden)
+{
+	if(!pName || pName[0] == '\0')
+		return;
+	const auto It = std::find_if(m_vHiddenHooklines.begin(), m_vHiddenHooklines.end(), [pName](const std::string &Name) {
+		return str_comp(Name.c_str(), pName) == 0;
+	});
+	if(Hidden && It == m_vHiddenHooklines.end())
+		m_vHiddenHooklines.emplace_back(pName);
+	else if(!Hidden && It != m_vHiddenHooklines.end())
+		m_vHiddenHooklines.erase(It);
+}
+
+void CSixClient::ConHideHookline(IConsole::IResult *pResult, void *pUserData)
+{
+	CSixClient *pThis = static_cast<CSixClient *>(pUserData);
+	const char *pName = pResult->GetString(0);
+	const bool Hidden = !pThis->IsHooklineHidden(pName);
+	pThis->SetHooklineHidden(pName, Hidden);
+	log_info("hookline", "%s: '%s'", Hidden ? "hidden" : "shown", pName);
+}
+
+void CSixClient::ConAddHiddenHookline(IConsole::IResult *pResult, void *pUserData)
+{
+	static_cast<CSixClient *>(pUserData)->SetHooklineHidden(pResult->GetString(0), true);
+}
+
+void CSixClient::ConRemoveHiddenHookline(IConsole::IResult *pResult, void *pUserData)
+{
+	static_cast<CSixClient *>(pUserData)->SetHooklineHidden(pResult->GetString(0), false);
+}
+
+void CSixClient::ConHiddenHooklines(IConsole::IResult *pResult, void *pUserData)
+{
+	const CSixClient *pThis = static_cast<CSixClient *>(pUserData);
+	if(pThis->m_vHiddenHooklines.empty())
+	{
+		log_info("hookline", "no hidden hooklines");
+		return;
+	}
+	for(const std::string &Name : pThis->m_vHiddenHooklines)
+		log_info("hookline", "'%s'", Name.c_str());
+}
+
+void CSixClient::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
+{
+	const CSixClient *pThis = static_cast<CSixClient *>(pUserData);
+	for(const std::string &Name : pThis->m_vHiddenHooklines)
+	{
+		char aBuf[1024];
+		str_copy(aBuf, "add_hidden_hookline \"");
+		char *pDst = aBuf + str_length(aBuf);
+		str_escape(&pDst, Name.c_str(), aBuf + sizeof(aBuf) - 2); // room for the closing quote
+		str_append(aBuf, "\"");
+		pConfigManager->WriteLine(aBuf, ConfigDomain::SIXCLIENT);
+	}
 }
 
 void CSixClient::OnMapLoad()

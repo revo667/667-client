@@ -1618,7 +1618,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::CScoreboardPopupContext::Render(void 
 	{
 		const int ActionCorners = IGraphics::CORNER_ALL;
 		const float Gap = 4.0f;
-		const int NumIcons = 7;
+		const int NumIcons = 8;
 		const float RowWidth = NumIcons * POPUP_ACTION_SIZE + (NumIcons - 1) * Gap;
 		View.HSplitTop(POPUP_ITEM_SPACING * 2, nullptr, &View);
 		View.HSplitTop(POPUP_ACTION_SIZE, &Container, &View);
@@ -1702,6 +1702,12 @@ CUi::EPopupMenuFunctionResult CScoreboard::CScoreboardPopupContext::Render(void 
 		if(pUi->DoButton_FontIcon(&pPopupContext->m_aQuickActions[1], FontIcon::SHIRT, 0, &Action, BUTTONFLAG_LEFT, ActionCorners))
 			pGameClient->m_SixClient.CopyPlayerSkin(pPopupContext->m_ClientId);
 		pGameClient->Ui()->DoToolTip(&pPopupContext->m_aQuickActions[1], &Action, Localize("Copy Skin"));
+
+		NextAction();
+		const bool HooklineHidden = pGameClient->m_SixClient.IsHooklineHidden(Client.m_aName);
+		if(pUi->DoButton_FontIcon(&pPopupContext->m_HooklineAction, HooklineHidden ? FontIcon::XMARK : FontIcon::SLASH, HooklineHidden, &Action, BUTTONFLAG_LEFT, ActionCorners))
+			pGameClient->m_SixClient.SetHooklineHidden(Client.m_aName, !HooklineHidden);
+		pGameClient->Ui()->DoToolTip(&pPopupContext->m_HooklineAction, &Action, HooklineHidden ? Localize("Show hookline") : Localize("Hide hookline"));
 	}
 	View.HSplitTop(POPUP_ITEM_SPACING * 2, nullptr, &View);
 
