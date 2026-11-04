@@ -2032,8 +2032,8 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
 	int *pCurrentUseCustomColor = m_Dummy ? &g_Config.m_ClDummyUseCustomColor : &g_Config.m_ClPlayerUseCustomColor;
 
 	const char *pCurrentSkinName = m_Dummy ? g_Config.m_ClDummySkin : g_Config.m_ClPlayerSkin;
-	const unsigned CurrentColorBody = *pCurrentUseCustomColor == 1 ? (m_Dummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody) : -1;
-	const unsigned CurrentColorFeet = *pCurrentUseCustomColor == 1 ? (m_Dummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet) : -1;
+	const int CurrentColorBody = *pCurrentUseCustomColor == 1 ? (int)(m_Dummy ? g_Config.m_ClDummyColorBody : g_Config.m_ClPlayerColorBody) : CProfile::NO_CUSTOM_COLORS;
+	const int CurrentColorFeet = *pCurrentUseCustomColor == 1 ? (int)(m_Dummy ? g_Config.m_ClDummyColorFeet : g_Config.m_ClPlayerColorFeet) : CProfile::NO_CUSTOM_COLORS;
 	const int CurrentFlag = m_Dummy ? g_Config.m_ClDummyCountry : g_Config.m_PlayerCountry;
 	const int Emote = m_Dummy ? g_Config.m_ClDummyDefaultEyes : g_Config.m_ClPlayerDefaultEyes;
 	const char *pCurrentName = m_Dummy ? g_Config.m_ClDummyName : g_Config.m_PlayerName;
@@ -2170,10 +2170,15 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
 				const CProfile &Profile = GameClient()->m_SkinProfiles.m_Profiles[s_SelectedProfile];
 				if(g_Config.m_TcProfileSkin && strlen(Profile.m_SkinName) != 0)
 					str_copy(LoadProfile.m_SkinName, Profile.m_SkinName);
-				if(g_Config.m_TcProfileColors && Profile.m_BodyColor != -1 && Profile.m_FeetColor != -1)
+				if(g_Config.m_TcProfileColors && Profile.m_BodyColor >= 0 && Profile.m_FeetColor >= 0)
 				{
 					LoadProfile.m_BodyColor = Profile.m_BodyColor;
 					LoadProfile.m_FeetColor = Profile.m_FeetColor;
+				}
+				else if(g_Config.m_TcProfileColors && Profile.m_BodyColor == CProfile::NO_CUSTOM_COLORS)
+				{
+					LoadProfile.m_BodyColor = CProfile::NO_CUSTOM_COLORS;
+					LoadProfile.m_FeetColor = CProfile::NO_CUSTOM_COLORS;
 				}
 				if(g_Config.m_TcProfileEmote && Profile.m_Emote != -1)
 					LoadProfile.m_Emote = Profile.m_Emote;
