@@ -240,7 +240,7 @@ void CMenus::RenderSixClientAudioEditor(CUIRect MainView)
 		m_SuppressMenuClickSound = true;
 		State.m_PreviewSample = Sound()->LoadWVFromMem(pData, Size, false, pName);
 		if(State.m_PreviewSample >= 0)
-			Sound()->Play(CSounds::CHN_GUI, State.m_PreviewSample, 0, 1.0f);
+			Sound()->Play(CSounds::CHN_PREVIEW, State.m_PreviewSample, 0, 1.0f);
 	};
 
 	auto StartDownload = [&](SCustomSound &Sound) {

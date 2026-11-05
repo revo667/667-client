@@ -55,6 +55,7 @@ public:
 		CHN_WORLD,
 		CHN_GLOBAL,
 		CHN_MAPSOUND,
+		CHN_PREVIEW, // 667client: audio-editor previews, kept at full volume independent of chat/game volume
 	};
 
 	int Sizeof() const override { return sizeof(*this); }

@@ -105,6 +105,9 @@ int CSounds::GetSampleId(int SetId)
 void CSounds::OnInit()
 {
 	UpdateChannels();
+	// 667client: the audio-editor preview channel stays at full volume and is never
+	// touched by UpdateChannels, so previews are audible even with chat/game sound muted
+	Sound()->SetChannel(CSounds::CHN_PREVIEW, 1.0f, 0.0f);
 	ClearQueue();
 
 	// load sounds
