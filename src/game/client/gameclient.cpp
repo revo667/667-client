@@ -4868,7 +4868,9 @@ void CGameClient::UpdateRenderedCharacters()
 				vec2(m_aClients[i].m_RenderCur.m_X, m_aClients[i].m_RenderCur.m_Y),
 				Client()->PredIntraGameTick(g_Config.m_ClDummy));
 			// 667client
-			if(HasFastInput && !CloudInputMode && !m_Snap.m_SpecInfo.m_Active)
+			if(HasFastInput && !CloudInputMode && !m_Snap.m_SpecInfo.m_Active && IsFastInputLocalClient(i))
+				Pos = GetFastInputPos(i);
+			else if(HasFastInput && !CloudInputMode && !m_Snap.m_SpecInfo.m_Active)
 			{
 				float PredIntraTick = Client()->PredIntraGameTick(g_Config.m_ClDummy);
 				int PredTick = Client()->PredGameTick(g_Config.m_ClDummy);
