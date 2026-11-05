@@ -2862,11 +2862,13 @@ void CClient::PumpNetwork()
 				if(ResponseToken != NET_SECURITY_TOKEN_UNKNOWN && !PreprocessConnlessPacket7(&Packet))
 					continue;
 
+				const BetaProbe::CScope ProbeScope(BetaProbe::PHASE_NET_PROCESS); // 667client
 				ProcessConnlessPacket(&Packet);
 				continue;
 			}
 			if(Conn == CONN_MAIN || Conn == CONN_DUMMY)
 			{
+				const BetaProbe::CScope ProbeScope(BetaProbe::PHASE_NET_PROCESS); // 667client
 				ProcessServerPacket(&Packet, Conn, g_Config.m_ClDummy ^ Conn);
 			}
 		}

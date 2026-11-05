@@ -18,6 +18,7 @@ std::atomic<int64_t> g_MainHeartbeat{0};
 static const char *const gs_apPhaseNames[NUM_PHASES] = {
 	"update",
 	"network",
+	"net_process",
 	"snapshot",
 	"predict",
 	"game_update",

@@ -3,6 +3,8 @@
 
 #include <base/color.h>
 
+#include <engine/textrender.h>
+
 #include <game/client/ui_rect.h>
 
 #include <cstdint>
@@ -14,8 +16,6 @@
 class IHttpRequest;
 class CUi;
 class IHttp;
-class ITextRender;
-struct STextColorSplit;
 struct _json_value;
 
 float MusicPlayerTextWidth(ITextRender *pTextRender, float FontSize, const char *pText);
@@ -69,6 +69,8 @@ public:
 	float PreferredTextSlotWidth(ITextRender *pTextRender, float FontSize, float MaxWidth, float Scale, float WidthScale) const;
 
 	void Render(ITextRender *pTextRender, CUi *pUi, const CUIRect &Area, float FontSize, float Delta);
+	// Text containers are tied to the glyph atlas; drop them on resize and shutdown
+	void ResetTextCache();
 
 private:
 	static constexpr int LINE_NONE = -99;
@@ -97,6 +99,7 @@ private:
 	};
 
 	static std::string BuildCacheKey(const char *pTitle, const char *pArtist, int64_t DurationMs);
+	static bool CacheKeyMatches(const std::string &Key, const char *pTitle, const char *pArtist);
 	static bool ParseLrcTimestamp(const char *pText, int64_t &OutMs, const char **ppEnd);
 	static void MergeConsecutiveIdenticalLines(std::vector<SLine> &vLines);
 	static bool IsCountdownIndex(int Index) { return Index >= -3 && Index <= -1; }
@@ -159,6 +162,18 @@ private:
 	std::vector<STextColorSplit> m_vColorSplits;
 	float m_BaseLineWidth = 0.0f;
 	bool m_LayoutValid = false;
+
+	// The current and the outgoing line, rebuilt only when their text or colors change
+	struct SCachedLine
+	{
+		STextContainerIndex m_Container;
+		std::string m_Text;
+		float m_FontSize = 0.0f;
+		ColorRGBA m_DefaultColor;
+		std::vector<STextColorSplit> m_vColorSplits;
+	};
+	SCachedLine m_aCachedLines[2];
+	ITextRender *m_pCacheTextRender = nullptr;
 };
 
 #endif

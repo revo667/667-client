@@ -1066,19 +1066,32 @@ public:
 static CRoundedRect GetRoundedRect(float x, float y, float w, float h, float r, int Corners)
 {
 	CRoundedRect Rect;
-	const float SegmentsAngle = pi / 2 / CRoundedRect::NUM_SEGMENTS;
+	// 667client
+	// The corner angles never change, so their sines and cosines are worked out once instead of for every rounded rect
+	static const struct SCornerAngles
+	{
+		float m_aCos[CRoundedRect::NUM_SEGMENTS + 1];
+		float m_aSin[CRoundedRect::NUM_SEGMENTS + 1];
+		SCornerAngles()
+		{
+			const float SegmentsAngle = pi / 2 / CRoundedRect::NUM_SEGMENTS;
+			for(int i = 0; i <= CRoundedRect::NUM_SEGMENTS; i++)
+			{
+				m_aCos[i] = std::cos(i * SegmentsAngle);
+				m_aSin[i] = std::sin(i * SegmentsAngle);
+			}
+		}
+	} s_CornerAngles;
+	// 667client
 
 	for(int i = 0; i < CRoundedRect::NUM_SEGMENTS; i += 2)
 	{
-		float a1 = i * SegmentsAngle;
-		float a2 = (i + 1) * SegmentsAngle;
-		float a3 = (i + 2) * SegmentsAngle;
-		float Ca1 = std::cos(a1);
-		float Ca2 = std::cos(a2);
-		float Ca3 = std::cos(a3);
-		float Sa1 = std::sin(a1);
-		float Sa2 = std::sin(a2);
-		float Sa3 = std::sin(a3);
+		const float Ca1 = s_CornerAngles.m_aCos[i];
+		const float Ca2 = s_CornerAngles.m_aCos[i + 1];
+		const float Ca3 = s_CornerAngles.m_aCos[i + 2];
+		const float Sa1 = s_CornerAngles.m_aSin[i];
+		const float Sa2 = s_CornerAngles.m_aSin[i + 1];
+		const float Sa3 = s_CornerAngles.m_aSin[i + 2];
 
 		if(Corners & IGraphics::CORNER_TL)
 		{

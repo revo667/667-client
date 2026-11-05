@@ -3890,6 +3890,41 @@ public:
 		std::chrono::steady_clock::time_point m_LastStep{};
 	};
 
+// A one-line HUD text kept in a text container while its text, size and color stay the same
+struct SCachedHudText
+{
+	ITextRender *m_pTextRender = nullptr;
+	STextContainerIndex m_Container;
+	std::string m_Text;
+	float m_FontSize = 0.0f;
+	ColorRGBA m_Color;
+
+	void Reset()
+	{
+		if(m_pTextRender)
+			m_pTextRender->DeleteTextContainer(m_Container);
+		m_Text.clear();
+	}
+
+	void Draw(ITextRender *pTextRender, float X, float Y, float FontSize, const char *pText)
+	{
+		m_pTextRender = pTextRender;
+		const ColorRGBA Color = pTextRender->GetTextColor();
+		if(!m_Container.Valid() || m_FontSize != FontSize || m_Color != Color || str_comp(m_Text.c_str(), pText) != 0)
+		{
+			pTextRender->DeleteTextContainer(m_Container);
+			m_Text = pText;
+			m_FontSize = FontSize;
+			m_Color = Color;
+			CTextCursor Cursor;
+			Cursor.m_FontSize = FontSize;
+			pTextRender->CreateTextContainer(m_Container, &Cursor, pText);
+		}
+		if(m_Container.Valid())
+			pTextRender->RenderTextContainer(m_Container, pTextRender->DefaultTextColor(), pTextRender->DefaultTextOutlineColor(), X, Y);
+	}
+};
+
 class CMusicPlayer::CImpl
 {
 public:
@@ -3957,6 +3992,8 @@ public:
 	std::string m_DebugLastRenderPath;
 	int64_t m_DebugNextRenderVerboseTick = 0;
 	CMusicPlayerLyrics m_Lyrics;
+	SCachedHudText m_TitleText;
+	SCachedHudText m_TimerText;
 	IGraphics::CTextureHandle m_LogoTexture;
 	bool m_LogoLoadAttempted = false;
 
@@ -4251,6 +4288,14 @@ public:
 		ResetPlaybackAnchor();
 		ResetArtwork(pGraphics);
 		m_Lyrics.Reset();
+		ResetTextCaches();
+	}
+
+	void ResetTextCaches()
+	{
+		m_Lyrics.ResetTextCache();
+		m_TitleText.Reset();
+		m_TimerText.Reset();
 	}
 
 	void Shutdown(IGraphics *pGraphics)
@@ -4883,6 +4928,7 @@ void CMusicPlayer::OnWindowResize()
 	if(!m_pImpl)
 		return;
 	m_pImpl->ResetArtwork(Graphics());
+	m_pImpl->ResetTextCaches();
 }
 
 CMusicPlayer::SHudReservation CMusicPlayer::HudReservation() const
@@ -5681,12 +5727,12 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 					CUIRect ClipRect = UiTitleRect;
 					Ui()->ClipEnable(&ClipRect);
 					const float CenteredX = ClipRect.x + (ClipRect.w - TitleWidth) * 0.5f;
-					TextRender()->Text(CenteredX, ClipRect.y + (ClipRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str(), -1.0f);
+					m_pImpl->m_TitleText.Draw(TextRender(), CenteredX, ClipRect.y + (ClipRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str());
 					Ui()->ClipDisable();
 				}
 				else
 				{
-					TextRender()->Text(UiTitleRect.x + (UiTitleRect.w - TitleWidth) * 0.5f, UiTitleRect.y + (UiTitleRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str(), -1.0f);
+					m_pImpl->m_TitleText.Draw(TextRender(), UiTitleRect.x + (UiTitleRect.w - TitleWidth) * 0.5f, UiTitleRect.y + (UiTitleRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str());
 				}
 			}
 			else if(TitleWidth > UiTitleRect.w)
@@ -5694,12 +5740,12 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 				CUIRect ClipRect = UiTitleRect;
 				Ui()->ClipEnable(&ClipRect);
 				const float RightAlignedX = ClipRect.x + ClipRect.w - TitleWidth;
-				TextRender()->Text(RightAlignedX, ClipRect.y + (ClipRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str(), -1.0f);
+				m_pImpl->m_TitleText.Draw(TextRender(), RightAlignedX, ClipRect.y + (ClipRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str());
 				Ui()->ClipDisable();
 			}
 			else
 			{
-				TextRender()->Text(UiTitleRect.x + UiTitleRect.w - TitleWidth, UiTitleRect.y + (UiTitleRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str(), -1.0f);
+				m_pImpl->m_TitleText.Draw(TextRender(), UiTitleRect.x + UiTitleRect.w - TitleWidth, UiTitleRect.y + (UiTitleRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str());
 			}
 		}
 		else
@@ -5727,7 +5773,7 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 					const float MoveT = std::clamp((BackT - PauseTime) / std::max(TravelTime, 0.001f), 0.0f, 1.0f);
 					Offset = -Overflow * (1.0f - EaseInOutCubic(MoveT));
 				}
-				TextRender()->Text(ClipRect.x + Offset, ClipRect.y + (ClipRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str(), -1.0f);
+				m_pImpl->m_TitleText.Draw(TextRender(), ClipRect.x + Offset, ClipRect.y + (ClipRect.h - UiTitleFont) * 0.5f, UiTitleFont, Title.c_str());
 				Ui()->ClipDisable();
 			}
 			else
@@ -5746,12 +5792,12 @@ void CMusicPlayer::RenderMusicPlayer(bool ForcePreview)
 			BelowColor = ColorRGBA(1.0f, 0.25f, 0.25f, (GameTimer.m_Blink ? 0.5f : 1.0f) * HeightT);
 		TextRender()->TextColor(BelowColor);
 		const float BelowWidth = MusicPlayerTextWidth(TextRender(), BelowFontUi, BelowTimerText.c_str());
-		TextRender()->Text(
+		m_pImpl->m_TimerText.Draw(
+			TextRender(),
 			UiBelowTimer.x + (UiBelowTimer.w - BelowWidth) * 0.5f,
 			UiBelowTimer.y + (UiBelowTimer.h - BelowFontUi) * 0.5f,
 			BelowFontUi,
-			BelowTimerText.c_str(),
-			-1.0f);
+			BelowTimerText.c_str());
 	}
 	if(ShowArtist)
 	{

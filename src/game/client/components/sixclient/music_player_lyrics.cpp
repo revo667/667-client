@@ -222,6 +222,15 @@ std::string CMusicPlayerLyrics::BuildCacheKey(const char *pTitle, const char *pA
 	return Key;
 }
 
+bool CMusicPlayerLyrics::CacheKeyMatches(const std::string &Key, const char *pTitle, const char *pArtist)
+{
+	// Same layout as BuildCacheKey, compared in place so the per-frame update needs no new string
+	const size_t ArtistLen = str_length(pArtist);
+	const size_t TitleLen = str_length(pTitle);
+	return Key.size() == 4 + ArtistLen + TitleLen && Key.compare(0, 3, "v3|") == 0 && Key.compare(3, ArtistLen, pArtist) == 0 &&
+	       Key[3 + ArtistLen] == '|' && Key.compare(4 + ArtistLen, TitleLen, pTitle) == 0;
+}
+
 bool CMusicPlayerLyrics::ParseLrcTimestamp(const char *pText, int64_t &OutMs, const char **ppEnd)
 {
 	if(pText == nullptr || pText[0] != '[')
@@ -576,7 +585,7 @@ void CMusicPlayerLyrics::Update(IHttp *pHttp, const char *pTitle, const char *pA
 {
 	ProcessRequest();
 
-	if(pTitle != nullptr && pTitle[0] != '\0')
+	if(pTitle != nullptr && pTitle[0] != '\0' && str_comp(m_TrackTitle.c_str(), pTitle) != 0)
 		m_TrackTitle = pTitle;
 
 	const bool HasIdentity = pTitle && pTitle[0] != '\0' && pArtist && pArtist[0] != '\0';
@@ -593,10 +602,9 @@ void CMusicPlayerLyrics::Update(IHttp *pHttp, const char *pTitle, const char *pA
 		return;
 	}
 
-	const std::string Key = BuildCacheKey(pTitle, pArtist, DurationMs);
-	const bool NewTrack = Key != m_ActiveKey;
-	if(NewTrack)
+	if(!CacheKeyMatches(m_ActiveKey, pTitle, pArtist))
 	{
+		const std::string Key = BuildCacheKey(pTitle, pArtist, DurationMs);
 		if(m_pRequest && m_RequestKey == Key)
 		{
 			m_ActiveKey = Key;
@@ -802,7 +810,7 @@ void CMusicPlayerLyrics::BuildColorSplits(float ProgressChars, float Alpha, std:
 	const int CharCount = (int)m_vCharMetrics.size();
 	const float Clamped = std::clamp(ProgressChars, 0.0f, (float)CharCount);
 	const int FullyPassed = (int)Clamped;
-	const float Frac = Clamped - (float)FullyPassed;
+	const float Frac = std::round((Clamped - (float)FullyPassed) * 8.0f) / 8.0f;
 
 	auto WithA = [Alpha](ColorRGBA Color) {
 		return Color.WithAlpha(Color.a * Alpha);
@@ -888,10 +896,31 @@ float CMusicPlayerLyrics::ComputeTextStartX(float AreaLeft, float AreaWidth, flo
 	return std::clamp(IdealStartX, MinStartX, MaxStartX);
 }
 
+void CMusicPlayerLyrics::ResetTextCache()
+{
+	for(SCachedLine &Line : m_aCachedLines)
+	{
+		if(m_pCacheTextRender)
+			m_pCacheTextRender->DeleteTextContainer(Line.m_Container);
+		Line = SCachedLine();
+	}
+}
+
+static bool SameColorSplits(const std::vector<STextColorSplit> &vA, const std::vector<STextColorSplit> &vB)
+{
+	if(vA.size() != vB.size())
+		return false;
+	for(size_t i = 0; i < vA.size(); i++)
+		if(vA[i].m_CharIndex != vB[i].m_CharIndex || vA[i].m_Length != vB[i].m_Length || vA[i].m_Color != vB[i].m_Color)
+			return false;
+	return true;
+}
+
 void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRect &Area, float FontSize, float Delta)
 {
 	if(pTextRender == nullptr || pUi == nullptr || Area.w <= 0.0f || Area.h <= 0.0f)
 		return;
+	m_pCacheTextRender = pTextRender;
 	if(m_vColorSplits.capacity() < 3)
 		m_vColorSplits.reserve(3);
 
@@ -978,7 +1007,7 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 	const float IncomingY = BaseY + (1.0f - SlideT) * Area.h;
 	const float OutgoingY = BaseY - SlideT * Area.h;
 
-	auto DrawDisplay = [&](int DrawIndex, float X, float Y, float ProgressCharsForColor, float Alpha, int ColorMode) {
+	auto DrawDisplay = [&](SCachedLine &Cache, int DrawIndex, float X, float Y, float ProgressCharsForColor, float Alpha, int ColorMode) {
 		if(DrawIndex == LINE_NONE || Alpha <= 0.001f)
 			return;
 		if(!IsCountdownIndex(DrawIndex) && !IsFallbackIndex(DrawIndex) && (DrawIndex < 0 || DrawIndex >= (int)m_vLines.size()))
@@ -1027,14 +1056,24 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 		else
 			BuildColorSplits(ProgressCharsForColor, Alpha, m_vColorSplits);
 
-		auto DrawOnce = [&](float DrawX) {
+		const ColorRGBA DefaultColor = LYRICS_UPCOMING_COLOR.WithAlpha(Alpha);
+		pTextRender->TextColor(DefaultColor);
+		if(!Cache.m_Container.Valid() || Cache.m_FontSize != FontSize || Cache.m_DefaultColor != DefaultColor ||
+			str_comp(Cache.m_Text.c_str(), pText) != 0 || !SameColorSplits(Cache.m_vColorSplits, m_vColorSplits))
+		{
+			pTextRender->DeleteTextContainer(Cache.m_Container);
+			Cache.m_Text = pText;
+			Cache.m_FontSize = FontSize;
+			Cache.m_DefaultColor = DefaultColor;
+			Cache.m_vColorSplits = m_vColorSplits;
 			CTextCursor Cursor;
 			Cursor.m_FontSize = FontSize;
-			Cursor.m_Flags = TEXTFLAG_RENDER;
-			Cursor.SetPosition(vec2(DrawX, Y));
 			Cursor.m_vColorSplits = m_vColorSplits;
-			pTextRender->TextColor(LYRICS_UPCOMING_COLOR.WithAlpha(Alpha));
-			pTextRender->TextEx(&Cursor, pText, -1);
+			pTextRender->CreateTextContainer(Cache.m_Container, &Cursor, pText);
+		}
+		auto DrawOnce = [&](float DrawX) {
+			if(Cache.m_Container.Valid())
+				pTextRender->RenderTextContainer(Cache.m_Container, pTextRender->DefaultTextColor(), pTextRender->DefaultTextOutlineColor(), DrawX, Y);
 		};
 
 		const bool MarqueeCopy = DrawIndex == m_CurrentLineIndex && TitleMarquee;
@@ -1064,7 +1103,7 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 		}
 		const float OutX = CenterX - OutWidth * 0.5f;
 		const int OutColorMode = IsMutedFallback(m_OutgoingLineIndex) ? 1 : 2;
-		DrawDisplay(m_OutgoingLineIndex, OutX, OutgoingY, 0.0f, 1.0f - SlideT, OutColorMode);
+		DrawDisplay(m_aCachedLines[1], m_OutgoingLineIndex, OutX, OutgoingY, 0.0f, 1.0f - SlideT, OutColorMode);
 	}
 
 	const float ActiveAlpha = m_OutgoingLineIndex != LINE_NONE ? SlideT : 1.0f;
@@ -1073,5 +1112,5 @@ void CMusicPlayerLyrics::Render(ITextRender *pTextRender, CUi *pUi, const CUIRec
 		ActiveColorMode = 1;
 	else if(m_CurrentLineIndex == FALLBACK_TITLE || m_CurrentLineIndex == FALLBACK_BRAND)
 		ActiveColorMode = 2;
-	DrawDisplay(m_CurrentLineIndex, TextStartX, IncomingY, ProgressChars, ActiveAlpha, ActiveColorMode);
+	DrawDisplay(m_aCachedLines[0], m_CurrentLineIndex, TextStartX, IncomingY, ProgressChars, ActiveAlpha, ActiveColorMode);
 }
