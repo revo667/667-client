@@ -103,6 +103,9 @@ void CInput::Init()
 	m_pConfigManager = Kernel()->RequestInterface<IConfigManager>();
 
 	MouseModeRelative();
+	// 667client
+	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+	// 667client
 
 	InitJoysticks();
 }
@@ -754,7 +757,10 @@ int CInput::Update()
 	}
 #endif
 
-	while(SDL_PollEvent(&Event))
+	// 667client
+	SDL_PumpEvents();
+	while(SDL_PeepEvents(&Event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) > 0)
+	// 667client
 	{
 		switch(Event.type)
 		{
