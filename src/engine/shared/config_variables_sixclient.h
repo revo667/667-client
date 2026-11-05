@@ -488,6 +488,9 @@ MACRO_CONFIG_INT(ScGatheredEnergyAmount, sc_gathered_energy_amount, 100, 25, 300
 MACRO_CONFIG_INT(ScGatheredEnergyAura, sc_gathered_energy_aura, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Draw the aura and the ground ring of the gathered energy")
 MACRO_CONFIG_INT(ScGatheredEnergyBurst, sc_gathered_energy_burst, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Blow the gathered energy apart when the hook comes off the other tee")
 
+// KoG power
+MACRO_CONFIG_INT(ScHidePower, sc_hide_power, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide the KoG /power visuals on invincible tees: the sparkle stars and the rainbow recolor")
+
 // Atmosphere
 MACRO_CONFIG_INT(ScAtmosphere, sc_atmosphere, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weather around you")
 MACRO_CONFIG_INT(ScWeather, sc_weather, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weather type (0 = snow, 1 = rain, 2 = fireflies, 3 = dust)")

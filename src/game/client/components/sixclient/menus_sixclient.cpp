@@ -3396,6 +3396,10 @@ void CMenus::RenderSettingsSixClientOthers(CUIRect MainView)
 	BrowserUtilsBlock.HSplitTop(LineSize, &Content, &BrowserUtilsBlock);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScShowFinishedMapOnEgo, ScLocalize("Show finished map on EGO"), &g_Config.m_ScShowFinishedMapOnEgo, &Content, LineSize);
 
+	BrowserUtilsBlock.HSplitTop(MarginSmall, nullptr, &BrowserUtilsBlock);
+	BrowserUtilsBlock.HSplitTop(LineSize, &Content, &BrowserUtilsBlock);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ScHidePower, ScLocalize("Hide KoG power effect"), &g_Config.m_ScHidePower, &Content, LineSize);
+
 
 	const bool FocusModeEnabled = g_Config.m_ClFocusMode != 0;
 	const bool FocusModeAutoReplyEnabled = g_Config.m_ClFocusModeAutoReply != 0;

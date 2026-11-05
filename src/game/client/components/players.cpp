@@ -1248,6 +1248,7 @@ void CPlayers::OnRender()
 		aRenderInfo[i].m_TeeRenderFlags = 0;
 
 		bool Frozen = false;
+		bool PlayerInvincible = false; // 667client: KoG /power sets CHARACTERFLAG_INVINCIBLE
 		// 667client
 		const bool PracticeParticipant = GameClient()->m_FastPractice.Active() && GameClient()->m_FastPractice.IsPracticeParticipant(i);
 		if(PracticeParticipant)
@@ -1255,7 +1256,11 @@ void CPlayers::OnRender()
 			if(GameClient()->m_aClients[i].m_Predicted.m_LiveFrozen)
 				aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_FROZEN;
 			if(GameClient()->m_aClients[i].m_Predicted.m_Invincible)
-				aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_SPARKLE;
+			{
+				PlayerInvincible = true;
+				if(!g_Config.m_ScHidePower) // 667client
+					aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_SPARKLE;
+			}
 
 			Frozen = GameClient()->m_FastPractice.ShouldShowPracticeFrozenSkin(i);
 			if(Frozen)
@@ -1269,7 +1274,11 @@ void CPlayers::OnRender()
 			if(GameClient()->m_aClients[i].m_Predicted.m_LiveFrozen)
 				aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_FROZEN;
 			if(GameClient()->m_aClients[i].m_Predicted.m_Invincible)
-				aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_SPARKLE;
+			{
+				PlayerInvincible = true;
+				if(!g_Config.m_ScHidePower) // 667client
+					aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_SPARKLE;
+			}
 
 			Frozen = GameClient()->m_aClients[i].m_Predicted.m_FreezeEnd != 0;
 			// 667client
@@ -1284,7 +1293,11 @@ void CPlayers::OnRender()
 			if(GameClient()->m_aClients[i].m_LiveFrozen)
 				aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_FROZEN;
 			if(GameClient()->m_aClients[i].m_Invincible)
-				aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_SPARKLE;
+			{
+				PlayerInvincible = true;
+				if(!g_Config.m_ScHidePower) // 667client
+					aRenderInfo[i].m_TeeRenderFlags |= TEE_EFFECT_SPARKLE;
+			}
 
 			Frozen = GameClient()->m_Snap.m_aCharacters[i].m_HasExtendedData && GameClient()->m_Snap.m_aCharacters[i].m_ExtendedData.m_FreezeEnd != 0;
 		}
@@ -1326,6 +1339,10 @@ void CPlayers::OnRender()
 				}
 			}
 		}
+
+		// 667client: hide the KoG /power rainbow recolor by showing powered tees in their skin's own colors
+		if(PlayerInvincible && g_Config.m_ScHidePower)
+			aRenderInfo[i].m_CustomColoredSkin = false;
 	}
 
 	// get screen edges to avoid rendering offscreen

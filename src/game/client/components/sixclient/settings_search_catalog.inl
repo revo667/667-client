@@ -233,6 +233,7 @@
 	{"Browser Utils", SETTINGS_NAV_LEAF_SC_OTHERS, "Others", &g_Config.m_ScAutoServerListRefresh, nullptr},
 	{"Short EGO/KoG server name", SETTINGS_NAV_LEAF_SC_OTHERS, "Browser Utils", &g_Config.m_ScUseShortKogServerName, nullptr},
 	{"Show finished map on EGO", SETTINGS_NAV_LEAF_SC_OTHERS, "Browser Utils", &g_Config.m_ScShowFinishedMapOnEgo, nullptr},
+	{"Hide KoG power effect", SETTINGS_NAV_LEAF_SC_OTHERS, "Browser Utils", &g_Config.m_ScHidePower, nullptr},
 
 	{"Show ping colored circle in nameplates", SETTINGS_NAV_LEAF_TC_SETTINGS, "Visual", &g_Config.m_TcNameplatePingCircle, nullptr},
 	{"Show country flags in nameplates", SETTINGS_NAV_LEAF_TC_SETTINGS, "Visual", &g_Config.m_TcNameplateCountry, nullptr},
