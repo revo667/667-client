@@ -991,6 +991,18 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		}
 	}
 
+#if !defined(CONF_BACKEND_VULKAN) && !defined(CONF_BACKEND_OPENGL_ES)
+	// settings_ddnet.cfg is shared with other clients; a Vulkan entry (1.1) from one of them would otherwise run this build on legacy OpenGL 1.1
+	if(str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0)
+	{
+		log_warn("gfx", "Vulkan is not available in this build, using OpenGL 3.0");
+		str_copy(g_Config.m_GfxBackend, "OpenGL");
+		g_Config.m_GfxGLMajor = 3;
+		g_Config.m_GfxGLMinor = 0;
+		g_Config.m_GfxGLPatch = 0;
+	}
+#endif
+
 	EBackendType OldBackendType = m_BackendType;
 	m_BackendType = DetectBackend();
 	// little fallback for Vulkan
