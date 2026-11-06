@@ -662,32 +662,45 @@ void CBetaReporter::ReadPreviousSession()
 
 	if(Event.m_Type != "unclean_exit")
 	{
-		struct SNewest
+		// dumps/ is shared with every DDNet fork using the same config folder, so only take an
+		// assert log written during the crashed session that names this client's commit.
+		long long SessionStart = 0;
+		std::string SessionCommit;
+		for(const auto &[Key, Value] : SessionInfo.m_vStrings)
 		{
-			std::string m_Name;
-			time_t m_Time = 0;
-		} Newest;
+			if(Key == "start")
+				SessionStart = std::strtoll(Value.c_str(), nullptr, 10);
+			else if(Key == "commit")
+				SessionCommit = Value;
+		}
+		struct SCandidates
+		{
+			time_t m_MinTime;
+			std::vector<std::pair<time_t, std::string>> m_vFiles;
+		} Candidates;
+		Candidates.m_MinTime = SessionStart > 0 ? (time_t)SessionStart : (time_t)(time_timestamp() - 3600 * 24 * 7);
 		Storage()->ListDirectoryInfo(IStorage::TYPE_SAVE, "dumps", [](const CFsFileInfo *pInfo, int IsDir, int StorageType, void *pUser) {
-			SNewest *pNewest = static_cast<SNewest *>(pUser);
-			if(!IsDir && str_find(pInfo->m_pName, "assert_log") && pInfo->m_TimeModified >= pNewest->m_Time)
-			{
-				pNewest->m_Name = pInfo->m_pName;
-				pNewest->m_Time = pInfo->m_TimeModified;
-			}
+			SCandidates *pCandidates = static_cast<SCandidates *>(pUser);
+			if(!IsDir && str_find(pInfo->m_pName, "assert_log") && pInfo->m_TimeModified >= pCandidates->m_MinTime)
+				pCandidates->m_vFiles.emplace_back(pInfo->m_TimeModified, pInfo->m_pName);
 			return 0;
 		},
-			&Newest);
-		if(!Newest.m_Name.empty() && Newest.m_Time + 3600 * 24 * 7 >= time_timestamp())
+			&Candidates);
+		std::sort(Candidates.m_vFiles.begin(), Candidates.m_vFiles.end(), [](const auto &A, const auto &B) { return A.first > B.first; });
+		for(const auto &[Time, Name] : Candidates.m_vFiles)
 		{
-			const std::string Path = "dumps/" + Newest.m_Name;
-			if(char *pLog = Storage()->ReadFileStr(Path.c_str(), IStorage::TYPE_SAVE))
-			{
-				std::string Log = pLog;
-				free(pLog);
-				if(Log.size() > 6000)
-					Log = Log.substr(Log.size() - 6000);
-				Event.m_vStrings.emplace_back("log_tail", Log);
-			}
+			const std::string Path = "dumps/" + Name;
+			char *pLog = Storage()->ReadFileStr(Path.c_str(), IStorage::TYPE_SAVE);
+			if(!pLog)
+				continue;
+			std::string Log = pLog;
+			free(pLog);
+			if(SessionCommit.empty() || Log.find(SessionCommit) == std::string::npos)
+				continue;
+			if(Log.size() > 6000)
+				Log = Log.substr(Log.size() - 6000);
+			Event.m_vStrings.emplace_back("log_tail", Log);
+			break;
 		}
 	}
 
