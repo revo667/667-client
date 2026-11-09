@@ -10,11 +10,11 @@
     in {
       packages.${system}.default = pkgs.stdenv.mkDerivation rec {
         pname = "cecenclient";
-        version = "1.0.48";
+        version = "2.0";
 
         src = pkgs.fetchurl {
           url = "https://github.com/revo667/cecen-client-releases/releases/download/v${version}/CecenClient-linux.tar.xz";
-          hash = "sha256-i07AKpF8++oHVyk3Rw0RLBedoeItCp1H/vvYZplcTJc=";
+          hash = "sha256-aud7mK1ZhRhXf0jWMg+5mCPxEiwzBxlUSBnaQBSb8yc=";
         };
 
         nativeBuildInputs = [ 
